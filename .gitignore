@@ -1,85 +1,20 @@
-# =========================
-# Dependencies
-# =========================
-node_modules/
-.pnpm-store/
+# dependencies
+**/node_modules
 
-# =========================
-# Build Output
-# =========================
-dist/
-build/
-coverage/
+# builds
+**/dist
 
-# =========================
-# Environment Files
-# =========================
+# logs
+*.log
+
+# env
 .env
 .env.*
-!.env.example
 
-# =========================
-# Logs
-# =========================
-logs/
-*.log
-npm-debug.log*
-pnpm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+# IDE
+.vscode
+.idea
 
-# =========================
-# Vercel
-# =========================
-.vercel/
-
-# =========================
-# VS Code
-# =========================
-.vscode/*
-!.vscode/extensions.json
-!.vscode/settings.json
-
-# =========================
-# JetBrains
-# =========================
-.idea/
-
-# =========================
-# OS Files
-# =========================
+# OS
 .DS_Store
 Thumbs.db
-desktop.ini
-
-# =========================
-# Temporary Files
-# =========================
-*.tmp
-*.temp
-*.bak
-*.orig
-*.swp
-
-# =========================
-# Cache
-# =========================
-.cache/
-.eslintcache
-
-# =========================
-# TypeScript
-# =========================
-*.tsbuildinfo
-
-# =========================
-# Python (if any helper scripts remain)
-# =========================
-__pycache__/
-*.pyc
-
-# =========================
-# Local Testing Files
-# =========================
-playwright-report/
-test-results/
