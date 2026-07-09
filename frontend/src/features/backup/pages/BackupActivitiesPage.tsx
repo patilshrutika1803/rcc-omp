@@ -76,167 +76,26 @@ interface BackupJob {
   history: { date: string; status: BkpStatus; duration: string; sizeGB: number }[];
 }
 
-const BACKUP_JOBS: BackupJob[] = [
-  {
-    id: "BK-2001", name: "ERP Full Backup", server: "SRV-ERP-001", backupType: "Full",
-    frequency: "Daily", lastBackup: "2026-07-03 02:00", nextBackup: "2026-07-04 02:00",
-    status: "Completed", progress: 100, user: "Arjun Rao", sizeGB: 245,
-    destination: "NAS-BACKUP-01 / Pool-A", retention: "30 Days", duration: "1h 23m",
-    department: "IT Department", lastVerified: "2026-07-02", recoveryPoints: 28,
-    compressionRatio: "3.2:1", quota: 500, description: "Daily full backup of the ERP system including all modules and databases.",
-    history: [
-      { date: "2026-07-03 02:00", status: "Completed", duration: "1h 23m", sizeGB: 245 },
-      { date: "2026-07-02 02:00", status: "Completed", duration: "1h 21m", sizeGB: 242 },
-      { date: "2026-07-01 02:00", status: "Completed", duration: "1h 25m", sizeGB: 240 },
-      { date: "2026-06-30 02:00", status: "Failed",    duration: "—",      sizeGB: 0   },
-      { date: "2026-06-29 02:00", status: "Completed", duration: "1h 19m", sizeGB: 238 },
-    ]
-  },
-  {
-    id: "BK-2002", name: "Active Directory Backup", server: "SRV-AD-001", backupType: "Full",
-    frequency: "Weekly", lastBackup: "2026-06-29 01:00", nextBackup: "2026-07-06 01:00",
-    status: "Scheduled", progress: 0, user: "Vikram Singh", sizeGB: 18,
-    destination: "NAS-BACKUP-01 / Pool-B", retention: "90 Days", duration: "12m",
-    department: "IT Department", lastVerified: "2026-06-29", recoveryPoints: 12,
-    compressionRatio: "4.1:1", quota: 100, description: "Weekly full backup of Active Directory services and domain controllers.",
-    history: [
-      { date: "2026-06-29 01:00", status: "Completed", duration: "12m",  sizeGB: 18 },
-      { date: "2026-06-22 01:00", status: "Completed", duration: "11m",  sizeGB: 17 },
-      { date: "2026-06-15 01:00", status: "Completed", duration: "13m",  sizeGB: 18 },
-      { date: "2026-06-08 01:00", status: "Completed", duration: "11m",  sizeGB: 17 },
-    ]
-  },
-  {
-    id: "BK-2003", name: "File Server Incremental", server: "SRV-FILE-001", backupType: "Incremental",
-    frequency: "Daily", lastBackup: "2026-07-03 03:30", nextBackup: "2026-07-04 03:30",
-    status: "Running", progress: 67, user: "Rajesh Kumar", sizeGB: 112,
-    destination: "TAPE-LIB-01 / Slot-4", retention: "60 Days", duration: "~45m",
-    department: "IT Department", lastVerified: "2026-07-01", recoveryPoints: 58,
-    compressionRatio: "2.8:1", quota: 300, description: "Daily incremental backup of the shared file server.",
-    history: [
-      { date: "2026-07-03 03:30", status: "Running",   duration: "~45m",  sizeGB: 112 },
-      { date: "2026-07-02 03:30", status: "Completed", duration: "48m",   sizeGB: 108 },
-      { date: "2026-07-01 03:30", status: "Completed", duration: "44m",   sizeGB: 105 },
-      { date: "2026-06-30 03:30", status: "Completed", duration: "50m",   sizeGB: 110 },
-      { date: "2026-06-29 03:30", status: "Failed",    duration: "—",     sizeGB: 0   },
-    ]
-  },
-  {
-    id: "BK-2004", name: "Exchange Mail Backup", server: "SRV-EXCH-001", backupType: "Differential",
-    frequency: "Daily", lastBackup: "2026-07-03 01:00", nextBackup: "2026-07-04 01:00",
-    status: "Completed", progress: 100, user: "Priya Nair", sizeGB: 380,
-    destination: "NAS-BACKUP-02 / Pool-A", retention: "45 Days", duration: "2h 10m",
-    department: "IT Department", lastVerified: "2026-07-03", recoveryPoints: 42,
-    compressionRatio: "2.5:1", quota: 600, description: "Daily differential backup of Exchange mail server and mailboxes.",
-    history: [
-      { date: "2026-07-03 01:00", status: "Completed", duration: "2h 10m", sizeGB: 380 },
-      { date: "2026-07-02 01:00", status: "Completed", duration: "2h 05m", sizeGB: 375 },
-      { date: "2026-07-01 01:00", status: "Completed", duration: "2h 18m", sizeGB: 378 },
-      { date: "2026-06-30 01:00", status: "Completed", duration: "2h 08m", sizeGB: 372 },
-    ]
-  },
-  {
-    id: "BK-2005", name: "VMware ESXi Snapshot", server: "VMH-ESX-001", backupType: "Snapshot",
-    frequency: "Daily", lastBackup: "2026-07-03 04:00", nextBackup: "2026-07-04 04:00",
-    status: "Failed", progress: 0, user: "Arjun Rao", sizeGB: 0,
-    destination: "SAN-BACKUP-01 / LUN-12", retention: "14 Days", duration: "—",
-    department: "IT Department", lastVerified: "2026-07-01", recoveryPoints: 10,
-    compressionRatio: "N/A", quota: 800, description: "Daily VMware ESXi hypervisor snapshot for all virtual machines.",
-    history: [
-      { date: "2026-07-03 04:00", status: "Failed",    duration: "—",      sizeGB: 0   },
-      { date: "2026-07-02 04:00", status: "Completed", duration: "55m",    sizeGB: 520 },
-      { date: "2026-07-01 04:00", status: "Completed", duration: "58m",    sizeGB: 515 },
-      { date: "2026-06-30 04:00", status: "Completed", duration: "52m",    sizeGB: 510 },
-    ]
-  },
-  {
-    id: "BK-2006", name: "HR Database Backup", server: "SRV-HRM-001", backupType: "Full",
-    frequency: "Weekly", lastBackup: "2026-06-30 00:30", nextBackup: "2026-07-07 00:30",
-    status: "Scheduled", progress: 0, user: "Meena Pillai", sizeGB: 62,
-    destination: "NAS-BACKUP-01 / Pool-C", retention: "180 Days", duration: "32m",
-    department: "Human Resources", lastVerified: "2026-06-30", recoveryPoints: 24,
-    compressionRatio: "5.1:1", quota: 200, description: "Weekly full backup of HR management system and employee records.",
-    history: [
-      { date: "2026-06-30 00:30", status: "Completed", duration: "32m", sizeGB: 62 },
-      { date: "2026-06-23 00:30", status: "Completed", duration: "30m", sizeGB: 60 },
-      { date: "2026-06-16 00:30", status: "Completed", duration: "31m", sizeGB: 59 },
-    ]
-  },
-  {
-    id: "BK-2007", name: "CRM Database Backup", server: "SRV-CRM-001", backupType: "Incremental",
-    frequency: "Daily", lastBackup: "2026-07-03 02:30", nextBackup: "2026-07-04 02:30",
-    status: "Completed", progress: 100, user: "Deepa Iyer", sizeGB: 88,
-    destination: "NAS-BACKUP-02 / Pool-B", retention: "30 Days", duration: "28m",
-    department: "Sales", lastVerified: "2026-07-02", recoveryPoints: 30,
-    compressionRatio: "3.8:1", quota: 250, description: "Daily incremental backup of CRM database and customer data.",
-    history: [
-      { date: "2026-07-03 02:30", status: "Completed", duration: "28m", sizeGB: 88 },
-      { date: "2026-07-02 02:30", status: "Completed", duration: "27m", sizeGB: 86 },
-      { date: "2026-07-01 02:30", status: "Completed", duration: "29m", sizeGB: 85 },
-      { date: "2026-06-30 02:30", status: "Completed", duration: "26m", sizeGB: 84 },
-    ]
-  },
-  {
-    id: "BK-2008", name: "Production SQL Server", server: "SRV-SQL-002", backupType: "Differential",
-    frequency: "Daily", lastBackup: "2026-07-03 00:00", nextBackup: "2026-07-04 00:00",
-    status: "Completed", progress: 100, user: "Suresh Babu", sizeGB: 195,
-    destination: "NAS-BACKUP-01 / Pool-D", retention: "30 Days", duration: "48m",
-    department: "Production", lastVerified: "2026-07-02", recoveryPoints: 30,
-    compressionRatio: "3.0:1", quota: 500, description: "Daily differential backup of production SQL Server databases.",
-    history: [
-      { date: "2026-07-03 00:00", status: "Completed", duration: "48m", sizeGB: 195 },
-      { date: "2026-07-02 00:00", status: "Completed", duration: "45m", sizeGB: 190 },
-      { date: "2026-07-01 00:00", status: "Failed",    duration: "—",   sizeGB: 0   },
-      { date: "2026-06-30 00:00", status: "Completed", duration: "47m", sizeGB: 188 },
-    ]
-  },
-  {
-    id: "BK-2009", name: "Web Server Backup", server: "SRV-WEB-001", backupType: "Incremental",
-    frequency: "Daily", lastBackup: "2026-07-03 05:00", nextBackup: "2026-07-04 05:00",
-    status: "Completed", progress: 100, user: "Anita Desai", sizeGB: 24,
-    destination: "NAS-BACKUP-02 / Pool-C", retention: "14 Days", duration: "8m",
-    department: "IT Department", lastVerified: "2026-07-03", recoveryPoints: 14,
-    compressionRatio: "4.5:1", quota: 100, description: "Daily incremental backup of web server files and configurations.",
-    history: [
-      { date: "2026-07-03 05:00", status: "Completed", duration: "8m",  sizeGB: 24 },
-      { date: "2026-07-02 05:00", status: "Completed", duration: "7m",  sizeGB: 23 },
-      { date: "2026-07-01 05:00", status: "Completed", duration: "8m",  sizeGB: 24 },
-    ]
-  },
-  {
-    id: "BK-2010", name: "System Logs Archive", server: "SRV-LOG-001", backupType: "Full",
-    frequency: "Weekly", lastBackup: "2026-07-01 06:00", nextBackup: "2026-07-08 06:00",
-    status: "Scheduled", progress: 0, user: "Vikram Singh", sizeGB: 45,
-    destination: "TAPE-LIB-01 / Slot-8", retention: "365 Days", duration: "18m",
-    department: "IT Department", lastVerified: "2026-07-01", recoveryPoints: 52,
-    compressionRatio: "6.2:1", quota: 150, description: "Weekly full backup of system and application logs for compliance.",
-    history: [
-      { date: "2026-07-01 06:00", status: "Completed", duration: "18m", sizeGB: 45 },
-      { date: "2026-06-24 06:00", status: "Completed", duration: "16m", sizeGB: 42 },
-      { date: "2026-06-17 06:00", status: "Completed", duration: "17m", sizeGB: 40 },
-    ]
-  },
-];
+// ─────────────────────────────────────────────────────────────────────────────
+// DATA SOURCE (backend-ready)
+// Currently initialized empty. Replace this initial state / fetch logic with a
+// real data source later — e.g.:
+//   const { data } = await fetch("/api/backups").then(r => r.json());
+//   const { data } = await supabase.from("backup_jobs").select("*");
+//   const { data } = await db.collection("backup_jobs").find({}).toArray(); // MongoDB
+//   const { data } = await pgPool.query("SELECT * FROM backup_jobs");      // PostgreSQL
+// The BackupJob[] shape defined above is the contract the backend response
+// should conform to (or be mapped into) so no UI changes are required.
+// ─────────────────────────────────────────────────────────────────────────────
+const BACKUP_JOBS: BackupJob[] = [];
 
-const BKP_WEEKLY_TREND = [
-  { day: "Jun 27", success: 8, failed: 1, total: 9, storage: 1142 },
-  { day: "Jun 28", success: 9, failed: 0, total: 9, storage: 1158 },
-  { day: "Jun 29", success: 7, failed: 2, total: 9, storage: 1165 },
-  { day: "Jun 30", success: 8, failed: 1, total: 9, storage: 1170 },
-  { day: "Jul 1",  success: 9, failed: 0, total: 9, storage: 1180 },
-  { day: "Jul 2",  success: 9, failed: 0, total: 9, storage: 1192 },
-  { day: "Jul 3",  success: 7, failed: 1, total: 10,storage: 1159 },
-];
+// Weekly success/failure trend used by the analytics charts. Replace with an
+// aggregation query (e.g. GROUP BY day) from the backend once available.
+const BKP_WEEKLY_TREND: { day: string; success: number; failed: number; total: number; storage: number }[] = [];
 
-const BKP_STORAGE_TREND = [
-  { month: "Jan", used: 820, capacity: 2000 },
-  { month: "Feb", used: 890, capacity: 2000 },
-  { month: "Mar", used: 960, capacity: 2000 },
-  { month: "Apr", used: 1020, capacity: 2000 },
-  { month: "May", used: 1090, capacity: 2000 },
-  { month: "Jun", used: 1192, capacity: 2000 },
-  { month: "Jul", used: 1210, capacity: 2000 },
-];
+// Monthly storage usage trend used by the storage chart. Replace with an
+// aggregation query from the backend once available.
+const BKP_STORAGE_TREND: { month: string; used: number; capacity: number }[] = [];
 
 function bkpStatusCfg(status: BkpStatus) {
   switch (status) {
@@ -849,6 +708,13 @@ function BackupTimeline({ jobs }: { jobs: BackupJob[] }) {
       <Section title="Today & Running" items={today}    accent="text-blue-600"  />
       <Section title="Tomorrow"        items={tomorrow}  accent="text-slate-600" />
       <Section title="Coming Up"       items={later}     accent="text-slate-400" />
+      {jobs.length === 0 && (
+        <div className="py-8 text-center">
+          <CalendarClock size={28} className="text-slate-300 mx-auto mb-2" />
+          <p className="text-xs font-bold text-slate-700">No Backup Records Found</p>
+          <p className="text-[11px] text-slate-400 mt-1">Scheduled and running jobs will show up here.</p>
+        </div>
+      )}
     </div>
   );
 }
@@ -862,7 +728,8 @@ function BackupDashboard({ jobs, onViewJob }: { jobs: BackupJob[]; onViewJob: (j
     running:     jobs.filter(j => j.status === "Running").length,
     totalGB:     jobs.reduce((s, j) => s + j.sizeGB, 0),
   };
-  const successRate = Math.round((kpi.successful / (kpi.total - jobs.filter(j => j.status === "Scheduled").length)) * 100);
+  const nonScheduled = kpi.total - jobs.filter(j => j.status === "Scheduled").length;
+  const successRate  = nonScheduled > 0 ? Math.round((kpi.successful / nonScheduled) * 100) : 0;
 
   const todayJobs = jobs.filter(j => j.lastBackup.startsWith("2026-07-03") || j.status === "Running");
 
@@ -927,6 +794,13 @@ function BackupDashboard({ jobs, onViewJob }: { jobs: BackupJob[]; onViewJob: (j
                 ))}
               </tbody>
             </table>
+            {todayJobs.length === 0 && (
+              <div className="py-16 text-center">
+                <Archive size={32} className="text-slate-300 mx-auto mb-3" />
+                <p className="text-sm font-bold text-slate-700">No Backup Records Found</p>
+                <p className="text-xs text-slate-400 mt-1">Backup job activity will appear here once jobs are added.</p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -1134,8 +1008,10 @@ function BackupJobsTable({
           {filtered.length === 0 && (
             <div className="py-16 text-center">
               <Archive size={32} className="text-slate-300 mx-auto mb-3" />
-              <p className="text-sm font-bold text-slate-700">No backup jobs found</p>
-              <p className="text-xs text-slate-400 mt-1">Try adjusting your search or filters</p>
+              <p className="text-sm font-bold text-slate-700">No Backup Records Found</p>
+              <p className="text-xs text-slate-400 mt-1">
+                {jobs.length === 0 ? "Get started by adding your first backup job." : "Try adjusting your search or filters."}
+              </p>
             </div>
           )}
         </div>
@@ -1158,8 +1034,8 @@ function BackupJobsTable({
 // ─── BACKUP JOB FORM MODAL ───────────────────────────────────────────────────
 const BKP_DEPARTMENTS  = ["Quality Assurance","Quality Control","Production","Warehouse","Engineering","Purchase & Accounts","HR & Admin","Environmental Health & Safety","IT Department"];
 const BKP_FREQUENCIES  = ["Daily","Weekly","Monthly","Quarterly","Hourly"];
-const BKP_DESTINATIONS = ["NAS-BACKUP-01 / Pool-A","NAS-BACKUP-01 / Pool-B","NAS-BACKUP-01 / Pool-C","NAS-BACKUP-01 / Pool-D","NAS-BACKUP-02 / Pool-A","NAS-BACKUP-02 / Pool-B","NAS-BACKUP-02 / Pool-C","TAPE-LIB-01 / Slot-4","TAPE-LIB-01 / Slot-8","SAN-BACKUP-01 / LUN-12"];
-const BKP_USERS    = ["Arjun Rao","Vikram Singh","Rajesh Kumar","Priya Nair","Meena Pillai","Suresh Babu","Deepa Iyer","Anita Desai"];
+// "Backup Destination" and "Assigned User" are free-text fields (manually
+// entered by the user) rather than fixed option lists — see BackupJobModal.
 
 interface BackupJobFormData {
   name: string; department: string; backupType: BkpType;
@@ -1178,9 +1054,9 @@ function BackupJobModal({ mode, initial, onSave, onCancel }: {
     department:  initial?.department  ?? BKP_DEPARTMENTS[0],
     backupType:  initial?.backupType  ?? "Full",
     frequency:   initial?.frequency   ?? "Daily",
-    destination: initial?.destination ?? BKP_DESTINATIONS[0],
+    destination: initial?.destination ?? "",
     backupTime:  initial?.lastBackup?.split(" ")[1] ?? "02:00",
-    user:    initial?.user    ?? BKP_USERS[0],
+    user:    initial?.user    ?? "",
     quota:       initial?.quota       ?? 500,
     description: initial?.description ?? "",
   });
@@ -1232,17 +1108,23 @@ function BackupJobModal({ mode, initial, onSave, onCancel }: {
             </div>
           </div>
           <div>
-            <div className="text-xs font-bold text-slate-700 mb-1">Backup Destination</div>
-            <select value={form.destination} onChange={e => set("destination", e.target.value)} className="w-full h-9 px-3 text-sm border border-slate-300 rounded-lg focus:outline-none focus:border-blue-400">
-              {BKP_DESTINATIONS.map(d => <option key={d}>{d}</option>)}
-            </select>
+            <div className="text-xs font-bold text-slate-700 mb-1">Backup Destination <span className="text-red-500">*</span></div>
+            <input
+              value={form.destination}
+              onChange={e => set("destination", e.target.value)}
+              placeholder="e.g. NAS, AWS S3, Local Server, External HDD"
+              className="w-full h-9 px-3 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+            />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <div className="text-xs font-bold text-slate-700 mb-1">Assigned User</div>
-              <select value={form.user} onChange={e => set("user", e.target.value)} className="w-full h-9 px-3 text-sm border border-slate-300 rounded-lg focus:outline-none focus:border-blue-400">
-                {BKP_USERS.map(e => <option key={e}>{e}</option>)}
-              </select>
+              <div className="text-xs font-bold text-slate-700 mb-1">Assigned User <span className="text-red-500">*</span></div>
+              <input
+                value={form.user}
+                onChange={e => set("user", e.target.value)}
+                placeholder="Enter employee name"
+                className="w-full h-9 px-3 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+              />
             </div>
             <div>
               <div className="text-xs font-bold text-slate-700 mb-1">Quota (GB)</div>
@@ -1256,7 +1138,11 @@ function BackupJobModal({ mode, initial, onSave, onCancel }: {
         </div>
         <div className="p-5 border-t border-slate-100 flex justify-end gap-3 shrink-0">
           <button onClick={onCancel} className="px-4 py-2 text-xs font-semibold text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors">Cancel</button>
-          <button onClick={() => form.name.trim() && onSave(form)} disabled={!form.name.trim()} className="px-5 py-2 text-xs font-semibold text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+          <button
+            onClick={() => form.name.trim() && form.user.trim() && form.destination.trim() && onSave(form)}
+            disabled={!form.name.trim() || !form.user.trim() || !form.destination.trim()}
+            className="px-5 py-2 text-xs font-semibold text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
             {mode === "add" ? "Save Backup Job" : "Save Changes"}
           </button>
         </div>
