@@ -321,7 +321,20 @@ function AddPMModal({ onClose, onSave, editRecord, departments, users }: { onClo
                 className={fieldClass("department") + " text-slate-700"}
               >
                 <option value="">Select department</option>
-                {departments.map(d => <option key={d} value={d}>{d}</option>)}
+                {[
+                  "Quality Assurance",
+                  "Quality Control",
+                  "Production",
+                  "Warehouse",
+                  "Engineering",
+                  "Purchase & Accounts",
+                  "HR & Admin",
+                  "Environment, Health & Safety",
+                  "IT",
+                  "Microbiology",
+                ].map(d => (
+                  <option key={d} value={d}>{d}</option>
+                ))}
               </select>
               {errors.department && <p className="text-[11px] text-red-500 mt-1">{errors.department}</p>}
             </div>
@@ -379,7 +392,9 @@ function AddPMModal({ onClose, onSave, editRecord, departments, users }: { onClo
                 className={fieldClass("user") + " text-slate-700"}
               >
                 <option value="">Assign user</option>
-                {users.map(u => <option key={u} value={u}>{u}</option>)}
+                {["Megha Jadhav", "Nikhil Sakat", "Kiran Yadav"].map(u => (
+                  <option key={u} value={u}>{u}</option>
+                ))}
               </select>
               {errors.user && <p className="text-[11px] text-red-500 mt-1">{errors.user}</p>}
             </div>
@@ -1469,12 +1484,7 @@ export default function PreventiveMaintenancePage() {
             >
               <Plus size={14} /> Add PM
             </button>
-            <button
-              onClick={handleCheckAll}
-              className="h-9 px-3 text-xs font-semibold text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 shadow-sm"
-            >
-              ✔ Check All PM
-            </button>
+
             <button
               onClick={() => { toast.loading("Exporting..."); setTimeout(() => toast.success("Export Completed"), 1500); }}
               className="flex items-center gap-1.5 h-9 px-3 text-xs font-semibold text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors shadow-sm">
