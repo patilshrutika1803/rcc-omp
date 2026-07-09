@@ -80,7 +80,7 @@ import { formatDate } from "../shared/utils/dateHelpers";
 
 const NAV_ITEMS = [
   { id: "dashboard", icon: LayoutDashboard, label: "Dashboard" },
-  { id: "maintenance", icon: Wrench, label: "Preventive Maintenance", badge: 3 },
+  { id: "maintenance", icon: Wrench, label: "Preventive Maintenance" },
   { id: "backup", icon: Archive, label: "Backup Activities" },
   { id: "qa", icon: CheckSquare, label: "QA Activities" },
   { id: "machines", icon: Server, label: "Machines" },

@@ -196,12 +196,15 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
 function AddPMModal({ onClose, onSave, editRecord, departments, users }: { onClose: () => void; onSave: (record: PMRecord) => void; editRecord?: PMRecord; departments: string[]; users: string[] }) {
   const isEdit = !!editRecord;
   const [form, setForm] = useState({
-    machine: editRecord?.machine ?? "",
-    machineId: editRecord?.machineId ?? "",
+        // Machine type is captured in `machine` (PC/Laptop)
+        machine: editRecord?.machine ?? "",
+        machineId: editRecord?.machineId ?? "",
+
     department: editRecord?.department ?? "",
     frequency: editRecord?.frequency ?? "Monthly",
     priority: editRecord?.priority ?? "High",
     reminder: "1 Day Before",
+    lastMaintenanceDate: editRecord?.lastMaintenance ?? new Date().toISOString().split("T")[0],
     dueDate: editRecord?.nextDue ?? new Date().toISOString().split("T")[0],
     user: editRecord?.user ?? "",
     description: editRecord?.description ?? "",
@@ -212,11 +215,14 @@ function AddPMModal({ onClose, onSave, editRecord, departments, users }: { onClo
 
   const validate = () => {
     const e: Record<string, string> = {};
-    if (!form.machine.trim()) e.machine = "Machine name is required";
+    if (!form.machine.trim()) e.machine = "Machine Type is required";
     if (!form.machineId.trim()) e.machineId = "Machine ID is required";
     if (!form.department) e.department = "Department is required";
     if (!form.frequency) e.frequency = "Frequency is required";
     if (!form.priority) e.priority = "Priority is required";
+    if (!form.lastMaintenanceDate || isNaN(new Date(form.lastMaintenanceDate).getTime())) {
+      e.lastMaintenanceDate = "A valid last maintenance date is required";
+    }
     if (!form.dueDate || isNaN(new Date(form.dueDate).getTime())) e.dueDate = "A valid due date is required";
     if (!form.user) e.user = "User is required";
     return e;
@@ -289,14 +295,16 @@ function AddPMModal({ onClose, onSave, editRecord, departments, users }: { onClo
         <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-xs font-semibold text-slate-700 mb-1.5 block">Machine Name <span className="text-red-500">*</span></label>
-              <input
-                type="text"
-                placeholder="e.g. Filling Machine Line A"
+              <label className="text-xs font-semibold text-slate-700 mb-1.5 block">Machine Type <span className="text-red-500">*</span></label>
+              <select
                 value={form.machine}
                 onChange={e => { setForm({ ...form, machine: e.target.value }); setErrors(prev => ({ ...prev, machine: "" })); }}
-                className={fieldClass("machine") + " placeholder-slate-400"}
-              />
+                className="w-full h-9 px-3 text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-700"
+              >
+                <option value="">Select machine type</option>
+                <option value="PC">PC</option>
+                <option value="Laptop">Laptop</option>
+              </select>
               {errors.machine && <p className="text-[11px] text-red-500 mt-1">{errors.machine}</p>}
             </div>
             <div>
@@ -374,6 +382,16 @@ function AddPMModal({ onClose, onSave, editRecord, departments, users }: { onClo
           </div>
 
           <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs font-semibold text-slate-700 mb-1.5 block">Last Maintenance Date <span className="text-red-500">*</span></label>
+              <input
+                type="date"
+                value={form.lastMaintenanceDate}
+                onChange={e => { setForm({ ...form, lastMaintenanceDate: e.target.value }); setErrors(prev => ({ ...prev, lastMaintenanceDate: "" })); }}
+                className={fieldClass("lastMaintenanceDate") + " text-slate-700"}
+              />
+              {errors.lastMaintenanceDate && <p className="text-[11px] text-red-500 mt-1">{errors.lastMaintenanceDate}</p>}
+            </div>
             <div>
               <label className="text-xs font-semibold text-slate-700 mb-1.5 block">Due Date <span className="text-red-500">*</span></label>
               <input
