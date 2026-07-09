@@ -67,7 +67,8 @@ import DashboardPage from "../features/dashboard/pages/DashboardPage";
 import PreventiveMaintenancePage, { PM_DATA, StatusBadge } from "../features/preventive-maintenance/pages/PreventiveMaintenancePage";
 import BackupActivitiesPage from "../features/backup/pages/BackupActivitiesPage";
 import QAPage from "../features/qa/pages/QAPage";
-import MachinesPage, { MACHINES } from "../features/machines/pages/MachinesPage";
+import SystemInventoryPage, { SYSTEMS } from "../features/system-inventory/pages/SystemInventoryPage";
+
 import DepartmentsPage, { DEPT_RECORDS, EMPLOYEES } from "../features/departments/pages/DepartmentsPage";
 import ReportsPage, { ALL_REPORTS } from "../features/reports/pages/ReportsPage";
 import NotificationsPage from "../features/notificataions/pages/NotificationsPage";
@@ -83,7 +84,7 @@ const NAV_ITEMS = [
   { id: "maintenance", icon: Wrench, label: "Preventive Maintenance" },
   { id: "backup", icon: Archive, label: "Backup Activities" },
   { id: "qa", icon: CheckSquare, label: "QA Activities" },
-  { id: "machines", icon: Server, label: "Machines" },
+{ id: "machines", icon: Server, label: "System Inventory" },
   { id: "departments", icon: BarChart2, label: "Departments" },
   { id: "reports", icon: BarChart2, label: "Reports" },
   { id: "notifications", icon: Bell, label: "Notifications" },
@@ -97,7 +98,7 @@ const NAV_ITEMS = [
 // ─────────────────────────────────────────────────────────────────────────────
 
 const SEARCH_ITEMS = [
-  ...MACHINES.map(m => ({ type: "Machine", label: m.name, sub: m.id + " · " + m.department, status: m.status })),
+...SYSTEMS.map(s => ({ type: "Machine", label: s.systemName, sub: s.systemId + " · " + s.department, status: s.status })),
   ...DEPT_RECORDS.map(d => ({ type: "Department", label: d.name, sub: d.head + " · " + d.employees + " employees", status: d.status })),
   ...EMPLOYEES.map(e => ({ type: "Employee", label: e.name, sub: e.role + " · " + e.department, status: e.availability })),
   ...ALL_REPORTS.map(r => ({ type: "Report", label: r.title, sub: r.type + " · " + r.date, status: r.status })),
@@ -887,7 +888,7 @@ function DashboardApp({ onLogout }: { onLogout: () => void }) {
             {activeNav === "maintenance" && <PreventiveMaintenancePage />}
             {activeNav === "backup"      && <BackupActivitiesPage />}
             {activeNav === "qa"          && <QAPage />}
-            {activeNav === "machines"     && <MachinesPage />}
+{activeNav === "machines"     && <SystemInventoryPage />}
             {activeNav === "departments"  && <DepartmentsPage />}
             {activeNav === "reports"      && <ReportsPage />}
             {activeNav === "notifications"&& <NotificationsPage />}

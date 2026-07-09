@@ -53,8 +53,15 @@ import {
 import { toast } from "sonner";
 import LiveTimestamp from "../../../app/components/LiveTimestamp";
 import type { PMRecord, PMPriority, PMStatus } from "@/features/preventive-maintenance/types/pm";
+// System Inventory is the single source of truth for which systems can have
+// a PM schedule. Only Laptop / Desktop PC records are PM-eligible; Printers
+// never appear here.
+// NOTE: adjust this relative path if System Inventory lives at a different
+// location in your final folder structure.
+import { SYSTEMS, type SystemInventory } from "../../system-inventory/pages/SystemInventoryPage";
 
 const FREQUENCIES = ["Daily", "Weekly", "Bi-Weekly", "Monthly", "Quarterly", "Half-Yearly", "Yearly"];
+const PM_ELIGIBLE_TYPES = ["Laptop", "Desktop PC"];
 
 // Backward-compatible export for other modules that still import PM_DATA.
 // Backend-ready: starts empty, no hardcoded/demo records.
@@ -191,16 +198,126 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
   );
 }
 
+// ─── SEARCHABLE SYSTEM DROPDOWN ────────────────────────────────────────────────
+// Replaces free-typed Machine ID entry. Lists only Laptop / Desktop PC systems
+// pulled from System Inventory (Printers are excluded — they don't get PM).
+
+function SystemSearchDropdown({
+  systems,
+  selected,
+  onSelect,
+  hasError,
+}: {
+  systems: SystemInventory[];
+  selected: SystemInventory | null;
+  onSelect: (system: SystemInventory) => void;
+  hasError?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const ref = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const filtered = useMemo(() => {
+    if (!query) return systems;
+    const q = query.toLowerCase();
+    return systems.filter(s =>
+      s.systemId.toLowerCase().includes(q) ||
+      s.systemName.toLowerCase().includes(q) ||
+      s.assignedUser.toLowerCase().includes(q)
+    );
+  }, [systems, query]);
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className={`w-full h-9 px-3 text-sm bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all flex items-center justify-between gap-2 ${hasError ? "border-red-400" : "border-slate-300"}`}
+      >
+        {selected ? (
+          <span className="flex items-center gap-2 truncate">
+            <span className="font-mono text-xs font-semibold text-slate-700">{selected.systemId}</span>
+            <span className="text-slate-400">·</span>
+            <span className="text-slate-700 truncate">{selected.systemName}</span>
+          </span>
+        ) : (
+          <span className="text-slate-400">Search and select a system...</span>
+        )}
+        <ChevronDown size={14} className="text-slate-400 shrink-0" />
+      </button>
+
+      {open && (
+        <div className="absolute z-10 mt-1 w-full bg-white border border-slate-200 rounded-lg shadow-lg overflow-hidden">
+          <div className="p-2 border-b border-slate-100">
+            <div className="relative">
+              <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                autoFocus
+                type="text"
+                value={query}
+                onChange={e => setQuery(e.target.value)}
+                placeholder="Search System ID, name or user..."
+                className="w-full h-8 pl-8 pr-2 text-xs bg-slate-50 border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder-slate-400"
+              />
+            </div>
+          </div>
+          <div className="max-h-56 overflow-y-auto">
+            {filtered.length === 0 ? (
+              <div className="px-3 py-4 text-xs text-slate-400 text-center">No matching systems</div>
+            ) : (
+              filtered.map(s => (
+                <button
+                  key={s.systemId}
+                  type="button"
+                  onClick={() => { onSelect(s); setOpen(false); setQuery(""); }}
+                  className={`w-full text-left px-3 py-2 text-xs hover:bg-blue-50 transition-colors flex items-center justify-between gap-2 ${selected?.systemId === s.systemId ? "bg-blue-50" : ""}`}
+                >
+                  <span className="flex flex-col min-w-0">
+                    <span className="font-semibold text-slate-800 truncate">{s.systemName}</span>
+                    <span className="text-slate-400 font-mono">{s.systemId} · {s.systemType} · {s.department}</span>
+                  </span>
+                </button>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── ADD PM MODAL ─────────────────────────────────────────────────────────────
 
 function AddPMModal({ onClose, onSave, editRecord, departments, users }: { onClose: () => void; onSave: (record: PMRecord) => void; editRecord?: PMRecord; departments: string[]; users: string[] }) {
   const isEdit = !!editRecord;
-  const [form, setForm] = useState({
-        // Machine type is captured in `machine` (PC/Laptop)
-        machine: editRecord?.machine ?? "",
-        machineId: editRecord?.machineId ?? "",
 
+  // Only Laptop / Desktop PC systems from System Inventory are eligible for PM.
+  // TODO: GET /api/system-inventory?type=Laptop,Desktop PC — replace SYSTEMS
+  // with the live backend list once the API is wired up.
+  const eligibleSystems = useMemo(
+    () => SYSTEMS.filter(s => PM_ELIGIBLE_TYPES.includes(s.systemType)),
+    []
+  );
+
+  const initialSystem = editRecord
+    ? eligibleSystems.find(s => s.systemId === editRecord.machineId) ?? null
+    : null;
+
+  const [selectedSystem, setSelectedSystem] = useState<SystemInventory | null>(initialSystem);
+  const [form, setForm] = useState({
+    // machine = system type (Laptop / Desktop PC), machineId = System ID — both auto-filled from the selected system.
+    machine: editRecord?.machine ?? "",
+    machineId: editRecord?.machineId ?? "",
     department: editRecord?.department ?? "",
+    location: editRecord?.location ?? "",
     frequency: editRecord?.frequency ?? "Monthly",
     priority: editRecord?.priority ?? "High",
     reminder: "1 Day Before",
@@ -213,18 +330,28 @@ function AddPMModal({ onClose, onSave, editRecord, departments, users }: { onClo
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSaving, setIsSaving] = useState(false);
 
+  const handleSelectSystem = (system: SystemInventory) => {
+    setSelectedSystem(system);
+    setForm(prev => ({
+      ...prev,
+      machine: system.systemType,
+      machineId: system.systemId,
+      department: system.department,
+      location: system.location,
+      user: system.assignedUser,
+    }));
+    setErrors(prev => ({ ...prev, machineId: "" }));
+  };
+
   const validate = () => {
     const e: Record<string, string> = {};
-    if (!form.machine.trim()) e.machine = "Machine Type is required";
-    if (!form.machineId.trim()) e.machineId = "Machine ID is required";
-    if (!form.department) e.department = "Department is required";
+    if (!form.machineId.trim()) e.machineId = "Please select a system";
     if (!form.frequency) e.frequency = "Frequency is required";
     if (!form.priority) e.priority = "Priority is required";
     if (!form.lastMaintenanceDate || isNaN(new Date(form.lastMaintenanceDate).getTime())) {
       e.lastMaintenanceDate = "A valid last maintenance date is required";
     }
     if (!form.dueDate || isNaN(new Date(form.dueDate).getTime())) e.dueDate = "A valid due date is required";
-    if (!form.user) e.user = "User is required";
     return e;
   };
 
@@ -252,14 +379,14 @@ function AddPMModal({ onClose, onSave, editRecord, departments, users }: { onClo
         machineId: form.machineId.trim(),
         department: form.department,
         frequency: form.frequency,
-        lastMaintenance: editRecord?.lastMaintenance ?? new Date().toISOString().split("T")[0],
+        lastMaintenance: form.lastMaintenanceDate,
         nextDue: form.dueDate,
         priority: form.priority as PMPriority,
         user: form.user,
         status: autoStatus,
         description: form.description.trim(),
-        location: editRecord?.location ?? "",
-        model: editRecord?.model ?? "",
+        location: form.location,
+        model: selectedSystem?.model ?? editRecord?.model ?? "",
         history: editRecord?.history ?? [],
       };
       setIsSaving(false);
@@ -293,59 +420,42 @@ function AddPMModal({ onClose, onSave, editRecord, departments, users }: { onClo
 
         {/* Modal Body */}
         <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="text-xs font-semibold text-slate-700 mb-1.5 block">System <span className="text-red-500">*</span></label>
+            <SystemSearchDropdown
+              systems={eligibleSystems}
+              selected={selectedSystem}
+              onSelect={handleSelectSystem}
+              hasError={!!errors.machineId}
+            />
+            {errors.machineId && <p className="text-[11px] text-red-500 mt-1">{errors.machineId}</p>}
+            {eligibleSystems.length === 0 && (
+              <p className="text-[11px] text-slate-400 mt-1">
+                No Laptop / Desktop PC systems are registered yet. Add one from System Inventory first.
+              </p>
+            )}
+          </div>
+
+          {/* Auto-filled from the selected system — not editable here */}
+          <div className="grid grid-cols-3 gap-4">
             <div>
-              <label className="text-xs font-semibold text-slate-700 mb-1.5 block">Machine Type <span className="text-red-500">*</span></label>
-              <select
-                value={form.machine}
-                onChange={e => { setForm({ ...form, machine: e.target.value }); setErrors(prev => ({ ...prev, machine: "" })); }}
-                className="w-full h-9 px-3 text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-700"
-              >
-                <option value="">Select machine type</option>
-                <option value="PC">PC</option>
-                <option value="Laptop">Laptop</option>
-              </select>
-              {errors.machine && <p className="text-[11px] text-red-500 mt-1">{errors.machine}</p>}
+              <label className="text-xs font-semibold text-slate-700 mb-1.5 block">Department</label>
+              <input type="text" value={form.department} readOnly placeholder="Auto-filled"
+                className="w-full h-9 px-3 text-sm bg-slate-50 border border-slate-200 rounded-lg text-slate-500 placeholder-slate-400 cursor-not-allowed" />
             </div>
             <div>
-              <label className="text-xs font-semibold text-slate-700 mb-1.5 block">Machine ID <span className="text-red-500">*</span></label>
-              <input
-                type="text"
-                placeholder="e.g. MCH-FLA-001"
-                value={form.machineId}
-                onChange={e => { setForm({ ...form, machineId: e.target.value }); setErrors(prev => ({ ...prev, machineId: "" })); }}
-                className={fieldClass("machineId") + " placeholder-slate-400 font-mono"}
-              />
-              {errors.machineId && <p className="text-[11px] text-red-500 mt-1">{errors.machineId}</p>}
+              <label className="text-xs font-semibold text-slate-700 mb-1.5 block">Location</label>
+              <input type="text" value={form.location} readOnly placeholder="Auto-filled"
+                className="w-full h-9 px-3 text-sm bg-slate-50 border border-slate-200 rounded-lg text-slate-500 placeholder-slate-400 cursor-not-allowed" />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-slate-700 mb-1.5 block">Assigned User</label>
+              <input type="text" value={form.user} readOnly placeholder="Auto-filled"
+                className="w-full h-9 px-3 text-sm bg-slate-50 border border-slate-200 rounded-lg text-slate-500 placeholder-slate-400 cursor-not-allowed" />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-xs font-semibold text-slate-700 mb-1.5 block">Department <span className="text-red-500">*</span></label>
-              <select
-                value={form.department}
-                onChange={e => { setForm({ ...form, department: e.target.value }); setErrors(prev => ({ ...prev, department: "" })); }}
-                className={fieldClass("department") + " text-slate-700"}
-              >
-                <option value="">Select department</option>
-                {[
-                  "Quality Assurance",
-                  "Quality Control",
-                  "Production",
-                  "Warehouse",
-                  "Engineering",
-                  "Purchase & Accounts",
-                  "HR & Admin",
-                  "Environment, Health & Safety",
-                  "IT",
-                  "Microbiology",
-                ].map(d => (
-                  <option key={d} value={d}>{d}</option>
-                ))}
-              </select>
-              {errors.department && <p className="text-[11px] text-red-500 mt-1">{errors.department}</p>}
-            </div>
             <div>
               <label className="text-xs font-semibold text-slate-700 mb-1.5 block">Frequency <span className="text-red-500">*</span></label>
               <select
@@ -354,19 +464,6 @@ function AddPMModal({ onClose, onSave, editRecord, departments, users }: { onClo
                 className="w-full h-9 px-3 text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-700"
               >
                 {FREQUENCIES.map(f => <option key={f} value={f}>{f}</option>)}
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-xs font-semibold text-slate-700 mb-1.5 block">Priority <span className="text-red-500">*</span></label>
-              <select
-                value={form.priority}
-                onChange={e => setForm({ ...form, priority: e.target.value })}
-                className="w-full h-9 px-3 text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-700"
-              >
-                {["Critical", "High", "Medium", "Low"].map(p => <option key={p} value={p}>{p}</option>)}
               </select>
             </div>
             <div>
@@ -383,6 +480,16 @@ function AddPMModal({ onClose, onSave, editRecord, departments, users }: { onClo
 
           <div className="grid grid-cols-2 gap-4">
             <div>
+              <label className="text-xs font-semibold text-slate-700 mb-1.5 block">Priority <span className="text-red-500">*</span></label>
+              <select
+                value={form.priority}
+                onChange={e => setForm({ ...form, priority: e.target.value })}
+                className="w-full h-9 px-3 text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-700"
+              >
+                {["Critical", "High", "Medium", "Low"].map(p => <option key={p} value={p}>{p}</option>)}
+              </select>
+            </div>
+            <div>
               <label className="text-xs font-semibold text-slate-700 mb-1.5 block">Last Maintenance Date <span className="text-red-500">*</span></label>
               <input
                 type="date"
@@ -392,6 +499,9 @@ function AddPMModal({ onClose, onSave, editRecord, departments, users }: { onClo
               />
               {errors.lastMaintenanceDate && <p className="text-[11px] text-red-500 mt-1">{errors.lastMaintenanceDate}</p>}
             </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-xs font-semibold text-slate-700 mb-1.5 block">Due Date <span className="text-red-500">*</span></label>
               <input
@@ -401,20 +511,6 @@ function AddPMModal({ onClose, onSave, editRecord, departments, users }: { onClo
                 className={fieldClass("dueDate") + " text-slate-700"}
               />
               {errors.dueDate && <p className="text-[11px] text-red-500 mt-1">{errors.dueDate}</p>}
-            </div>
-            <div>
-              <label className="text-xs font-semibold text-slate-700 mb-1.5 block">Assigned User <span className="text-red-500">*</span></label>
-              <select
-                value={form.user}
-                onChange={e => { setForm({ ...form, user: e.target.value }); setErrors(prev => ({ ...prev, user: "" })); }}
-                className={fieldClass("user") + " text-slate-700"}
-              >
-                <option value="">Assign user</option>
-                {["Megha Jadhav", "Nikhil Sakat", "Kiran Yadav"].map(u => (
-                  <option key={u} value={u}>{u}</option>
-                ))}
-              </select>
-              {errors.user && <p className="text-[11px] text-red-500 mt-1">{errors.user}</p>}
             </div>
           </div>
 

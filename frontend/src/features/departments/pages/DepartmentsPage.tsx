@@ -41,7 +41,28 @@ import {
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { toast } from "sonner";
 import { daysUntil } from "../../../shared/utils/dateHelpers";
-import { MACHINES, mchStatusCfg } from "../../machines/pages/MachinesPage";
+import { SYSTEMS } from "../../system-inventory/pages/SystemInventoryPage";
+
+// Backward-compatible helpers adapted from the original Machines module.
+// Departments UI expects these for status dot rendering.
+function mchStatusCfg(status: string) {
+  switch (status) {
+    case "Active":
+      return { dot: "bg-emerald-500" };
+    case "Inactive":
+      return { dot: "bg-slate-400" };
+    case "Under Repair":
+      return { dot: "bg-amber-500" };
+    case "Disposed":
+      return { dot: "bg-red-500" };
+    default:
+      return { dot: "bg-slate-400" };
+  }
+}
+
+// Backward-compatible export expected by the existing page.
+const MACHINES = SYSTEMS as unknown as Array<any>;
+
 
 const USERS = [
   "Rajesh Kumar", "Priya Nair", "Suresh Babu", "Anita Desai",
