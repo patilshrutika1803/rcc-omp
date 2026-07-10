@@ -299,6 +299,13 @@ function SystemSearchDropdown({
 function AddPMModal({ onClose, onSave, editRecord, departments, users }: { onClose: () => void; onSave: (record: PMRecord) => void; editRecord?: PMRecord; departments: string[]; users: string[] }) {
   const isEdit = !!editRecord;
 
+  const [creationMode, setCreationMode] = useState<"existing" | "manual">(
+    editRecord?.systemId ? "existing" : "manual"
+  );
+
+  const SYSTEM_MODE = creationMode;
+
+
   // Only Laptop / Desktop PC systems from System Inventory are eligible for PM.
   // TODO: GET /api/system-inventory?type=Laptop,Desktop PC — replace SYSTEMS
   // with the live backend list once the API is wired up.
@@ -307,26 +314,36 @@ function AddPMModal({ onClose, onSave, editRecord, departments, users }: { onClo
     []
   );
 
-  const initialSystem = editRecord
-    ? eligibleSystems.find(s => s.systemId === editRecord.machineId) ?? null
+  const initialSystem = editRecord?.systemId
+    ? eligibleSystems.find(s => s.systemId === editRecord.systemId) ?? null
     : null;
 
   const [selectedSystem, setSelectedSystem] = useState<SystemInventory | null>(initialSystem);
+
   const [form, setForm] = useState({
-    // machine = system type (Laptop / Desktop PC), machineId = System ID — both auto-filled from the selected system.
+    // Legacy UI fields
     machine: editRecord?.machine ?? "",
     machineId: editRecord?.machineId ?? "",
     department: editRecord?.department ?? "",
     location: editRecord?.location ?? "",
+    user: editRecord?.user ?? "",
     frequency: editRecord?.frequency ?? "Monthly",
     priority: editRecord?.priority ?? "High",
     reminder: "1 Day Before",
     lastMaintenanceDate: editRecord?.lastMaintenance ?? new Date().toISOString().split("T")[0],
     dueDate: editRecord?.nextDue ?? new Date().toISOString().split("T")[0],
-    user: editRecord?.user ?? "",
+
+    // AWS-ready snapshot fields
+    systemId: editRecord?.systemId ?? null,
+    systemName: editRecord?.systemName ?? "",
+    systemType: editRecord?.systemType ?? "",
+    assignedUser: editRecord?.assignedUser ?? "",
+    model: editRecord?.model ?? "",
+
     description: editRecord?.description ?? "",
-    status: editRecord?.status ?? "Upcoming",
+    status: editRecord?.status ?? "Upcoming" as PMStatus,
   });
+
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSaving, setIsSaving] = useState(false);
 
@@ -334,50 +351,68 @@ function AddPMModal({ onClose, onSave, editRecord, departments, users }: { onClo
     setSelectedSystem(system);
     setForm(prev => ({
       ...prev,
-      machine: system.systemType,
+      // PM legacy display fields
+      machine: system.systemName,
       machineId: system.systemId,
       department: system.department,
       location: system.location,
       user: system.assignedUser,
+
+      // Snapshot fields for AWS / backend compatibility
+      systemId: system.systemId,
+      systemName: system.systemName,
+      systemType: system.systemType,
+      assignedUser: system.assignedUser,
+      model: system.model ?? prev.model,
     }));
-    setErrors(prev => ({ ...prev, machineId: "" }));
+    setErrors(prev => ({ ...prev, systemId: "", machineId: "" }));
   };
 
   const validate = () => {
     const e: Record<string, string> = {};
-    if (!form.machineId.trim()) e.machineId = "Please select a system";
+
+    if (creationMode === "existing") {
+      if (!form.systemId) e.systemId = "Please select a system";
+    } else {
+      if (!form.machine.trim()) e.machine = "Machine name is required";
+      if (!form.machineId.trim()) e.machineId = "Machine ID is required";
+    }
+
     if (!form.frequency) e.frequency = "Frequency is required";
     if (!form.priority) e.priority = "Priority is required";
+
     if (!form.lastMaintenanceDate || isNaN(new Date(form.lastMaintenanceDate).getTime())) {
       e.lastMaintenanceDate = "A valid last maintenance date is required";
     }
     if (!form.dueDate || isNaN(new Date(form.dueDate).getTime())) e.dueDate = "A valid due date is required";
+
     return e;
   };
 
   const handleSave = () => {
     const e = validate();
     if (Object.keys(e).length > 0) { setErrors(e); return; }
+
     setIsSaving(true);
-    // TODO:
-    // Create PM / Update PM
-    // const res = await fetch(isEdit ? `/api/pm-records/${editRecord?._id ?? editRecord?.id}` : '/api/pm-records', {
-    //   method: isEdit ? 'PUT' : 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify(payload),
-    // });
-    // const saved = await res.json(); // MongoDB will return the generated _id
     setTimeout(() => {
       const d = daysUntil(form.dueDate);
       const autoStatus: PMStatus = d < 0 ? "Overdue" : d === 0 ? "Due Today" : "Upcoming";
+
       const record: PMRecord = {
-        // Backend (MongoDB) generates the permanent _id/id on save.
-        // This temporary client-side id is only a placeholder for the
-        // optimistic UI update until the API responds.
         id: editRecord?.id ?? `temp-${Date.now()}`,
         machine: form.machine.trim(),
         machineId: form.machineId.trim(),
+
+        systemId: creationMode === "manual" ? null : form.systemId,
+        systemName: creationMode === "manual" ? form.machine.trim() : form.systemName,
+        systemType: creationMode === "manual" ? form.systemType || form.machine.trim() : form.systemType,
+
         department: form.department,
+        location: form.location,
+        assignedUser: form.user,
+
+        model: creationMode === "manual" ? form.model : form.model,
+
         frequency: form.frequency,
         lastMaintenance: form.lastMaintenanceDate,
         nextDue: form.dueDate,
@@ -385,10 +420,10 @@ function AddPMModal({ onClose, onSave, editRecord, departments, users }: { onClo
         user: form.user,
         status: autoStatus,
         description: form.description.trim(),
-        location: form.location,
-        model: selectedSystem?.model ?? editRecord?.model ?? "",
+
         history: editRecord?.history ?? [],
       };
+
       setIsSaving(false);
       onSave(record);
       onClose();
@@ -420,40 +455,143 @@ function AddPMModal({ onClose, onSave, editRecord, departments, users }: { onClo
 
         {/* Modal Body */}
         <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
+          {/* Machine Source */}
           <div>
-            <label className="text-xs font-semibold text-slate-700 mb-1.5 block">System <span className="text-red-500">*</span></label>
-            <SystemSearchDropdown
-              systems={eligibleSystems}
-              selected={selectedSystem}
-              onSelect={handleSelectSystem}
-              hasError={!!errors.machineId}
-            />
-            {errors.machineId && <p className="text-[11px] text-red-500 mt-1">{errors.machineId}</p>}
-            {eligibleSystems.length === 0 && (
-              <p className="text-[11px] text-slate-400 mt-1">
-                No Laptop / Desktop PC systems are registered yet. Add one from System Inventory first.
-              </p>
-            )}
+            <label className="text-xs font-semibold text-slate-700 mb-1.5 block">Machine Source</label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setCreationMode("existing")}
+                className={`text-left px-3 py-2.5 rounded-lg border transition-all ${
+                  creationMode === "existing"
+                    ? "border-blue-500 bg-blue-50 ring-2 ring-blue-500/20"
+                    : "border-slate-200 bg-white hover:border-slate-300"
+                }`}
+              >
+                <p className={`text-xs font-semibold ${creationMode === "existing" ? "text-blue-700" : "text-slate-700"}`}>
+                  Existing System Inventory
+                </p>
+                <p className="text-[11px] text-slate-500 mt-0.5">
+                  Create PM from an already registered machine.
+                </p>
+              </button>
+              <button
+                type="button"
+                onClick={() => setCreationMode("manual")}
+                className={`text-left px-3 py-2.5 rounded-lg border transition-all ${
+                  creationMode === "manual"
+                    ? "border-blue-500 bg-blue-50 ring-2 ring-blue-500/20"
+                    : "border-slate-200 bg-white hover:border-slate-300"
+                }`}
+              >
+                <p className={`text-xs font-semibold ${creationMode === "manual" ? "text-blue-700" : "text-slate-700"}`}>
+                  Manual Machine
+                </p>
+                <p className="text-[11px] text-slate-500 mt-0.5">
+                  Create a maintenance schedule without System Inventory.
+                </p>
+              </button>
+            </div>
           </div>
 
-          {/* Auto-filled from the selected system — not editable here */}
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <label className="text-xs font-semibold text-slate-700 mb-1.5 block">Department</label>
-              <input type="text" value={form.department} readOnly placeholder="Auto-filled"
-                className="w-full h-9 px-3 text-sm bg-slate-50 border border-slate-200 rounded-lg text-slate-500 placeholder-slate-400 cursor-not-allowed" />
-            </div>
-            <div>
-              <label className="text-xs font-semibold text-slate-700 mb-1.5 block">Location</label>
-              <input type="text" value={form.location} readOnly placeholder="Auto-filled"
-                className="w-full h-9 px-3 text-sm bg-slate-50 border border-slate-200 rounded-lg text-slate-500 placeholder-slate-400 cursor-not-allowed" />
-            </div>
-            <div>
-              <label className="text-xs font-semibold text-slate-700 mb-1.5 block">Assigned User</label>
-              <input type="text" value={form.user} readOnly placeholder="Auto-filled"
-                className="w-full h-9 px-3 text-sm bg-slate-50 border border-slate-200 rounded-lg text-slate-500 placeholder-slate-400 cursor-not-allowed" />
-            </div>
-          </div>
+          {creationMode === "existing" ? (
+            <>
+              <div>
+                <label className="text-xs font-semibold text-slate-700 mb-1.5 block">System <span className="text-red-500">*</span></label>
+                <SystemSearchDropdown
+                  systems={eligibleSystems}
+                  selected={selectedSystem}
+                  onSelect={handleSelectSystem}
+                  hasError={!!errors.machineId}
+                />
+                {errors.machineId && <p className="text-[11px] text-red-500 mt-1">{errors.machineId}</p>}
+                {eligibleSystems.length === 0 && (
+                  <p className="text-[11px] text-slate-400 mt-1">
+                    No Laptop / Desktop PC systems are registered yet. Add one from System Inventory first.
+                  </p>
+                )}
+              </div>
+
+              {/* Auto-filled from the selected system — not editable here */}
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <label className="text-xs font-semibold text-slate-700 mb-1.5 block">Department</label>
+                  <input type="text" value={form.department} readOnly placeholder="Auto-filled"
+                    className="w-full h-9 px-3 text-sm bg-slate-50 border border-slate-200 rounded-lg text-slate-500 placeholder-slate-400 cursor-not-allowed" />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-700 mb-1.5 block">Location</label>
+                  <input type="text" value={form.location} readOnly placeholder="Auto-filled"
+                    className="w-full h-9 px-3 text-sm bg-slate-50 border border-slate-200 rounded-lg text-slate-500 placeholder-slate-400 cursor-not-allowed" />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-700 mb-1.5 block">Assigned User</label>
+                  <input type="text" value={form.user} readOnly placeholder="Auto-filled"
+                    className="w-full h-9 px-3 text-sm bg-slate-50 border border-slate-200 rounded-lg text-slate-500 placeholder-slate-400 cursor-not-allowed" />
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-semibold text-slate-700 mb-1.5 block">Machine Name <span className="text-red-500">*</span></label>
+                  <input
+                    type="text"
+                    value={form.machine}
+                    onChange={e => { setForm({ ...form, machine: e.target.value }); setErrors(prev => ({ ...prev, machine: "" })); }}
+                    placeholder="e.g. CNC Lathe #4"
+                    className={fieldClass("machine") + " text-slate-700"}
+                  />
+                  {errors.machine && <p className="text-[11px] text-red-500 mt-1">{errors.machine}</p>}
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-700 mb-1.5 block">Machine ID <span className="text-red-500">*</span></label>
+                  <input
+                    type="text"
+                    value={form.machineId}
+                    onChange={e => { setForm({ ...form, machineId: e.target.value }); setErrors(prev => ({ ...prev, machineId: "" })); }}
+                    placeholder="e.g. MC-1042"
+                    className={fieldClass("machineId") + " text-slate-700"}
+                  />
+                  {errors.machineId && <p className="text-[11px] text-red-500 mt-1">{errors.machineId}</p>}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <label className="text-xs font-semibold text-slate-700 mb-1.5 block">Department <span className="text-red-500">*</span></label>
+                  <input
+                    type="text"
+                    value={form.department}
+                    onChange={e => setForm({ ...form, department: e.target.value })}
+                    placeholder="e.g. Maintenance"
+                    className="w-full h-9 px-3 text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-700 placeholder-slate-400"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-700 mb-1.5 block">Location <span className="text-red-500">*</span></label>
+                  <input
+                    type="text"
+                    value={form.location}
+                    onChange={e => setForm({ ...form, location: e.target.value })}
+                    placeholder="e.g. Plant A - Bay 3"
+                    className="w-full h-9 px-3 text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-700 placeholder-slate-400"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-700 mb-1.5 block">Assigned User <span className="text-red-500">*</span></label>
+                  <input
+                    type="text"
+                    value={form.user}
+                    onChange={e => setForm({ ...form, user: e.target.value })}
+                    placeholder="e.g. John Doe"
+                    className="w-full h-9 px-3 text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-700 placeholder-slate-400"
+                  />
+                </div>
+              </div>
+            </>
+          )}
 
           <div className="grid grid-cols-2 gap-4">
             <div>
