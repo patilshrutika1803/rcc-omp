@@ -33,7 +33,7 @@ import {
   Eye,
   Edit2,
   Trash2,
-  Snooze,
+
   RefreshCw,
   ChevronUp,
   Cpu,
@@ -52,7 +52,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import LiveTimestamp from "../../../app/components/LiveTimestamp";
-import type { PMRecord, PMPriority, PMStatus } from "@/features/preventive-maintenance/types/pm";
+import type { PMRecord, PMPriority, PMStatus } from "../types/pm";
 // System Inventory is the single source of truth for which systems can have
 // a PM schedule. Only Laptop / Desktop PC records are PM-eligible; Printers
 // never appear here.
@@ -119,7 +119,8 @@ function formatDate(dateStr: string): string {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function StatusBadge({ status }: { status: PMStatus }) {
-  const cfg = statusConfig(status);
+  const cfg = statusConfig(status) as { bg: string; text: string; border: string; dot: string };
+
   return (
     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wide border ${cfg.bg} ${cfg.text} ${cfg.border}`}>
       <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot} shrink-0`} />
@@ -892,8 +893,9 @@ function DeleteDialog({ record, onClose, onConfirm }: { record: PMRecord; onClos
 function MachineDrawer({ record, onClose, onEdit, onComplete, onSnooze }: { record: PMRecord; onClose: () => void; onEdit: (r: PMRecord) => void; onComplete: (r: PMRecord) => void; onSnooze: (r: PMRecord) => void }) {
   const [tab, setTab] = useState<"info" | "history" | "schedule" | "timeline">("info");
   const Icon = machineIcon(record.department);
-  const pCfg = priorityConfig(record.priority);
-  const sCfg = statusConfig(record.status);
+  priorityConfig(record.priority);
+  statusConfig(record.status);
+
 
   const tabs = [
     { id: "info", label: "Machine Info" },

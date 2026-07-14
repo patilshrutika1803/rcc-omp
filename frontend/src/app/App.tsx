@@ -79,18 +79,26 @@ import SettingsPage, { SettingsToggle, SettingsInput } from "../features/setting
 import { StatusChip } from "../shared/components/EnterpriseUI";
 import { formatDate } from "../shared/utils/dateHelpers";
 
-const NAV_ITEMS = [
+type NavItem = {
+  id: string;
+  icon: React.ComponentType<any>;
+  label: string;
+  badge?: string;
+};
+
+const NAV_ITEMS: NavItem[] = [
   { id: "dashboard", icon: LayoutDashboard, label: "Dashboard" },
   { id: "maintenance", icon: Wrench, label: "Preventive Maintenance" },
   { id: "backup", icon: Archive, label: "Backup Activities" },
   { id: "qa", icon: CheckSquare, label: "QA Activities" },
-{ id: "machines", icon: Server, label: "System Inventory" },
+  { id: "machines", icon: Server, label: "System Inventory" },
   { id: "departments", icon: BarChart2, label: "Departments" },
   { id: "reports", icon: BarChart2, label: "Reports" },
   { id: "notifications", icon: Bell, label: "Notifications" },
   { id: "notes", icon: FileText, label: "Notes" },
   { id: "settings", icon: Settings, label: "Settings" },
 ];
+
 
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1069,17 +1077,116 @@ function ResetView({ onNavigate }: any) {
 
 type ViewState = "login" | "signup" | "forgot" | "reset" | "app";
 
-export default function App() {
-  const [currentView, setCurrentView] = useState<ViewState>("app");
+import { BrowserRouter, Routes, Route, Navigate } from "react-router";
+import LoginPage from "../pages/LoginPage";
+import ForgotPasswordPage from "../pages/ForgotPasswordPage";
+import RegisterPage from "../pages/RegisterPage";
+import { AuthProvider } from "../auth/AuthProvider";
+import { ProtectedRoute } from "../auth/ProtectedRoute";
+import { logout as logoutAuth } from "../auth/auth";
 
+
+export default function App() {
   return (
-    <>
-      <Toaster position="bottom-right" richColors closeButton toastOptions={{ duration: 3000 }} />
-      {currentView === "app"    && <DashboardApp onLogout={() => setCurrentView("login")} />}
-      {currentView === "signup" && <SignUpView onNavigate={setCurrentView} />}
-      {currentView === "forgot" && <ForgotView onNavigate={setCurrentView} />}
-      {currentView === "reset"  && <ResetView onNavigate={setCurrentView} />}
-      {!["app","signup","forgot","reset"].includes(currentView) && <LoginView onNavigate={setCurrentView} onLogin={() => setCurrentView("app")} />}
-    </>
+    <AuthProvider>
+      <BrowserRouter>
+        <Toaster position="bottom-right" richColors closeButton toastOptions={{ duration: 3000 }} />
+        <Routes>
+          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="/login" element={<LoginPage />} />
+
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <DashboardApp onLogout={() => { logoutAuth(); window.location.href = "/login"; }} />
+              </ProtectedRoute>
+            }
+          />
+
+
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+
+
+          <Route
+            path="/preventive-maintenance"
+            element={
+              <ProtectedRoute>
+                <PreventiveMaintenancePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/backup-activities"
+            element={
+              <ProtectedRoute>
+                <BackupActivitiesPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/qa-activities"
+            element={
+              <ProtectedRoute>
+                <QAPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/system-inventory"
+            element={
+              <ProtectedRoute>
+                <SystemInventoryPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/departments"
+            element={
+              <ProtectedRoute>
+                <DepartmentsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/reports"
+            element={
+              <ProtectedRoute>
+                <ReportsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/notifications"
+            element={
+              <ProtectedRoute>
+                <NotificationsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/notes"
+            element={
+              <ProtectedRoute>
+                <NotesPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute>
+                <SettingsPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route path="*" element={<Navigate to="/login" replace />} />
+        </Routes>
+
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
+
