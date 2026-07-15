@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router";
-import { Mail, Lock, ArrowLeft } from "lucide-react";
+import { useLocation, useNavigate } from "react-router";
+import { Mail, Lock } from "lucide-react";
 import { useAuth } from "../auth/AuthProvider";
+
 
 function AuthHeader() {
   return (
@@ -52,7 +53,9 @@ function InputField({ label, type = "text", placeholder, icon: Icon }: any) {
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const locationState = (window.history.state as any) || {};
+  const location = useLocation();
+  const locationState = location.state as any;
+
 
   const { login } = useAuth();
 
@@ -79,6 +82,7 @@ export default function LoginPage() {
 
             const from = locationState?.from as string | undefined;
             navigate(from && from.startsWith("/") ? from : "/dashboard", { replace: true });
+
 
           } catch (err: any) {
             setError(err?.message ?? "Login failed");
@@ -161,6 +165,7 @@ export default function LoginPage() {
           Create Account
         </button>
       </div>
+
 
     </AuthContainer>
   );

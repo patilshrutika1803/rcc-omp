@@ -727,12 +727,32 @@ function HelpCenterContent() {
 
 // ─── SHELL ────────────────────────────────────────────────────────────────────
 
-function DashboardApp({ onLogout }: { onLogout: () => void }) {
+function DashboardApp({
+  onLogout,
+  initialRoutePath,
+}: {
+  onLogout: () => void;
+  initialRoutePath?: string;
+}) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
-  const [activeNav, setActiveNav] = useState("dashboard");
+  const [activeNav, setActiveNav] = useState(() => {
+    const path = initialRoutePath ?? "";
+    if (path.startsWith("/preventive-maintenance")) return "maintenance";
+    if (path.startsWith("/backup-activities")) return "backup";
+    if (path.startsWith("/qa-activities")) return "qa";
+    if (path.startsWith("/system-inventory")) return "machines";
+    if (path.startsWith("/departments")) return "departments";
+    if (path.startsWith("/reports")) return "reports";
+    if (path.startsWith("/notifications")) return "notifications";
+    if (path.startsWith("/notes")) return "notes";
+    if (path.startsWith("/settings")) return "settings";
+    return "dashboard";
+  });
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+
+
 
   useEffect(() => {
     const handleResize = () => { if (window.innerWidth >= 1024) setIsMobileDrawerOpen(false); };
@@ -1077,13 +1097,42 @@ function ResetView({ onNavigate }: any) {
 
 type ViewState = "login" | "signup" | "forgot" | "reset" | "app";
 
-import { BrowserRouter, Routes, Route, Navigate } from "react-router";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router";
 import LoginPage from "../pages/LoginPage";
 import ForgotPasswordPage from "../pages/ForgotPasswordPage";
 import RegisterPage from "../pages/RegisterPage";
 import { AuthProvider } from "../auth/AuthProvider";
 import { ProtectedRoute } from "../auth/ProtectedRoute";
 import { logout as logoutAuth } from "../auth/auth";
+import { useNavigate } from "react-router";
+
+
+function LogoutAndRedirect({ closeProfileDropdown }: { closeProfileDropdown?: () => void }) {
+  const navigate = useNavigate();
+
+  const onLogout = () => {
+    logoutAuth();
+    try {
+      sessionStorage.clear();
+    } catch {
+      // ignore
+    }
+
+    closeProfileDropdown?.();
+    navigate("/login", { replace: true });
+  };
+
+  const location = useLocation();
+
+  return (
+    <DashboardApp
+      onLogout={onLogout}
+      initialRoutePath={location.pathname}
+    />
+  );
+}
+
+
 
 
 export default function App() {
@@ -1099,10 +1148,11 @@ export default function App() {
             path="/dashboard"
             element={
               <ProtectedRoute>
-                <DashboardApp onLogout={() => { logoutAuth(); window.location.href = "/login"; }} />
+                <LogoutAndRedirect />
               </ProtectedRoute>
             }
           />
+
 
 
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
