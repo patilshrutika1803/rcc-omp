@@ -31,7 +31,7 @@ import PreventiveMaintenancePage from "../features/preventive-maintenance/pages/
 import BackupActivitiesPage from "../features/backup/pages/BackupActivitiesPage";
 import QAPage from "../features/qa/pages/QAPage";
 import SystemInventoryPage from "../features/system-inventory/pages/SystemInventoryPage";
-import DepartmentsPage from "../features/departments/pages/DepartmentsPage";
+import DepartmentPage from "../features/departments/DepartmentPage";
 
 import NotificationsPage from "../features/notificataions/pages/NotificationsPage";
 import NotesPage from "../features/notes/pages/NotesPage";
@@ -119,7 +119,7 @@ export default function App() {
             path="/departments"
             element={
               <ProtectedRoute>
-                <DepartmentsPage />
+                <DepartmentPage />
               </ProtectedRoute>
             }
           />

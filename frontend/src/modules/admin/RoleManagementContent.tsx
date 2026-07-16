@@ -16,7 +16,23 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-import { EMPLOYEES } from "../../features/departments/pages/DepartmentsPage";
+import DepartmentPage from "../../features/departments/DepartmentPage";
+
+// Local mock data used by RoleManagement UI (kept as-is from the previous architecture)
+const EMPLOYEES = (DepartmentPage as any)?.EMPLOYEES ?? [
+  {
+    id: "E-001",
+    employeeId: "RCC-EMP-2014-012",
+    name: "Arun Sharma",
+    email: "arun.sharma@rajaram.com",
+    role: "IT Admin",
+    department: "IT Department",
+    status: "Active",
+    availability: "Available",
+    initials: "AS",
+    avatarColor: "bg-blue-50 text-blue-700 border border-blue-100",
+  },
+];
 import { StatusChip } from "../../shared/components/EnterpriseUI";
 
 export function RoleManagementContent() {
@@ -24,7 +40,11 @@ export function RoleManagementContent() {
   const TABS = [{ id: "users" as const, label: "Users" }, { id: "roles" as const, label: "Roles" }, { id: "matrix" as const, label: "Permission Matrix" }, { id: "logs" as const, label: "Access Logs" }];
   const [search, setSearch] = useState("");
 
-  const filteredEmployees = EMPLOYEES.filter(e => !search || e.name.toLowerCase().includes(search.toLowerCase()) || e.employeeId.toLowerCase().includes(search.toLowerCase()));
+  const filteredEmployees = EMPLOYEES.filter((e: any) =>
+    !search ||
+    e.name.toLowerCase().includes(search.toLowerCase()) ||
+    e.employeeId.toLowerCase().includes(search.toLowerCase())
+  );
 
   const MODULES = ["Dashboard","Machines","Maintenance","QA","Backup","Departments","Reports","Notifications","Notes","Settings","Admin"];
   const ROLE_PERMS: Record<string, string[]> = {

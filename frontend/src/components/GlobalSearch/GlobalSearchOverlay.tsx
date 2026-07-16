@@ -47,7 +47,7 @@ export function GlobalSearchOverlay({ onClose, onNavigate }: { onClose: () => vo
       <div className="relative bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
         <div className="flex items-center gap-3 px-4 py-3.5 border-b border-slate-100">
           <Search size={18} className="text-slate-400 shrink-0" />
-          <input ref={inputRef} type="text" value={query} onChange={e => setQuery(e.target.value)} placeholder="Search machines, reports, employees, notes..."
+          <input ref={inputRef} type="text" value={query} onChange={e => setQuery(e.target.value)} placeholder="Search machines, employees, notes..."
             className="flex-1 text-sm text-slate-900 bg-transparent border-none focus:outline-none placeholder-slate-400" />
           <div className="flex items-center gap-2">
             <kbd className="text-[10px] font-bold bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded border border-slate-200">Esc</kbd>

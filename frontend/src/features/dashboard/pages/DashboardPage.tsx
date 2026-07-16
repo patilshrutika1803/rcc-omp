@@ -90,7 +90,7 @@ export default function DashboardPage() {
           </button>
           <div className="w-px h-5 bg-slate-300 mx-1 hidden sm:block" />
           <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700 shadow-sm transition-all">
-            <Upload size={14} /> Export Report
+Export
           </button>
         </div>
       </div>

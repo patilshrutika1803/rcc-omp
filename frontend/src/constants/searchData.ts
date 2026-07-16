@@ -5,8 +5,13 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { SYSTEMS } from "../features/system-inventory/pages/SystemInventoryPage";
-import { DEPT_RECORDS, EMPLOYEES } from "../features/departments/pages/DepartmentsPage";
 import { ALL_NOTES } from "../features/notes/pages/NotesPage";
+
+// Departments feature has been refactored to a modular architecture.
+// searchData.ts should not depend on the removed monolithic DepartmentsPage.
+// Until the backend is wired, department/employee search entries are empty.
+const DEPT_RECORDS: any[] = [];
+const EMPLOYEES: any[] = [];
 
 export const SEARCH_ITEMS = [
   ...SYSTEMS.map(s => ({
