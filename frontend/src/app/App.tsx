@@ -72,7 +72,7 @@ import SystemInventoryPage, { SYSTEMS } from "../features/system-inventory/pages
 import DepartmentsPage, { DEPT_RECORDS, EMPLOYEES } from "../features/departments/pages/DepartmentsPage";
 import ReportsPage, { ALL_REPORTS } from "../features/reports/pages/ReportsPage";
 import NotificationsPage from "../features/notificataions/pages/NotificationsPage";
-import NotesPage, { ALL_NOTES } from "../features/notes/pages/NotesPage";
+import NotesPage from "../features/notes/pages/NotesPage";
 import SettingsPage, { SettingsToggle, SettingsInput } from "../features/settings/pages/SettingsPage";
 
 // Shared
@@ -110,7 +110,7 @@ const SEARCH_ITEMS = [
   ...DEPT_RECORDS.map(d => ({ type: "Department", label: d.name, sub: d.head + " · " + d.employees + " employees", status: d.status })),
   ...EMPLOYEES.map(e => ({ type: "Employee", label: e.name, sub: e.role + " · " + e.department, status: e.availability })),
   ...ALL_REPORTS.map(r => ({ type: "Report", label: r.title, sub: r.type + " · " + r.date, status: r.status })),
-  ...ALL_NOTES.map(n => ({ type: "Note", label: n.title, sub: n.folder + " · " + n.author, status: "" })),
+  // Notes items removed (no demo data). Will be populated via notesService/Supabase later.
 ];
 
 const RECENT_SEARCHES = ["HVAC critical alert", "Backup BK-2001", "Rajesh Kumar", "Production PM schedule", "QA Audit July"];
