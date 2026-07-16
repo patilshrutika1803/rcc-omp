@@ -1,0 +1,32 @@
+import React from "react";
+import {
+  LayoutDashboard,
+  Wrench,
+  Archive,
+  CheckSquare,
+  Server,
+  BarChart2,
+  Bell,
+  FileText,
+  Settings,
+} from "lucide-react";
+
+export type NavItem = {
+  id: string;
+  icon: React.ComponentType<any>;
+  label: string;
+  badge?: string;
+};
+
+export const NAV_ITEMS: NavItem[] = [
+  { id: "dashboard", icon: LayoutDashboard, label: "Dashboard" },
+  { id: "maintenance", icon: Wrench, label: "Preventive Maintenance" },
+  { id: "backup", icon: Archive, label: "Backup Activities" },
+  { id: "qa", icon: CheckSquare, label: "QA Activities" },
+  { id: "machines", icon: Server, label: "System Inventory" },
+  { id: "departments", icon: BarChart2, label: "Departments" },
+  { id: "reports", icon: BarChart2, label: "Reports" },
+  { id: "notifications", icon: Bell, label: "Notifications" },
+  { id: "notes", icon: FileText, label: "Notes" },
+  { id: "settings", icon: Settings, label: "Settings" },
+];

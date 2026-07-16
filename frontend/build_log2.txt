@@ -1,0 +1,27 @@
+$ vite build
+[36mvite v6.3.5 [32mbuilding for production...[36m[39m
+transforming...
+[32m✓[39m 2277 modules transformed.
+[31m✗[39m Build failed in 31m 5s
+[31merror during build:
+[31msrc/constants/searchData.ts (9:9): "ALL_NOTES" is not exported by "src/features/notes/pages/NotesPage.tsx", imported by "src/constants/searchData.ts".[31m
+file: [36mC:/Users/patil/Desktop/RCC-OMP/frontend/src/constants/searchData.ts:9:9[31m
+[33m
+ 7: import { DEPT_RECORDS, EMPLOYEES } from "../features/departments/pages/DepartmentsPage";
+ 8: import { ALL_REPORTS } from "../features/reports/pages/ReportsPage";
+ 9: import { ALL_NOTES } from "../features/notes/pages/NotesPage";
+             ^
+10: 
+11: export const SEARCH_ITEMS = [
+[31m
+    at getRollupError (file:///C:/Users/patil/Desktop/RCC-OMP/frontend/node_modules/.pnpm/rollup@4.62.2/node_modules/rollup/dist/es/shared/parseAst.js:317:41)
+    at error (file:///C:/Users/patil/Desktop/RCC-OMP/frontend/node_modules/.pnpm/rollup@4.62.2/node_modules/rollup/dist/es/shared/parseAst.js:313:42)
+    at Module.error (file:///C:/Users/patil/Desktop/RCC-OMP/frontend/node_modules/.pnpm/rollup@4.62.2/node_modules/rollup/dist/es/shared/node-entry.js:17396:16)
+    at Module.traceVariable (file:///C:/Users/patil/Desktop/RCC-OMP/frontend/node_modules/.pnpm/rollup@4.62.2/node_modules/rollup/dist/es/shared/node-entry.js:17829:29)
+    at ModuleScope.findVariable (file:///C:/Users/patil/Desktop/RCC-OMP/frontend/node_modules/.pnpm/rollup@4.62.2/node_modules/rollup/dist/es/shared/node-entry.js:15419:39)
+    at MemberExpression.bind (file:///C:/Users/patil/Desktop/RCC-OMP/frontend/node_modules/.pnpm/rollup@4.62.2/node_modules/rollup/dist/es/shared/node-entry.js:7403:49)
+    at CallExpression.bind (file:///C:/Users/patil/Desktop/RCC-OMP/frontend/node_modules/.pnpm/rollup@4.62.2/node_modules/rollup/dist/es/shared/node-entry.js:2833:23)
+    at CallExpression.bind (file:///C:/Users/patil/Desktop/RCC-OMP/frontend/node_modules/.pnpm/rollup@4.62.2/node_modules/rollup/dist/es/shared/node-entry.js:12528:15)
+    at SpreadElement.bind (file:///C:/Users/patil/Desktop/RCC-OMP/frontend/node_modules/.pnpm/rollup@4.62.2/node_modules/rollup/dist/es/shared/node-entry.js:2833:23)
+    at ArrayExpression.bind (file:///C:/Users/patil/Desktop/RCC-OMP/frontend/node_modules/.pnpm/rollup@4.62.2/node_modules/rollup/dist/es/shared/node-entry.js:2829:28)[39m
+[ELIFECYCLE] Command failed with exit code 1.

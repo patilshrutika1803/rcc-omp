@@ -1,0 +1,4 @@
+[36mvite v6.3.5 [32mbuilding for production...[36m[39m
+transforming...
+[32m✓[39m 2277 modules transformed.
+[ELIFECYCLE] Command failed with exit code 1.

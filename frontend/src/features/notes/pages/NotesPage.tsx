@@ -13,6 +13,8 @@ import NotesSidebar from "../components/NotesSidebar";
 import NotesList from "../components/NotesList";
 import NoteEditor from "../components/NoteEditor";
 
+export const ALL_NOTES = [] as any[];
+
 export default function NotesPage() {
   const {
     selectedFolder,
