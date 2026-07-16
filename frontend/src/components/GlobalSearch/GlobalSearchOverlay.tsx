@@ -32,9 +32,12 @@ export function GlobalSearchOverlay({ onClose, onNavigate }: { onClose: () => vo
   }, [query]);
 
   const typeIcon: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
-    Machine: Server, Department: Layers, Employee: User, Report: FileText, Note: FileText,
+    Machine: Server,
+    Department: Layers,
+    Employee: User,
+    Note: FileText,
   };
-  const typeNav: Record<string, string> = { Machine: "machines", Department: "departments", Employee: "departments", Report: "reports", Note: "notes" };
+  const typeNav: Record<string, string> = { Machine: "machines", Department: "departments", Employee: "departments", Note: "notes" };
 
   const grouped = results.reduce((acc, item) => { (acc[item.type] = acc[item.type] || []).push(item); return acc; }, {} as Record<string, typeof results>);
 
@@ -64,9 +67,17 @@ export function GlobalSearchOverlay({ onClose, onNavigate }: { onClose: () => vo
               ))}
               <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 mt-4">Quick Navigate</div>
               <div className="grid grid-cols-3 gap-2">
-                {[["Machines","machines",Server],["Reports","reports",FileText],["Notes","notes",BookOpen],["Departments","departments",Layers],["Notifications","notifications",Bell],["Settings","settings",Settings]].map(([label, nav, Icon]: any) => (
-                  <button key={label} onClick={() => { onNavigate(nav); onClose(); }} className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-200 hover:border-blue-300 hover:bg-blue-50/30 transition-all text-left">
-                    <Icon size={14} className="text-slate-400" /><span className="text-xs font-semibold text-slate-700">{label}</span>
+                {[["Machines","machines",Server],["Notes","notes",BookOpen],["Departments","departments",Layers],["Notifications","notifications",Bell],["Settings","settings",Settings]].map(([label, nav, Icon]: any) => ( 
+                  <button
+                    key={label}
+                    onClick={() => {
+                      onNavigate(nav);
+                      onClose();
+                    }}
+                    className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-200 hover:border-blue-300 hover:bg-blue-50/30 transition-all text-left"
+                  >
+                    <Icon size={14} className="text-slate-400" />
+                    <span className="text-xs font-semibold text-slate-700">{label}</span>
                   </button>
                 ))}
               </div>

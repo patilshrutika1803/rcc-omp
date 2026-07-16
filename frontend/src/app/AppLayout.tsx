@@ -38,7 +38,7 @@ export function AppLayout({
     if (path.startsWith("/qa-activities")) return "qa";
     if (path.startsWith("/system-inventory")) return "machines";
     if (path.startsWith("/departments")) return "departments";
-    if (path.startsWith("/reports")) return "reports";
+
     if (path.startsWith("/notifications")) return "notifications";
     if (path.startsWith("/notes")) return "notes";
     if (path.startsWith("/settings")) return "settings";

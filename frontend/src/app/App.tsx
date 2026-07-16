@@ -32,7 +32,7 @@ import BackupActivitiesPage from "../features/backup/pages/BackupActivitiesPage"
 import QAPage from "../features/qa/pages/QAPage";
 import SystemInventoryPage from "../features/system-inventory/pages/SystemInventoryPage";
 import DepartmentsPage from "../features/departments/pages/DepartmentsPage";
-import ReportsPage from "../features/reports/pages/ReportsPage";
+
 import NotificationsPage from "../features/notificataions/pages/NotificationsPage";
 import NotesPage from "../features/notes/pages/NotesPage";
 import SettingsPage from "../features/settings/pages/SettingsPage";
@@ -123,14 +123,8 @@ export default function App() {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/reports"
-            element={
-              <ProtectedRoute>
-                <ReportsPage />
-              </ProtectedRoute>
-            }
-          />
+
+
           <Route
             path="/notifications"
             element={

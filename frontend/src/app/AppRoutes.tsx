@@ -15,7 +15,7 @@ import BackupActivitiesPage from "../features/backup/pages/BackupActivitiesPage"
 import QAPage from "../features/qa/pages/QAPage";
 import SystemInventoryPage from "../features/system-inventory/pages/SystemInventoryPage";
 import DepartmentsPage from "../features/departments/pages/DepartmentsPage";
-import ReportsPage from "../features/reports/pages/ReportsPage";
+
 import NotificationsPage from "../features/notificataions/pages/NotificationsPage";
 import NotesPage from "../features/notes/pages/NotesPage";
 import SettingsPage from "../features/settings/pages/SettingsPage";
@@ -26,7 +26,7 @@ import { HelpCenterContent } from "../modules/help/HelpCenterContent";
 
 import { NAV_ITEMS } from "../constants/navigation";
 
-const KNOWN_NAV_IDS = ["dashboard","maintenance","backup","qa","machines","departments","reports","notifications","notes","settings","profile","admin","help"];
+const KNOWN_NAV_IDS = ["dashboard","maintenance","backup","qa","machines","departments","notifications","notes","settings","profile","admin","help"];
 
 export function AppRoutes({ activeNav }: { activeNav: string }) {
   return (
@@ -36,8 +36,8 @@ export function AppRoutes({ activeNav }: { activeNav: string }) {
       {activeNav === "backup"      && <BackupActivitiesPage />}
       {activeNav === "qa"          && <QAPage />}
       {activeNav === "machines"     && <SystemInventoryPage />}
+
       {activeNav === "departments"  && <DepartmentsPage />}
-      {activeNav === "reports"      && <ReportsPage />}
       {activeNav === "notifications"&& <NotificationsPage />}
       {activeNav === "notes"        && <NotesPage />}
       {activeNav === "settings"     && <SettingsPage />}

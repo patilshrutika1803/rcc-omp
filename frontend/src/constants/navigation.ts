@@ -25,7 +25,7 @@ export const NAV_ITEMS: NavItem[] = [
   { id: "qa", icon: CheckSquare, label: "QA Activities" },
   { id: "machines", icon: Server, label: "System Inventory" },
   { id: "departments", icon: BarChart2, label: "Departments" },
-  { id: "reports", icon: BarChart2, label: "Reports" },
+
   { id: "notifications", icon: Bell, label: "Notifications" },
   { id: "notes", icon: FileText, label: "Notes" },
   { id: "settings", icon: Settings, label: "Settings" },
