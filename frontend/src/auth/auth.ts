@@ -35,13 +35,13 @@ export function logout() {
 // Temporary frontend-only login.
 // Later replace internals with: POST /api/auth/login (JWT etc.)
 export async function loginWithPassword(email: string, password: string): Promise<AuthState> {
-  const ok = email === "admin@rcc.com" && password === "admin123";
+  const ok = email === "nikhil.sakat@rajaram.com" && password === "admin123";
   if (!ok) {
     throw new Error("Invalid email or password");
   }
 
   return {
-    user: { email, name: "Admin" },
+    user: { email, name: "Nikhil Sakat" },
     authenticatedAt: Date.now(),
   };
 }

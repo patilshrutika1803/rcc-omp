@@ -22,15 +22,39 @@ import DepartmentPage from "../../features/departments/DepartmentPage";
 const EMPLOYEES = (DepartmentPage as any)?.EMPLOYEES ?? [
   {
     id: "E-001",
-    employeeId: "RCC-EMP-2014-012",
-    name: "Arun Sharma",
-    email: "arun.sharma@rajaram.com",
-    role: "IT Admin",
-    department: "IT Department",
+    employeeId: "RCC-IT-001",
+    name: "Nikhil Sakat",
+    email: "nikhil.sakat@rajaram.com",
+    role: "IT Head",
+    department: "IT",
     status: "Active",
     availability: "Available",
-    initials: "AS",
+    initials: "NS",
     avatarColor: "bg-blue-50 text-blue-700 border border-blue-100",
+  },
+  {
+    id: "E-002",
+    employeeId: "RCC-IT-002",
+    name: "Megha Jadhav",
+    email: "megha.jadhav@rajaram.com",
+    role: "IT Executive",
+    department: "IT",
+    status: "Active",
+    availability: "Available",
+    initials: "MJ",
+    avatarColor: "bg-purple-50 text-purple-700 border border-purple-100",
+  },
+  {
+    id: "E-003",
+    employeeId: "RCC-IT-003",
+    name: "Kiran Yadav",
+    email: "kiran.yadav@rajaram.com",
+    role: "IT Executive",
+    department: "IT",
+    status: "Active",
+    availability: "Available",
+    initials: "KY",
+    avatarColor: "bg-emerald-50 text-emerald-700 border border-emerald-100",
   },
 ];
 import { StatusChip } from "../../shared/components/EnterpriseUI";
@@ -59,12 +83,12 @@ export function RoleManagementContent() {
   const ROLES_LIST = Object.keys(ROLE_PERMS);
 
   const ACCESS_LOGS = [
-    { user: "Arun Sharma", action: "Login", resource: "Portal", time: "2026-07-03 09:12:04", result: "Success" },
-    { user: "Vikram Singh", action: "View", resource: "Machine MCH-HVAC-SR1", time: "2026-07-03 10:02:11", result: "Success" },
+    { user: "Nikhil Sakat", action: "Login", resource: "Portal", time: "2026-07-03 09:12:04", result: "Success" },
+    { user: "Megha Jadhav", action: "View", resource: "Backup Dashboard", time: "2026-07-03 10:02:11", result: "Success" },
     { user: "Unknown", action: "Login failed", resource: "Portal", time: "2026-07-03 10:30:00", result: "Failed" },
-    { user: "Arjun Rao", action: "Edit", resource: "Backup BK-2003", time: "2026-07-03 11:15:22", result: "Success" },
-    { user: "Priya Nair", action: "Export", resource: "QA Report", time: "2026-07-03 13:44:10", result: "Success" },
-    { user: "Anita Desai", action: "Delete", resource: "Note NOTE-004", time: "2026-07-02 16:20:55", result: "Denied" },
+    { user: "Kiran Yadav", action: "Edit", resource: "PM Record PM-2003", time: "2026-07-03 11:15:22", result: "Success" },
+    { user: "Nikhil Sakat", action: "Export", resource: "QA Report", time: "2026-07-03 13:44:10", result: "Success" },
+    { user: "Megha Jadhav", action: "Create", resource: "QA Activity QMS-011", time: "2026-07-02 16:20:55", result: "Success" },
   ];
 
   return (

@@ -131,7 +131,7 @@ export default function DepartmentFormModal({
                   setForm({ ...form, head: e.target.value });
                   setErrors(p => ({ ...p, head: "" }));
                 }}
-                placeholder="e.g. Arun Sharma"
+                placeholder="e.g. Nikhil Sakat"
                 className={fc("head")}
               />
               {errors.head && <p className="text-[11px] text-red-500 mt-1">{errors.head}</p>}
@@ -141,7 +141,7 @@ export default function DepartmentFormModal({
               <input
                 value={form.manager}
                 onChange={e => setForm({ ...form, manager: e.target.value })}
-                placeholder="e.g. Vikram Singh"
+                placeholder="e.g. Megha Jadhav"
                 className={fc("manager")}
               />
             </div>

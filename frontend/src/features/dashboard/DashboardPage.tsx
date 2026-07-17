@@ -77,7 +77,7 @@ export default function DashboardPage() {
 
   return (
     <div className="w-full max-w-[1600px] mx-auto animate-in fade-in duration-300">
-      <DashboardHeader greetingName="Arun" dateTimeText={dateTimeText} />
+      <DashboardHeader greetingName="Nikhil" dateTimeText={dateTimeText} />
 
       <DashboardKPICards kpis={kpisWithVisuals} />
 

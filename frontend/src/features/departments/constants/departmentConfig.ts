@@ -42,14 +42,9 @@ export const DEPARTMENTS = [
  * userService.ts) is wired to Supabase, this should come from the backend.
  */
 export const USERS = [
-  "Rajesh Kumar",
-  "Priya Nair",
-  "Suresh Babu",
-  "Anita Desai",
-  "Vikram Singh",
-  "Meena Pillai",
-  "Arjun Rao",
-  "Deepa Iyer",
+  "Nikhil Sakat",
+  "Megha Jadhav",
+  "Kiran Yadav",
 ];
 
 /** Top-level tab configuration for DepartmentPage */

@@ -150,12 +150,6 @@ export default function LoginPage() {
       </form>
 
       <div className="mt-8 text-center">
-        <div className="mb-4 text-left rounded-xl border border-slate-200 bg-slate-50 p-4">
-          <div className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Demo Login</div>
-          <div className="text-sm font-semibold text-slate-800">Email: <span className="font-mono">admin@rcc.com</span></div>
-          <div className="text-sm font-semibold text-slate-800">Password: <span className="font-mono">admin123</span></div>
-        </div>
-
         <span className="text-sm text-slate-500">Don't have an account? </span>
         <button
           type="button"

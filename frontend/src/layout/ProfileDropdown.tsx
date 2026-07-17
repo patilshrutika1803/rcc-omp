@@ -23,10 +23,10 @@ export function ProfileDropdown({
   return (
     <div className="relative">
       <button className="flex items-center gap-2 lg:gap-3 p-1 rounded-lg hover:bg-slate-50 transition-colors" onClick={onToggle}>
-        <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-sm font-bold shrink-0">AS</div>
+        <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-sm font-bold shrink-0">NS</div>
         <div className="hidden lg:block text-left">
-          <div className="text-sm font-semibold text-slate-900 leading-tight">Arun Sharma</div>
-          <div className="text-[11px] text-slate-500 font-medium">IT Admin</div>
+          <div className="text-sm font-semibold text-slate-900 leading-tight">Nikhil Sakat</div>
+          <div className="text-[11px] text-slate-500 font-medium">IT Head</div>
         </div>
         <ChevronDown size={14} className="text-slate-400 hidden lg:block" />
       </button>
@@ -35,8 +35,8 @@ export function ProfileDropdown({
           <div className="fixed inset-0 z-40" onClick={onClose} />
           <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-slate-200 py-1 z-50 animate-in fade-in zoom-in-95 duration-100">
             <div className="px-4 py-3 border-b border-slate-100">
-              <div className="text-sm font-bold text-slate-900">Arun Sharma</div>
-              <div className="text-xs text-slate-500">arun.sharma@rajaram.com</div>
+              <div className="text-sm font-bold text-slate-900">Nikhil Sakat</div>
+              <div className="text-xs text-slate-500">nikhil.sakat@rajaram.com</div>
             </div>
             <div className="py-1">
               <button onClick={() => { setActiveNav("profile"); onClose(); }} className="w-full px-4 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-slate-900 flex items-center gap-2"><User size={14} /> My Profile</button>

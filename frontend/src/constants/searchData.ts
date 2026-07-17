@@ -52,5 +52,5 @@ export const SEARCH_ITEMS = [
   })),
 ];
 
-export const RECENT_SEARCHES = ["HVAC critical alert", "Backup BK-2001", "Rajesh Kumar", "Production PM schedule", "QA Audit July"];
+export const RECENT_SEARCHES = ["Backup dashboard", "PM schedule", "QA activity", "Nikhil Sakat", "IT Department"];
 

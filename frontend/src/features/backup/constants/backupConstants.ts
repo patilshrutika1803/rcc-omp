@@ -70,10 +70,10 @@ export const BKP_WEEKLY_SUMMARY = [
 ];
 
 export const BKP_FAILED_JOBS_SAMPLE = [
-  { job: "ERP Full Backup", server: "SRV-ERP-001", dt: "2026-06-30 02:00", err: "Network timeout during transfer", dur: "8m", eng: "Arjun Rao" },
-  { job: "VMware ESXi Snapshot", server: "VMH-ESX-001", dt: "2026-07-03 04:00", err: "Snapshot consolidation failed", dur: "4m", eng: "Arjun Rao" },
-  { job: "File Server Incremental", server: "SRV-FILE-001", dt: "2026-06-29 03:30", err: "Insufficient destination storage", dur: "12m", eng: "Rajesh Kumar" },
-  { job: "Production SQL Server", server: "SRV-SQL-002", dt: "2026-07-01 00:00", err: "SQL VSS writer timeout", dur: "3m", eng: "Suresh Babu" },
+  { job: "ERP Full Backup", server: "SRV-ERP-001", dt: "2026-06-30 02:00", err: "Network timeout during transfer", dur: "8m", eng: "Nikhil Sakat" },
+  { job: "VMware ESXi Snapshot", server: "VMH-ESX-001", dt: "2026-07-03 04:00", err: "Snapshot consolidation failed", dur: "4m", eng: "Megha Jadhav" },
+  { job: "File Server Incremental", server: "SRV-FILE-001", dt: "2026-06-29 03:30", err: "Insufficient destination storage", dur: "12m", eng: "Kiran Yadav" },
+  { job: "Production SQL Server", server: "SRV-SQL-002", dt: "2026-07-01 00:00", err: "SQL VSS writer timeout", dur: "3m", eng: "Nikhil Sakat" },
 ];
 
 export const BKP_CALENDAR_LEGEND = [
