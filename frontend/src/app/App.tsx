@@ -28,7 +28,7 @@ import { AuthProvider } from "../auth/AuthProvider";
 import { logout as logoutAuth } from "../auth/auth";
 
 import PreventiveMaintenancePage from "../features/preventive-maintenance/PreventiveMaintenancePage";
-import BackupActivitiesPage from "../features/backup/pages/BackupActivitiesPage";
+import BackupActivitiesPage from "../features/backup/BackupActivitiesPage";
 import QAPage from "../features/qa/QAPage";
 import SystemInventoryPage from "../features/system-inventory/SystemInventoryPage";
 import DepartmentPage from "../features/departments/DepartmentPage";
