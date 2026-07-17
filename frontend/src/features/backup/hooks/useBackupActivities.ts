@@ -23,11 +23,15 @@ export function useBackupActivities() {
   const closeDrawer = () => setShowDrawer(false);
 
   const handleAddJob = (data: BackupJobFormData) => {
+    const now = new Date();
+    const nextDate = new Date(now);
+    nextDate.setDate(nextDate.getDate() + 1);
+    const nextBackup = `${nextDate.toISOString().split("T")[0]} ${data.backupTime}`;
     const newJob: BackupJob = {
-      id: `BK-${2011 + jobs.length}`,
-      name: data.name, server: "SRV-NEW-001",
+      id: `BK-${Date.now()}`,
+      name: data.name, server: "",
       backupType: data.backupType, frequency: data.frequency,
-      lastBackup: "—", nextBackup: `2026-07-04 ${data.backupTime}`,
+      lastBackup: "—", nextBackup,
       status: "Scheduled", progress: 0,
       user: data.user, sizeGB: 0,
       destination: data.destination, retention: "30 Days", duration: "—",
@@ -63,7 +67,8 @@ export function useBackupActivities() {
     const j = runConfirmJob;
     if (!j) return;
     setRunConfirmJob(null);
-    const now = "2026-07-04 00:00";
+    const now = new Date().toISOString().slice(0, 16).replace("T", " ");
+    const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 16).replace("T", " ");
     setJobs(prev => prev.map(jj => jj.id === j.id ? { ...jj, status: "Running", progress: 0 } : jj));
 
     let prog = 0;
@@ -72,8 +77,8 @@ export function useBackupActivities() {
       if (prog >= 100) {
         clearInterval(tick);
         setJobs(prev => prev.map(jj => jj.id !== j.id ? jj : {
-          ...jj, status: "Completed", progress: 100, lastBackup: now, nextBackup: "2026-07-05 00:00",
-          history: [{ date: now, status: "Completed", duration: "12m", sizeGB: jj.sizeGB || 50 }, ...jj.history.slice(0, 9)],
+          ...jj, status: "Completed", progress: 100, lastBackup: now, nextBackup: tomorrow,
+          history: [{ date: now, status: "Completed", duration: "12m", sizeGB: jj.sizeGB || 0 }, ...jj.history.slice(0, 9)],
         }));
         if (selectedJob?.id === j.id) setSelectedJob(prev => prev ? { ...prev, status: "Completed", progress: 100, lastBackup: now } : null);
         toast.success(`"${j.name}" completed successfully.`);
@@ -91,11 +96,12 @@ export function useBackupActivities() {
     jobs.forEach((j, idx) => {
       setTimeout(() => {
         done++;
-        const now = "2026-07-04 00:00";
+        const now = new Date().toISOString().slice(0, 16).replace("T", " ");
+        const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 16).replace("T", " ");
         setRunAllProgress(Math.round((done / total) * 100));
         setJobs(prev => prev.map(jj => jj.id !== j.id ? jj : {
-          ...jj, status: "Completed", progress: 100, lastBackup: now, nextBackup: "2026-07-05 00:00",
-          history: [{ date: now, status: "Completed", duration: "15m", sizeGB: jj.sizeGB || 50 }, ...jj.history.slice(0, 9)],
+          ...jj, status: "Completed", progress: 100, lastBackup: now, nextBackup: tomorrow,
+          history: [{ date: now, status: "Completed", duration: "15m", sizeGB: jj.sizeGB || 0 }, ...jj.history.slice(0, 9)],
         }));
         if (done === total) setTimeout(() => { setRunAllProgress(null); toast.success("All backup jobs completed successfully."); }, 600);
       }, idx * 400);
@@ -103,7 +109,7 @@ export function useBackupActivities() {
   };
 
   const handleDuplicate = (j: BackupJob) => {
-    const newJob: BackupJob = { ...j, id: `BK-${2011 + jobs.length}`, name: `${j.name} (Copy)`, status: "Scheduled", progress: 0, lastBackup: "—", history: [] };
+    const newJob: BackupJob = { ...j, id: `BK-${Date.now()}`, name: `${j.name} (Copy)`, status: "Scheduled", progress: 0, lastBackup: "—", history: [] };
     setJobs(prev => [...prev, newJob]);
     toast.success(`Duplicated "${j.name}".`);
   };

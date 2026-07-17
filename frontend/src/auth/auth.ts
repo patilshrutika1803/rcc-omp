@@ -32,16 +32,19 @@ export function logout() {
   localStorage.removeItem(AUTH_STORAGE_KEY);
 }
 
-// Temporary frontend-only login.
+// Temporary frontend-only login. Only allowed portal users are supported until backend integration.
 // Later replace internals with: POST /api/auth/login (JWT etc.)
+import { ALLOWED_USERS } from "./userDirectory";
+
 export async function loginWithPassword(email: string, password: string): Promise<AuthState> {
-  const ok = email === "nikhil.sakat@rajaram.com" && password === "admin123";
-  if (!ok) {
+  const normalizedEmail = email.trim().toLowerCase();
+  const user = ALLOWED_USERS[normalizedEmail];
+  if (!user) {
     throw new Error("Invalid email or password");
   }
 
   return {
-    user: { email, name: "Nikhil Sakat" },
+    user: { email: normalizedEmail, name: user.name },
     authenticatedAt: Date.now(),
   };
 }

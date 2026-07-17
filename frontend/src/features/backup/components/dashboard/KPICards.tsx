@@ -8,7 +8,7 @@ export function KPICards({ kpi, successRate }: { kpi: BackupKpi; successRate: nu
     { label: "Successful",       val: String(kpi.successful),             icon: CheckCircle2, bg: "bg-emerald-50",border: "border-emerald-100", text: "text-emerald-600", sub: "Completed today"     },
     { label: "Failed",           val: String(kpi.failed),                 icon: XCircle,      bg: "bg-red-50",    border: "border-red-100",    text: "text-red-600",     sub: "Needs attention"     },
     { label: "Running Now",      val: String(kpi.running),                icon: RefreshCw,    bg: "bg-blue-50",   border: "border-blue-100",   text: "text-blue-600",    sub: "In progress"         },
-    { label: "Storage Used",     val: `${kpi.totalGB} GB`,               icon: Server,       bg: "bg-purple-50", border: "border-purple-100", text: "text-purple-600",  sub: "of 2,000 GB"         },
+    { label: "Storage Used",     val: `${kpi.totalGB} GB`,               icon: Server,       bg: "bg-purple-50", border: "border-purple-100", text: "text-purple-600",  sub: "Total backed up"     },
     { label: "Success Rate",     val: `${successRate}%`,                 icon: TrendingUp,   bg: "bg-emerald-50",border: "border-emerald-100", text: "text-emerald-600", sub: "Last 7 days"         },
   ];
 

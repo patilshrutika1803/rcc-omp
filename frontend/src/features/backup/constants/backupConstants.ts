@@ -48,33 +48,15 @@ export const BKP_SUB_TABS: { id: BackupSubTab; label: string; icon: typeof Layou
 ];
 
 // KPI configuration used by the dashboard's Backup Type Mix donut/legend.
-export const BKP_TYPE_MIX = [
-  { name: "Full", value: 30, color: "#3B82F6" },
-  { name: "Incremental", value: 40, color: "#8B5CF6" },
-  { name: "Differential", value: 20, color: "#6366F1" },
-  { name: "Snapshot", value: 10, color: "#14B8A6" },
-];
+// Backup type mix — populated from real job data at runtime (see BackupTypeChart).
+export const BKP_TYPE_MIX: { name: string; value: number; color: string }[] = [];
+export const BKP_TYPE_MIX_BARS: { name: string; pct: number; color: string }[] = [];
 
-export const BKP_TYPE_MIX_BARS = [
-  { name: "Full", pct: 30, color: "bg-blue-500" },
-  { name: "Incremental", pct: 40, color: "bg-purple-500" },
-  { name: "Differential", pct: 20, color: "bg-indigo-500" },
-  { name: "Snapshot", pct: 10, color: "bg-teal-500" },
-];
+// Weekly summary — computed from real job data at runtime (see SuccessRateChart).
+export const BKP_WEEKLY_SUMMARY: { label: string; value: string; color: string; bar: string; pct: number }[] = [];
 
-export const BKP_WEEKLY_SUMMARY = [
-  { label: "Total Jobs Run", value: "63", color: "text-slate-900", bar: "bg-blue-500", pct: 100 },
-  { label: "Successful", value: "57", color: "text-emerald-700", bar: "bg-emerald-500", pct: 90 },
-  { label: "Failed", value: "4", color: "text-red-600", bar: "bg-red-400", pct: 6 },
-  { label: "Avg. Duration", value: "54m", color: "text-slate-700", bar: "bg-indigo-400", pct: 60 },
-];
-
-export const BKP_FAILED_JOBS_SAMPLE = [
-  { job: "ERP Full Backup", server: "SRV-ERP-001", dt: "2026-06-30 02:00", err: "Network timeout during transfer", dur: "8m", eng: "Nikhil Sakat" },
-  { job: "VMware ESXi Snapshot", server: "VMH-ESX-001", dt: "2026-07-03 04:00", err: "Snapshot consolidation failed", dur: "4m", eng: "Megha Jadhav" },
-  { job: "File Server Incremental", server: "SRV-FILE-001", dt: "2026-06-29 03:30", err: "Insufficient destination storage", dur: "12m", eng: "Kiran Yadav" },
-  { job: "Production SQL Server", server: "SRV-SQL-002", dt: "2026-07-01 00:00", err: "SQL VSS writer timeout", dur: "3m", eng: "Nikhil Sakat" },
-];
+// Failed jobs — populated from real job data at runtime (see FailedJobsTable).
+export const BKP_FAILED_JOBS_SAMPLE: { job: string; server: string; dt: string; err: string; dur: string; eng: string }[] = [];
 
 export const BKP_CALENDAR_LEGEND = [
   { color: "bg-emerald-500", label: "Completed" },

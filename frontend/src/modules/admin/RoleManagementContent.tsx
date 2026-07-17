@@ -18,45 +18,7 @@ import { toast } from "sonner";
 
 import DepartmentPage from "../../features/departments/DepartmentPage";
 
-// Local mock data used by RoleManagement UI (kept as-is from the previous architecture)
-const EMPLOYEES = (DepartmentPage as any)?.EMPLOYEES ?? [
-  {
-    id: "E-001",
-    employeeId: "RCC-IT-001",
-    name: "Nikhil Sakat",
-    email: "nikhil.sakat@rajaram.com",
-    role: "IT Head",
-    department: "IT",
-    status: "Active",
-    availability: "Available",
-    initials: "NS",
-    avatarColor: "bg-blue-50 text-blue-700 border border-blue-100",
-  },
-  {
-    id: "E-002",
-    employeeId: "RCC-IT-002",
-    name: "Megha Jadhav",
-    email: "megha.jadhav@rajaram.com",
-    role: "IT Executive",
-    department: "IT",
-    status: "Active",
-    availability: "Available",
-    initials: "MJ",
-    avatarColor: "bg-purple-50 text-purple-700 border border-purple-100",
-  },
-  {
-    id: "E-003",
-    employeeId: "RCC-IT-003",
-    name: "Kiran Yadav",
-    email: "kiran.yadav@rajaram.com",
-    role: "IT Executive",
-    department: "IT",
-    status: "Active",
-    availability: "Available",
-    initials: "KY",
-    avatarColor: "bg-emerald-50 text-emerald-700 border border-emerald-100",
-  },
-];
+const EMPLOYEES: any[] = (DepartmentPage as any)?.EMPLOYEES ?? [];
 import { StatusChip } from "../../shared/components/EnterpriseUI";
 
 export function RoleManagementContent() {
@@ -82,14 +44,7 @@ export function RoleManagementContent() {
 
   const ROLES_LIST = Object.keys(ROLE_PERMS);
 
-  const ACCESS_LOGS = [
-    { user: "Nikhil Sakat", action: "Login", resource: "Portal", time: "2026-07-03 09:12:04", result: "Success" },
-    { user: "Megha Jadhav", action: "View", resource: "Backup Dashboard", time: "2026-07-03 10:02:11", result: "Success" },
-    { user: "Unknown", action: "Login failed", resource: "Portal", time: "2026-07-03 10:30:00", result: "Failed" },
-    { user: "Kiran Yadav", action: "Edit", resource: "PM Record PM-2003", time: "2026-07-03 11:15:22", result: "Success" },
-    { user: "Nikhil Sakat", action: "Export", resource: "QA Report", time: "2026-07-03 13:44:10", result: "Success" },
-    { user: "Megha Jadhav", action: "Create", resource: "QA Activity QMS-011", time: "2026-07-02 16:20:55", result: "Success" },
-  ];
+  const ACCESS_LOGS: { user: string; action: string; resource: string; time: string; result: string }[] = [];
 
   return (
     <div className="w-full max-w-[1600px] mx-auto animate-in fade-in duration-300">
@@ -128,26 +83,32 @@ export function RoleManagementContent() {
                 <tr><th className="px-5 py-3">User</th><th className="px-4 py-3">Role</th><th className="px-4 py-3">Department</th><th className="px-4 py-3">Employee ID</th><th className="px-4 py-3">Status</th><th className="px-4 py-3 text-right">Actions</th></tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {filteredEmployees.map((emp: any) => (
-                  <tr key={emp.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-5 py-3.5">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${emp.avatarColor}`}>{emp.initials}</div>
-                        <div><div className="text-xs font-bold text-slate-900">{emp.name}</div><div className="text-[10px] text-slate-400">{emp.email}</div></div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3.5 text-xs text-slate-600">{emp.role.split(" ").slice(-2).join(" ")}</td>
-                    <td className="px-4 py-3.5 text-xs text-slate-600">{emp.department}</td>
-                    <td className="px-4 py-3.5 text-xs font-mono text-slate-500">{emp.employeeId}</td>
-                    <td className="px-4 py-3.5"><StatusChip label={emp.status} variant={emp.status === "Active" ? "success" : emp.status === "On Leave" ? "warning" : "neutral"} /></td>
-                    <td className="px-4 py-3.5 text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <button className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"><Edit2 size={13} /></button>
-                        <button onClick={() => toast.error("User deactivated.")} className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"><UserX size={13} /></button>
-                      </div>
-                    </td>
+                {filteredEmployees.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-5 py-12 text-center text-xs text-slate-400">No users available. Invite users to start managing access.</td>
                   </tr>
-                ))}
+                ) : (
+                  filteredEmployees.map((emp: any) => (
+                    <tr key={emp.id} className="hover:bg-slate-50 transition-colors">
+                      <td className="px-5 py-3.5">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${emp.avatarColor}`}>{emp.initials}</div>
+                          <div><div className="text-xs font-bold text-slate-900">{emp.name}</div><div className="text-[10px] text-slate-400">{emp.email}</div></div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3.5 text-xs text-slate-600">{emp.role.split(" ").slice(-2).join(" ")}</td>
+                      <td className="px-4 py-3.5 text-xs text-slate-600">{emp.department}</td>
+                      <td className="px-4 py-3.5 text-xs font-mono text-slate-500">{emp.employeeId}</td>
+                      <td className="px-4 py-3.5"><StatusChip label={emp.status} variant={emp.status === "Active" ? "success" : emp.status === "On Leave" ? "warning" : "neutral"} /></td>
+                      <td className="px-4 py-3.5 text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <button className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"><Edit2 size={13} /></button>
+                          <button onClick={() => toast.error("User deactivated.")} className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"><UserX size={13} /></button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -170,7 +131,7 @@ export function RoleManagementContent() {
               <div className="flex flex-wrap gap-1">
                 {ROLE_PERMS[role].map(p => <span key={p} className="text-[10px] bg-blue-50 text-blue-700 border border-blue-200 px-1.5 py-0.5 rounded font-medium">{p}</span>)}
               </div>
-              <div className="mt-3 text-[10px] text-slate-400">{EMPLOYEES.length > 0 ? Math.floor(Math.random() * 6 + 1) : 0} users assigned</div>
+              <div className="mt-3 text-[10px] text-slate-400">{EMPLOYEES.length} users assigned</div>
             </div>
           ))}
         </div>
@@ -207,22 +168,26 @@ export function RoleManagementContent() {
 
       {tab === "logs" && (
         <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-          <table className="w-full text-left whitespace-nowrap">
-            <thead className="bg-slate-50/70 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-100">
-              <tr><th className="px-5 py-3">User</th><th className="px-4 py-3">Action</th><th className="px-4 py-3">Resource</th><th className="px-4 py-3">Timestamp</th><th className="px-4 py-3">Result</th></tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {ACCESS_LOGS.map((log, i) => (
-                <tr key={i} className="hover:bg-slate-50 transition-colors">
-                  <td className="px-5 py-3.5 text-xs font-semibold text-slate-900">{log.user}</td>
-                  <td className="px-4 py-3.5 text-xs text-slate-600">{log.action}</td>
-                  <td className="px-4 py-3.5 text-xs text-slate-500">{log.resource}</td>
-                  <td className="px-4 py-3.5 text-xs font-mono text-slate-400">{log.time}</td>
-                  <td className="px-4 py-3.5"><StatusChip label={log.result} variant={log.result === "Success" ? "success" : log.result === "Failed" ? "error" : "warning"} /></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          {ACCESS_LOGS.length === 0 ? (
+            <div className="py-16 text-center text-xs text-slate-400">No access logs available</div>
+          ) : (
+            <table className="w-full text-left whitespace-nowrap">
+              <thead className="bg-slate-50/70 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-100">
+                <tr><th className="px-5 py-3">User</th><th className="px-4 py-3">Action</th><th className="px-4 py-3">Resource</th><th className="px-4 py-3">Timestamp</th><th className="px-4 py-3">Result</th></tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {ACCESS_LOGS.map((log, i) => (
+                  <tr key={i} className="hover:bg-slate-50 transition-colors">
+                    <td className="px-5 py-3.5 text-xs font-semibold text-slate-900">{log.user}</td>
+                    <td className="px-4 py-3.5 text-xs text-slate-600">{log.action}</td>
+                    <td className="px-4 py-3.5 text-xs text-slate-500">{log.resource}</td>
+                    <td className="px-4 py-3.5 text-xs font-mono text-slate-400">{log.time}</td>
+                    <td className="px-4 py-3.5"><StatusChip label={log.result} variant={log.result === "Success" ? "success" : log.result === "Failed" ? "error" : "warning"} /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       )}
     </div>

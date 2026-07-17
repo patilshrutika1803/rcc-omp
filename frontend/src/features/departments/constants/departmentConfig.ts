@@ -10,6 +10,7 @@ import {
   Table2,
   Calendar as CalendarIcon,
 } from "lucide-react";
+import { ALLOWED_USER_NAMES } from "../../../auth/userDirectory";
 
 /** Department status dropdown / filter options */
 export const DEPARTMENT_STATUS_OPTIONS = ["Active", "Under Review", "Restructuring"] as const;
@@ -41,11 +42,7 @@ export const DEPARTMENTS = [
  * NOTE: kept as a constant for now. Once departmentService.ts (or a future
  * userService.ts) is wired to Supabase, this should come from the backend.
  */
-export const USERS = [
-  "Nikhil Sakat",
-  "Megha Jadhav",
-  "Kiran Yadav",
-];
+export const USERS = ALLOWED_USER_NAMES;
 
 /** Top-level tab configuration for DepartmentPage */
 export const DEPARTMENT_TABS: {

@@ -7,11 +7,11 @@ export default function RegisterPage() {
         <div className="text-center mb-6">
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Create Account</h1>
           <p className="text-sm text-slate-500 mt-2">
-            User registration will be available after backend integration.
+            User registration will be enabled after backend integration.
           </p>
         </div>
         <div className="text-center text-xs text-slate-500">
-          This is a temporary frontend-only placeholder.
+          This page is under development and will be available once authentication services are connected.
         </div>
       </div>
     </div>

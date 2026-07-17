@@ -98,21 +98,10 @@ export default function SettingsPage() {
     { id: "about",    label: "About System",       icon: Info,         group: "" },
   ];
 
-  const FAKE_AUDIT = [
-    { action: "User login", user: "Nikhil Sakat", ip: "192.168.1.10", time: "2026-07-03 09:12:04" },
-    { action: "Report generated", user: "Nikhil Sakat", ip: "192.168.1.10", time: "2026-07-03 09:45:22" },
-    { action: "PM record created", user: "Megha Jadhav", ip: "192.168.1.22", time: "2026-07-03 10:02:11" },
-    { action: "PM marked complete", user: "Kiran Yadav", ip: "192.168.2.14", time: "2026-07-02 16:33:55" },
-    { action: "Backup settings updated", user: "Nikhil Sakat", ip: "192.168.1.18", time: "2026-07-02 11:20:30" },
-    { action: "QA activity created: QMS-011", user: "Megha Jadhav", ip: "192.168.1.10", time: "2026-07-01 14:05:42" },
-  ];
-
-  const API_KEYS = [
-    { name: "ERP Integration", key: "rcc_live_sk_••••••••••••4a2f", created: "2026-01-01", lastUsed: "2026-07-03", status: "Active" },
-    { name: "HR System", key: "rcc_live_sk_••••••••••••b8c1", created: "2026-03-15", lastUsed: "2026-07-02", status: "Active" },
-    { name: "Backup Service", key: "rcc_live_sk_••••••••••••3d09", created: "2026-05-10", lastUsed: "2026-07-03", status: "Active" },
-    { name: "Legacy App (Deprecated)", key: "rcc_test_sk_••••••••••••9e77", created: "2025-08-01", lastUsed: "2026-01-15", status: "Revoked" },
-  ];
+  const auditLogs: { action: string; user: string; ip: string; time: string }[] = [];
+  const apiKeys: { name: string; key: string; created: string; lastUsed: string; status: string }[] = [];
+  const activeSessions: { device: string; ip: string; time: string; current: boolean }[] = [];
+  const systemLogs: { text: string; severity: "info" | "warn" | "error" }[] = [];
 
   return (
     <div className="w-full max-w-[1600px] mx-auto animate-in fade-in duration-300">
@@ -254,15 +243,21 @@ export default function SettingsPage() {
               </div>
               <div className="border-t border-slate-100 pt-5 mt-5">
                 <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">Active Sessions</h3>
-                {[{ device: "Chrome on Windows – Pune Office", ip: "192.168.1.10", time: "Active now", current: true }, { device: "Chrome on MacBook – Remote", ip: "103.44.21.88", time: "1 day ago", current: false }].map((s, i) => (
-                  <div key={i} className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-xl mb-2">
-                    <div>
-                      <div className="text-xs font-semibold text-slate-900 flex items-center gap-2">{s.device}{s.current && <span className="text-[9px] font-bold bg-emerald-100 text-emerald-700 px-1.5 rounded">Current</span>}</div>
-                      <div className="text-[11px] text-slate-400 mt-0.5">{s.ip} · {s.time}</div>
+                {activeSessions.length > 0 ? (
+                  activeSessions.map((s, i) => (
+                    <div key={i} className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-xl mb-2">
+                      <div>
+                        <div className="text-xs font-semibold text-slate-900 flex items-center gap-2">{s.device}{s.current && <span className="text-[9px] font-bold bg-emerald-100 text-emerald-700 px-1.5 rounded">Current</span>}</div>
+                        <div className="text-[11px] text-slate-400 mt-0.5">{s.ip} · {s.time}</div>
+                      </div>
+                      {!s.current && <button onClick={() => toast.error("Session terminated.")} className="text-[11px] font-semibold text-red-600 hover:text-red-800 transition-colors">Revoke</button>}
                     </div>
-                    {!s.current && <button onClick={() => toast.error("Session terminated.")} className="text-[11px] font-semibold text-red-600 hover:text-red-800 transition-colors">Revoke</button>}
+                  ))
+                ) : (
+                  <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-sm text-slate-500">
+                    No active sessions are currently recorded. Session activity will appear here once users sign in.
                   </div>
-                ))}
+                )}
               </div>
             </div>
           )}
@@ -307,7 +302,7 @@ export default function SettingsPage() {
                 <button onClick={() => toast.success("New API key generated!")} className="flex items-center gap-1.5 h-9 px-4 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"><Plus size={13} /> Generate Key</button>
               </div>
               <div className="space-y-3">
-                {API_KEYS.map((k, i) => (
+                {apiKeys.length > 0 ? apiKeys.map((k, i) => (
                   <div key={i} className="p-4 bg-slate-50 border border-slate-200 rounded-xl hover:border-slate-300 transition-colors">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm font-bold text-slate-900">{k.name}</span>
@@ -319,7 +314,11 @@ export default function SettingsPage() {
                     </div>
                     <div className="text-[10px] text-slate-400">Created: {k.created} · Last used: {k.lastUsed}</div>
                   </div>
-                ))}
+                )) : (
+                  <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-6 py-8 text-sm text-slate-500">
+                    No API keys have been generated yet. Create a key to integrate external systems.
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -333,14 +332,18 @@ export default function SettingsPage() {
                     <tr><th className="px-4 py-3">Action</th><th className="px-4 py-3">User</th><th className="px-4 py-3">IP Address</th><th className="px-4 py-3">Timestamp</th></tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 bg-white">
-                    {FAKE_AUDIT.map((a, i) => (
+                    {auditLogs.length > 0 ? auditLogs.map((a, i) => (
                       <tr key={i} className="hover:bg-slate-50 transition-colors">
                         <td className="px-4 py-3 text-xs font-medium text-slate-900">{a.action}</td>
                         <td className="px-4 py-3 text-xs text-slate-600">{a.user}</td>
                         <td className="px-4 py-3 text-xs font-mono text-slate-500">{a.ip}</td>
                         <td className="px-4 py-3 text-xs text-slate-500">{a.time}</td>
                       </tr>
-                    ))}
+                    )) : (
+                      <tr>
+                        <td colSpan={4} className="px-4 py-10 text-center text-sm text-slate-500">No audit logs are available yet.</td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -404,16 +407,19 @@ export default function SettingsPage() {
                   <button onClick={() => toast.success("Test email sent!")} className="flex items-center gap-2 h-9 px-4 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"><Send size={13} /> Send Test Email</button>
                 </>}
                 {section === "system" && (
-                  <div className="bg-slate-900 border border-slate-700 rounded-xl p-4 font-mono text-xs text-emerald-400 overflow-x-auto">
-                    <div>[2026-07-03 09:12:04] INFO  Portal started on port 3000</div>
-                    <div>[2026-07-03 09:12:05] INFO  Database connection established (PostgreSQL)</div>
-                    <div>[2026-07-03 09:45:22] INFO  Report RPT-001 generated by nikhil.sakat</div>
-                    <div>[2026-07-03 10:02:11] INFO  PM record created by megha.jadhav</div>
-                    <div>[2026-07-03 10:05:00] INFO  Heartbeat check: 12/12 machines responding</div>
-                    <div>[2026-07-03 10:15:00] <span className="text-red-400">WARN  Backup BK-2005 failed: snapshot timeout</span></div>
-                    <div>[2026-07-03 10:20:44] INFO  Notification dispatched to kiran.yadav (email)</div>
-                    <div className="text-slate-500 mt-2">── end of log ──</div>
-                  </div>
+                  systemLogs.length > 0 ? (
+                    <div className="bg-slate-900 border border-slate-700 rounded-xl p-4 font-mono text-xs text-emerald-400 overflow-x-auto">
+                      {systemLogs.map((log, i) => (
+                        <div key={i} className={log.severity === "error" ? "text-red-300" : log.severity === "warn" ? "text-amber-300" : undefined}>
+                          {log.text}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-6 py-8 text-sm text-slate-500">
+                      No system logs are available yet. Events will appear here once the portal begins recording runtime activity.
+                    </div>
+                  )
                 )}
                 {section === "import" && (
                   <div className="space-y-4">

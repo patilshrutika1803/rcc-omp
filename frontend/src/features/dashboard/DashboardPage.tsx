@@ -6,6 +6,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import React, { useState, useEffect, useMemo } from "react";
+import { useAuth } from "../../auth/AuthProvider";
 
 import DashboardHeader from "./components/DashboardHeader";
 import DashboardKPICards from "./components/DashboardKPICards";
@@ -42,6 +43,8 @@ export default function DashboardPage() {
     timeZone: "Asia/Kolkata",
   });
 
+  const { user } = useAuth();
+  const greetingName = user?.name?.split(" ")?.[0] ?? "Team";
   const dateTimeText = `${weekday}, ${day} ${month} ${year} · ${timeIST} IST`;
 
   const {
@@ -77,7 +80,7 @@ export default function DashboardPage() {
 
   return (
     <div className="w-full max-w-[1600px] mx-auto animate-in fade-in duration-300">
-      <DashboardHeader greetingName="Nikhil" dateTimeText={dateTimeText} />
+      <DashboardHeader greetingName={greetingName} dateTimeText={dateTimeText} />
 
       <DashboardKPICards kpis={kpisWithVisuals} />
 
