@@ -1,3 +1,8 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// Preventive Maintenance — Type Definitions
+// No fields removed or renamed. Backward compatible with existing UI/imports.
+// ─────────────────────────────────────────────────────────────────────────────
+
 export type PMStatus = "Due Today" | "Upcoming" | "Completed" | "Overdue" | "In Progress" | "Scheduled";
 export type PMPriority = "Critical" | "High" | "Medium" | "Low";
 
@@ -34,5 +39,3 @@ export interface PMRecord {
 
   history: { date: string; user: string; notes: string; status: string }[];
 }
-
-

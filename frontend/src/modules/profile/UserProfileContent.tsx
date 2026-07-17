@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-import { PM_DATA, StatusBadge } from "../../features/preventive-maintenance/pages/PreventiveMaintenancePage";
+import { PM_DATA, StatusBadge } from "../../features/preventive-maintenance/PreventiveMaintenancePage";
 import { SettingsToggle, SettingsInput } from "../../features/settings/pages/SettingsPage";
 import { StatusChip } from "../../shared/components/EnterpriseUI";
 import { formatDate } from "../../shared/utils/dateHelpers";

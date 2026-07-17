@@ -10,7 +10,7 @@ import React from "react";
 import { LayoutDashboard } from "lucide-react";
 
 import DashboardPage from "../features/dashboard/pages/DashboardPage";
-import PreventiveMaintenancePage from "../features/preventive-maintenance/pages/PreventiveMaintenancePage";
+import PreventiveMaintenancePage from "../features/preventive-maintenance/PreventiveMaintenancePage";
 import BackupActivitiesPage from "../features/backup/pages/BackupActivitiesPage";
 import QAPage from "../features/qa/pages/QAPage";
 import SystemInventoryPage from "../features/system-inventory/SystemInventoryPage";
