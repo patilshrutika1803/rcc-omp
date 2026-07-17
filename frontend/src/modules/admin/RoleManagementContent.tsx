@@ -104,7 +104,7 @@ export function RoleManagementContent() {
                 <tr><th className="px-5 py-3">User</th><th className="px-4 py-3">Role</th><th className="px-4 py-3">Department</th><th className="px-4 py-3">Employee ID</th><th className="px-4 py-3">Status</th><th className="px-4 py-3 text-right">Actions</th></tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {filteredEmployees.map(emp => (
+                {filteredEmployees.map((emp: any) => (
                   <tr key={emp.id} className="hover:bg-slate-50 transition-colors">
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-3">

@@ -5,3 +5,37 @@ Port 3001 is in use, trying another one...
 
   [32m➜[39m  [1mLocal[22m:   [36mhttp://localhost:[1m3002[22m/[39m
 [2m  [32m➜[39m  [1mNetwork[22m[2m: use [22m[1m--host[22m[2m to expose[22m
+[2m4:42:27 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/@fs/C:\Users\patil\Desktop\RCC-OMP\frontend\src\features\dashboard\pages\DashboardPage.tsx, /src/styles/index.css[22m
+[2m4:42:43 pm[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to resolve import "../features/dashboard/pages/DashboardPage" from "src/app/AppRoutes.tsx". Does the file exist?
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/patil/Desktop/RCC-OMP/frontend/src/app/AppRoutes.tsx[39m:12:26
+[33m  16 |  }
+  17 |  import { LayoutDashboard } from "lucide-react";
+  18 |  import DashboardPage from "../features/dashboard/pages/DashboardPage";
+     |                             ^
+  19 |  import PreventiveMaintenancePage from "../features/preventive-maintenance/PreventiveMaintenancePage";
+  20 |  import BackupActivitiesPage from "../features/backup/BackupActivitiesPage";[39m
+[2m4:42:50 pm[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to resolve import "../features/dashboard/pages/DashboardPage" from "src/app/AppRoutes.tsx". Does the file exist?[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/patil/Desktop/RCC-OMP/frontend/src/app/AppRoutes.tsx[39m:12:26
+[33m  16 |  }
+  17 |  import { LayoutDashboard } from "lucide-react";
+  18 |  import DashboardPage from "../features/dashboard/pages/DashboardPage";
+     |                             ^
+  19 |  import PreventiveMaintenancePage from "../features/preventive-maintenance/PreventiveMaintenancePage";
+  20 |  import BackupActivitiesPage from "../features/backup/BackupActivitiesPage";[39m
+      at TransformPluginContext._formatLog (file:///C:/Users/patil/Desktop/RCC-OMP/frontend/node_modules/.pnpm/vite@6.3.5_@types+node@26.1.0_jiti@2.7.0_lightningcss@1.32.0/node_modules/vite/dist/node/chunks/dep-DBxKXgDP.js:42499:41)
+      at TransformPluginContext.error (file:///C:/Users/patil/Desktop/RCC-OMP/frontend/node_modules/.pnpm/vite@6.3.5_@types+node@26.1.0_jiti@2.7.0_lightningcss@1.32.0/node_modules/vite/dist/node/chunks/dep-DBxKXgDP.js:42496:16)
+      at normalizeUrl (file:///C:/Users/patil/Desktop/RCC-OMP/frontend/node_modules/.pnpm/vite@6.3.5_@types+node@26.1.0_jiti@2.7.0_lightningcss@1.32.0/node_modules/vite/dist/node/chunks/dep-DBxKXgDP.js:40475:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async file:///C:/Users/patil/Desktop/RCC-OMP/frontend/node_modules/.pnpm/vite@6.3.5_@types+node@26.1.0_jiti@2.7.0_lightningcss@1.32.0/node_modules/vite/dist/node/chunks/dep-DBxKXgDP.js:40594:37
+      at async Promise.all (index 4)
+      at async TransformPluginContext.transform (file:///C:/Users/patil/Desktop/RCC-OMP/frontend/node_modules/.pnpm/vite@6.3.5_@types+node@26.1.0_jiti@2.7.0_lightningcss@1.32.0/node_modules/vite/dist/node/chunks/dep-DBxKXgDP.js:40521:7)
+      at async EnvironmentPluginContainer.transform (file:///C:/Users/patil/Desktop/RCC-OMP/frontend/node_modules/.pnpm/vite@6.3.5_@types+node@26.1.0_jiti@2.7.0_lightningcss@1.32.0/node_modules/vite/dist/node/chunks/dep-DBxKXgDP.js:42294:18)
+      at async loadAndTransform (file:///C:/Users/patil/Desktop/RCC-OMP/frontend/node_modules/.pnpm/vite@6.3.5_@types+node@26.1.0_jiti@2.7.0_lightningcss@1.32.0/node_modules/vite/dist/node/chunks/dep-DBxKXgDP.js:35735:27)
+      at async viteTransformMiddleware (file:///C:/Users/patil/Desktop/RCC-OMP/frontend/node_modules/.pnpm/vite@6.3.5_@types+node@26.1.0_jiti@2.7.0_lightningcss@1.32.0/node_modules/vite/dist/node/chunks/dep-DBxKXgDP.js:37250:24)
+[2m4:46:41 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/index.css, /src/app/AppLayout.tsx[22m
+[2m4:47:37 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/@fs/C:\Users\patil\Desktop\RCC-OMP\frontend\src\features\preventive-maintenance\components\AddPMModal.tsx, /src/styles/index.css[22m
+[2m4:47:42 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/main.tsx[22m
+[2m4:47:47 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/@fs/C:\Users\patil\Desktop\RCC-OMP\frontend\src\modules\admin\RoleManagementContent.tsx, /src/styles/index.css[22m
+[2m4:48:36 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/@fs/C:\Users\patil\Desktop\RCC-OMP\frontend\src\modules\admin\RoleManagementContent.tsx, /src/styles/index.css[22m

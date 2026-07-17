@@ -9,7 +9,7 @@
 import React from "react";
 import { LayoutDashboard } from "lucide-react";
 
-import DashboardPage from "../features/dashboard/pages/DashboardPage";
+import DashboardPage from "../features/dashboard/DashboardPage";
 import PreventiveMaintenancePage from "../features/preventive-maintenance/PreventiveMaintenancePage";
 import BackupActivitiesPage from "../features/backup/BackupActivitiesPage";
 import QAPage from "../features/qa/QAPage";

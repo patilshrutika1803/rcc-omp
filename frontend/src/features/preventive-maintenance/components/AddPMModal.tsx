@@ -321,7 +321,7 @@ export function AddPMModal({ onClose, onSave, editRecord, departments, users, el
               <label className="text-xs font-semibold text-slate-700 mb-1.5 block">Priority <span className="text-red-500">*</span></label>
               <select
                 value={form.priority}
-                onChange={e => setForm({ ...form, priority: e.target.value })}
+                onChange={e => setForm({ ...form, priority: e.target.value as PMPriority })}
                 className="w-full h-9 px-3 text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-700"
               >
                 {PRIORITY_OPTIONS.map(p => <option key={p} value={p}>{p}</option>)}
