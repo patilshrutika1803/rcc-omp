@@ -30,7 +30,7 @@ import { logout as logoutAuth } from "../auth/auth";
 import PreventiveMaintenancePage from "../features/preventive-maintenance/pages/PreventiveMaintenancePage";
 import BackupActivitiesPage from "../features/backup/pages/BackupActivitiesPage";
 import QAPage from "../features/qa/pages/QAPage";
-import SystemInventoryPage from "../features/system-inventory/pages/SystemInventoryPage";
+import SystemInventoryPage from "../features/system-inventory/SystemInventoryPage";
 import DepartmentPage from "../features/departments/DepartmentPage";
 
 import NotificationsPage from "../features/notificataions/pages/NotificationsPage";

@@ -58,10 +58,26 @@ import type { PMRecord, PMPriority, PMStatus } from "../types/pm";
 // never appear here.
 // NOTE: adjust this relative path if System Inventory lives at a different
 // location in your final folder structure.
-import { SYSTEMS, type SystemInventory } from "../../system-inventory/pages/SystemInventoryPage";
+import { PM_ELIGIBLE_TYPES } from "../../system-inventory/constants/systemConstants";
+
+// System Inventory was refactored: the previous SYSTEMS export is no longer
+// available from constants. Preventive Maintenance will use an empty list
+// until the Systems API / data flow is wired.
+type SystemInventory = {
+  systemId: string;
+  systemName: string;
+  systemType: string;
+  assignedUser: string;
+  department: string;
+  location: string;
+  model?: string;
+};
+
+const SYSTEMS: SystemInventory[] = [];
+
 
 const FREQUENCIES = ["Daily", "Weekly", "Bi-Weekly", "Monthly", "Quarterly", "Half-Yearly", "Yearly"];
-const PM_ELIGIBLE_TYPES = ["Laptop", "Desktop PC"];
+const PM_ELIGIBLE_TYPES_LOCAL = ["Laptop", "Desktop PC"];
 
 // Backward-compatible export for other modules that still import PM_DATA.
 // Backend-ready: starts empty, no hardcoded/demo records.
@@ -310,8 +326,8 @@ function AddPMModal({ onClose, onSave, editRecord, departments, users }: { onClo
   // Only Laptop / Desktop PC systems from System Inventory are eligible for PM.
   // TODO: GET /api/system-inventory?type=Laptop,Desktop PC — replace SYSTEMS
   // with the live backend list once the API is wired up.
-  const eligibleSystems = useMemo(
-    () => SYSTEMS.filter(s => PM_ELIGIBLE_TYPES.includes(s.systemType)),
+const eligibleSystems = useMemo(
+    () => SYSTEMS.filter(s => PM_ELIGIBLE_TYPES_LOCAL.includes(s.systemType)),
     []
   );
 
@@ -417,7 +433,7 @@ function AddPMModal({ onClose, onSave, editRecord, departments, users }: { onClo
         frequency: form.frequency,
         lastMaintenance: form.lastMaintenanceDate,
         nextDue: form.dueDate,
-        priority: form.priority as PMPriority,
+priority: form.priority as PMPriority,
         user: form.user,
         status: autoStatus,
         description: form.description.trim(),

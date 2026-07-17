@@ -4,14 +4,25 @@
 // Reports intentionally removed.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { SYSTEMS } from "../features/system-inventory/pages/SystemInventoryPage";
+import { SystemInventory } from "../features/system-inventory/types/system";
+// import { getSystems } from "../features/system-inventory/services/systemInventoryService";
 import { ALL_NOTES } from "../features/notes/pages/NotesPage";
 
+
+
+
+
 // Departments feature has been refactored to a modular architecture.
+
 // searchData.ts should not depend on the removed monolithic DepartmentsPage.
 // Until the backend is wired, department/employee search entries are empty.
 const DEPT_RECORDS: any[] = [];
 const EMPLOYEES: any[] = [];
+
+// Note: search overlay runs synchronously, so we can’t rely on async
+// service calls here. Until the backend is wired, the system service
+// returns an empty list.
+const SYSTEMS: SystemInventory[] = [];
 
 export const SEARCH_ITEMS = [
   ...SYSTEMS.map(s => ({
@@ -20,6 +31,7 @@ export const SEARCH_ITEMS = [
     sub: s.systemId + " · " + s.department,
     status: s.status,
   })),
+
   ...DEPT_RECORDS.map(d => ({
     type: "Department",
     label: d.name,
