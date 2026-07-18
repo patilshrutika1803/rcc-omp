@@ -75,8 +75,8 @@ export async function createDepartment(
  * Future: `.update({...}).eq('id', id).select().single()`
  */
 export async function updateDepartment(
-  id: string,
-  data: Partial<DepartmentFormSubmission>
+  _id: string,
+  _data: Partial<DepartmentFormSubmission>
 ): Promise<Department | null> {
   return null;
 }

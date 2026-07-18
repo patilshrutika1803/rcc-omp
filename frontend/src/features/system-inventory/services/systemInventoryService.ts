@@ -80,7 +80,7 @@ export async function updateSystem(systemId: string, payload: SystemInventory): 
  * Delete a system record.
  * TODO: DELETE /api/system-inventory/:id -> Supabase delete.
  */
-export async function deleteSystem(systemId: string): Promise<ServiceResult<boolean>> {
+export async function deleteSystem(_systemId: string): Promise<ServiceResult<boolean>> {
   return { data: true, error: null };
 }
 

@@ -1,4 +1,3 @@
-import { FileText } from "lucide-react";
 import type { Note } from "../types/note";
 import EmptyNotes from "./EmptyNotes";
 import NoteCard from "./NoteCard";

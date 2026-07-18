@@ -44,7 +44,7 @@ export async function apiUpdateQAActivity(updated: QAActivity): Promise<QAActivi
   return Promise.resolve({ ...updated, updatedAt: new Date().toISOString() });
 }
 
-export async function apiDeleteQAActivity(id: string): Promise<void> {
+export async function apiDeleteQAActivity(_id: string): Promise<void> {
   // TODO: Replace with real API call, e.g.
   // await fetch(`/api/qa-activities/${id}`, { method: "DELETE" });
   return Promise.resolve();

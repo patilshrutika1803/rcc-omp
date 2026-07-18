@@ -1,6 +1,11 @@
 export type AuthUser = {
   email: string;
   name?: string;
+  role?: string;
+  department?: string;
+  employeeId?: string;
+  phone?: string;
+  profileImageUrl?: string;
 };
 
 export type AuthState = {
@@ -36,7 +41,7 @@ export function logout() {
 // Later replace internals with: POST /api/auth/login (JWT etc.)
 import { ALLOWED_USERS } from "./userDirectory";
 
-export async function loginWithPassword(email: string, password: string): Promise<AuthState> {
+export async function loginWithPassword(email: string, _password: string): Promise<AuthState> {
   const normalizedEmail = email.trim().toLowerCase();
   const user = ALLOWED_USERS[normalizedEmail];
   if (!user) {
@@ -44,7 +49,15 @@ export async function loginWithPassword(email: string, password: string): Promis
   }
 
   return {
-    user: { email: normalizedEmail, name: user.name },
+    user: {
+      email: normalizedEmail,
+      name: user.name,
+      role: user.role ?? "Portal User",
+      department: user.department ?? "IT",
+      employeeId: user.employeeId ?? "EMP-001",
+      phone: user.phone ?? "+91 00000 00000",
+      profileImageUrl: user.profileImageUrl,
+    },
     authenticatedAt: Date.now(),
   };
 }

@@ -6,7 +6,8 @@
 // sidebar collapse, mobile drawer, profile menu, search overlay).
 // ─────────────────────────────────────────────────────────────────────────────
 
-import React, { useState } from "react";
+import React from "react";
+import { useLocation, useNavigate } from "react-router";
 
 import { Sidebar } from "../layout/Sidebar";
 import { Header } from "../layout/Header";
@@ -18,39 +19,27 @@ import { useSidebar } from "../hooks/useSidebar";
 import { useProfileMenu } from "../hooks/useProfileMenu";
 import { useGlobalSearch } from "../hooks/useGlobalSearch";
 
-import { AppRoutes } from "./AppRoutes";
+import { AppRoutes, getNavIdFromPath, getRouteFromNavId } from "./AppRoutes";
 
-export function AppLayout({
-  onLogout,
-  initialRoutePath,
-}: {
-  onLogout: () => void;
-  initialRoutePath?: string;
-}) {
+export function AppLayout({ onLogout }: { onLogout: () => void }) {
+  const location = useLocation();
+  const navigate = useNavigate();
   const { isSidebarCollapsed, setIsSidebarCollapsed, isMobileDrawerOpen, setIsMobileDrawerOpen } = useSidebar();
   const { isProfileMenuOpen, toggle: toggleProfileMenu, close: closeProfileMenu } = useProfileMenu();
   const { isSearchOpen, setIsSearchOpen } = useGlobalSearch();
 
-  const [activeNav, setActiveNav] = useState(() => {
-    const path = initialRoutePath ?? "";
-    if (path.startsWith("/preventive-maintenance")) return "maintenance";
-    if (path.startsWith("/backup-activities")) return "backup";
-    if (path.startsWith("/qa-activities")) return "qa";
-    if (path.startsWith("/system-inventory")) return "machines";
-    if (path.startsWith("/departments")) return "departments";
+  const activeNav = getNavIdFromPath(location.pathname);
 
-    if (path.startsWith("/notifications")) return "notifications";
-    if (path.startsWith("/notes")) return "notes";
-    if (path.startsWith("/settings")) return "settings";
-    return "dashboard";
-  });
+  const handleNavigate = (nav: string) => {
+    navigate(getRouteFromNavId(nav), { replace: false });
+  };
 
   return (
     <div className="flex h-screen bg-[#F8FAFC] font-sans text-slate-900 overflow-hidden w-full">
       <Sidebar
         isSidebarCollapsed={isSidebarCollapsed}
         activeNav={activeNav}
-        setActiveNav={setActiveNav}
+        setActiveNav={handleNavigate}
         onLogout={onLogout}
       />
 
@@ -58,7 +47,7 @@ export function AppLayout({
         isOpen={isMobileDrawerOpen}
         onClose={() => setIsMobileDrawerOpen(false)}
         activeNav={activeNav}
-        setActiveNav={setActiveNav}
+        setActiveNav={handleNavigate}
       />
 
       {/* MAIN */}
@@ -71,7 +60,7 @@ export function AppLayout({
           isProfileMenuOpen={isProfileMenuOpen}
           onToggleProfileMenu={toggleProfileMenu}
           onCloseProfileMenu={closeProfileMenu}
-          setActiveNav={setActiveNav}
+          setActiveNav={handleNavigate}
           onLogout={onLogout}
         />
 
@@ -80,7 +69,7 @@ export function AppLayout({
           <main className="flex-1 overflow-y-auto p-4 lg:p-6 xl:p-8 flex flex-col">
             <AppRoutes activeNav={activeNav} />
 
-            {isSearchOpen && <GlobalSearchOverlay onClose={() => setIsSearchOpen(false)} onNavigate={(nav) => setActiveNav(nav)} />}
+            {isSearchOpen && <GlobalSearchOverlay onClose={() => setIsSearchOpen(false)} onNavigate={handleNavigate} />}
 
             <Footer />
           </main>

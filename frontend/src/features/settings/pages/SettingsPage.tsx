@@ -5,42 +5,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import React, { useState } from "react";
-import {
-  Monitor,
-  LayoutDashboard,
-  Archive,
-  CheckSquare,
-  Server,
-  Settings,
-  Bell,
-  User,
-  Shield,
-  ChevronRight,
-  Info,
-  Mail,
-  Lock,
-  Check,
-  Plus,
-  Upload,
-  Download,
-  Edit2,
-  Copy,
-  Headphones,
-  Key,
-  Database,
-  Palette,
-  Send,
-  Type,
-  Moon,
-  Sun,
-  ShieldCheck,
-  ClipboardList,
-  Phone,
-  Building,
-  BadgeCheck,
-  RotateCw
-} from "lucide-react";
-import { Area } from "recharts";
+import { LayoutDashboard, Settings, Bell, Shield, ChevronRight, Lock, Check, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 
 
@@ -48,7 +13,7 @@ import { toast } from "sonner";
 // SETTINGS MODULE
 // ─────────────────────────────────────────────────────────────────────────────
 
-type SettingsSection = "general" | "profile" | "appearance" | "notifications" | "security" | "roles" | "machines" | "backup" | "qa" | "email" | "api" | "audit" | "system" | "import" | "license" | "about";
+type SettingsSection = "general" | "notifications" | "security" | "roles";
 
 export function SettingsToggle({ label, desc, value, onChange }: { label: string; desc?: string; value: boolean; onChange: () => void }) {
   return (
@@ -64,11 +29,11 @@ export function SettingsToggle({ label, desc, value, onChange }: { label: string
   );
 }
 
-export function SettingsInput({ label, value, type = "text", placeholder }: { label: string; value: string; type?: string; placeholder?: string }) {
+export function SettingsInput({ label, value, type = "text", placeholder, onChange, readOnly }: { label: string; value: string; type?: string; placeholder?: string; onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void; readOnly?: boolean }) {
   return (
     <div className="mb-4">
       <label className="text-xs font-semibold text-slate-700 mb-1.5 block">{label}</label>
-      <input type={type} defaultValue={value} placeholder={placeholder}
+      <input type={type} value={value} onChange={onChange} readOnly={readOnly} placeholder={placeholder}
         className="w-full h-9 px-3 text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder-slate-400" />
     </div>
   );
@@ -80,28 +45,13 @@ export default function SettingsPage() {
   const toggle = (key: keyof typeof toggles) => setToggles(t => ({ ...t, [key]: !t[key] }));
 
   const sidebar: { id: SettingsSection; label: string; icon: React.ComponentType<{ size?: number; className?: string }>; group?: string }[] = [
-    { id: "general",  label: "General",           icon: Settings,     group: "ORGANIZATION" },
-    { id: "profile",  label: "Company Profile",   icon: Building,     group: "" },
-    { id: "appearance", label: "Appearance",      icon: Palette,      group: "PREFERENCES" },
-    { id: "notifications", label: "Notifications",icon: Bell,         group: "" },
-    { id: "security", label: "Security",          icon: Shield,       group: "ACCESS & CONTROL" },
-    { id: "roles",    label: "Roles & Permissions",icon: ShieldCheck, group: "" },
-    { id: "machines", label: "Machines Config",   icon: Server,       group: "MODULE SETTINGS" },
-    { id: "backup",   label: "Backup Settings",   icon: Archive,      group: "" },
-    { id: "qa",       label: "QA Settings",       icon: CheckSquare,  group: "" },
-    { id: "email",    label: "Email Config",       icon: Mail,         group: "INTEGRATIONS" },
-    { id: "api",      label: "API Keys",           icon: Key,          group: "" },
-    { id: "audit",    label: "Audit Logs",         icon: ClipboardList,group: "SYSTEM" },
-    { id: "system",   label: "System Logs",        icon: Database,     group: "" },
-    { id: "import",   label: "Import / Export",    icon: Download,     group: "" },
-    { id: "license",  label: "License",            icon: BadgeCheck,   group: "ABOUT" },
-    { id: "about",    label: "About System",       icon: Info,         group: "" },
+    { id: "general", label: "General", icon: Settings, group: "PORTAL" },
+    { id: "notifications", label: "Notifications", icon: Bell, group: "" },
+    { id: "security", label: "Security", icon: Shield, group: "ACCESS & CONTROL" },
+    { id: "roles", label: "Roles & Permissions", icon: ShieldCheck, group: "" },
   ];
 
-  const auditLogs: { action: string; user: string; ip: string; time: string }[] = [];
-  const apiKeys: { name: string; key: string; created: string; lastUsed: string; status: string }[] = [];
   const activeSessions: { device: string; ip: string; time: string; current: boolean }[] = [];
-  const systemLogs: { text: string; severity: "info" | "warn" | "error" }[] = [];
 
   return (
     <div className="w-full max-w-[1600px] mx-auto animate-in fade-in duration-300">
@@ -116,10 +66,9 @@ export default function SettingsPage() {
       </div>
 
       <div className="flex gap-5">
-        {/* Sidebar */}
         <div className="w-56 shrink-0 bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
           <div className="py-2">
-            {sidebar.map((item, i) => (
+            {sidebar.map((item, _i) => (
               <React.Fragment key={item.id}>
                 {item.group && <div className="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-4 pt-4 pb-1.5">{item.group}</div>}
                 <button onClick={() => setSection(item.id)} className={`w-full flex items-center gap-2.5 px-4 py-2 text-xs transition-colors ${section === item.id ? "bg-blue-50 text-blue-700 font-semibold" : "text-slate-600 hover:bg-slate-50 font-medium"}`}>
@@ -131,7 +80,6 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {/* Content */}
         <div className="flex-1 min-w-0 bg-white border border-slate-200 rounded-xl shadow-sm p-6">
           {section === "general" && (
             <div className="max-w-xl">
@@ -154,59 +102,6 @@ export default function SettingsPage() {
               <SettingsToggle label="Auto-refresh dashboards" desc="Refresh data every 60 seconds" value={toggles.autoRefresh} onChange={() => toggle("autoRefresh")} />
               <SettingsToggle label="Compact view" desc="Reduce card and table padding" value={toggles.compactView} onChange={() => toggle("compactView")} />
               <button onClick={() => toast.success("Settings saved!")} className="mt-4 flex items-center gap-2 h-9 px-5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"><Check size={13} /> Save Changes</button>
-            </div>
-          )}
-
-          {section === "profile" && (
-            <div className="max-w-xl">
-              <h2 className="text-sm font-bold text-slate-900 mb-5">Company Profile</h2>
-              <div className="flex items-center gap-4 mb-5 p-4 bg-slate-50 border border-slate-200 rounded-xl">
-                <div className="w-16 h-16 bg-blue-600 rounded-xl flex items-center justify-center"><Monitor size={28} className="text-white" /></div>
-                <div><div className="text-sm font-bold text-slate-900">Rajaram Consumer Care Pvt. Ltd.</div><div className="text-xs text-slate-500 mt-1">CIN: U24234MH1998PTC112345</div></div>
-                <button className="ml-auto text-xs font-semibold text-blue-600 hover:text-blue-800">Change Logo</button>
-              </div>
-              <SettingsInput label="Company Name" value="Rajaram Consumer Care Pvt. Ltd." />
-              <SettingsInput label="CIN / Registration Number" value="U24234MH1998PTC112345" />
-              <SettingsInput label="Address" value="Plot 12, MIDC Industrial Area, Pune – 411019" />
-              <SettingsInput label="GSTIN" value="27AABCR1234M1ZX" />
-              <SettingsInput label="Contact Email" value="operations@rajaram.com" type="email" />
-              <SettingsInput label="Contact Phone" value="+91 20 2747 0000" />
-              <button onClick={() => toast.success("Profile saved!")} className="mt-2 flex items-center gap-2 h-9 px-5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"><Check size={13} /> Save Changes</button>
-            </div>
-          )}
-
-          {section === "appearance" && (
-            <div className="max-w-xl">
-              <h2 className="text-sm font-bold text-slate-900 mb-5">Appearance</h2>
-              <div className="mb-5">
-                <label className="text-xs font-semibold text-slate-700 mb-2 block">Theme</label>
-                <div className="grid grid-cols-3 gap-3">
-                  {[{ id: "light", label: "Light", icon: Sun }, { id: "dark", label: "Dark", icon: Moon }, { id: "system", label: "System", icon: Monitor }].map(t => (
-                    <button key={t.id} className={`p-3 rounded-xl border-2 flex flex-col items-center gap-1.5 text-xs font-semibold transition-all ${t.id === "light" ? "border-blue-500 bg-blue-50 text-blue-700" : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"}`}>
-                      <t.icon size={20} />{t.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div className="mb-4">
-                <label className="text-xs font-semibold text-slate-700 mb-2 block">Primary Accent Color</label>
-                <div className="flex gap-2">
-                  {["#2563EB","#7C3AED","#059669","#DC2626","#D97706","#0891B2"].map(c => (
-                    <button key={c} className={`w-8 h-8 rounded-full border-2 transition-all ${c === "#2563EB" ? "border-slate-900 scale-110" : "border-transparent hover:border-slate-400"}`} style={{ backgroundColor: c }} />
-                  ))}
-                </div>
-              </div>
-              <div className="mb-4">
-                <label className="text-xs font-semibold text-slate-700 mb-2 block">Sidebar Layout</label>
-                <div className="flex gap-2">
-                  {["Default (Expanded)", "Compact (Icons Only)"].map(l => (
-                    <button key={l} className={`px-3 py-2 text-xs font-semibold rounded-lg border-2 transition-all ${l.includes("Default") ? "border-blue-500 bg-blue-50 text-blue-700" : "border-slate-200 bg-white text-slate-600"}`}>{l}</button>
-                  ))}
-                </div>
-              </div>
-              <SettingsToggle label="Dark mode" desc="Switch to dark theme" value={toggles.darkMode} onChange={() => toggle("darkMode")} />
-              <SettingsToggle label="Compact view" desc="Tighter spacing and padding" value={toggles.compactView} onChange={() => toggle("compactView")} />
-              <button onClick={() => toast.success("Appearance saved!")} className="mt-2 flex items-center gap-2 h-9 px-5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"><Check size={13} /> Save</button>
             </div>
           )}
 
@@ -263,194 +158,14 @@ export default function SettingsPage() {
           )}
 
           {section === "roles" && (
-            <div>
-              <h2 className="text-sm font-bold text-slate-900 mb-5">Roles & Permissions</h2>
-              <div className="space-y-3 mb-6">
-                {[
-                  { role: "Super Admin", users: 1, perms: ["Full Access", "User Management", "System Config", "Audit Logs"] },
-                  { role: "IT Admin", users: 2, perms: ["IT Modules", "Backup Mgmt", "Machine Config", "Reports"] },
-                  { role: "Department Head", users: 6, perms: ["Own Department", "Reports", "Team Management"] },
-                  { role: "User", users: 8, perms: ["PM Tasks", "Machine View", "QA Tasks"] },
-                  { role: "QA Inspector", users: 3, perms: ["QA Module", "Inspection Reports"] },
-                  { role: "Viewer", users: 12, perms: ["Dashboard", "Read-only Reports"] },
-                ].map((r, i) => (
-                  <div key={i} className="flex items-center gap-4 p-4 bg-slate-50 border border-slate-200 rounded-xl hover:border-slate-300 transition-colors">
-                    <div className="w-9 h-9 bg-blue-50 border border-blue-100 rounded-xl flex items-center justify-center shrink-0"><ShieldCheck size={16} className="text-blue-600" /></div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1.5">
-                        <span className="text-sm font-bold text-slate-900">{r.role}</span>
-                        <span className="text-[10px] bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded-full font-semibold">{r.users} users</span>
-                      </div>
-                      <div className="flex flex-wrap gap-1">
-                        {r.perms.map(p => <span key={p} className="text-[10px] bg-white border border-slate-200 text-slate-600 px-1.5 py-0.5 rounded font-medium">{p}</span>)}
-                      </div>
-                    </div>
-                    <div className="flex gap-1.5 shrink-0">
-                      <button className="h-7 px-2.5 text-[11px] font-semibold text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"><Edit2 size={11} /></button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <button onClick={() => toast.success("New role created!")} className="flex items-center gap-2 h-9 px-4 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"><Plus size={13} /> Add New Role</button>
+            <div className="max-w-xl">
+              <h2 className="text-sm font-bold text-slate-900 mb-3">Roles & Permissions</h2>
+              <p className="text-sm text-slate-600 mb-4">Manage roles, permissions and assignments from the User & Role Management page.</p>
+              <button onClick={() => (window.location.href = '/admin')} className="flex items-center gap-2 h-9 px-4 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"><ShieldCheck size={13} /> Open User & Role Management</button>
             </div>
           )}
 
-          {section === "api" && (
-            <div>
-              <div className="flex items-center justify-between mb-5">
-                <h2 className="text-sm font-bold text-slate-900">API Keys</h2>
-                <button onClick={() => toast.success("New API key generated!")} className="flex items-center gap-1.5 h-9 px-4 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"><Plus size={13} /> Generate Key</button>
-              </div>
-              <div className="space-y-3">
-                {apiKeys.length > 0 ? apiKeys.map((k, i) => (
-                  <div key={i} className="p-4 bg-slate-50 border border-slate-200 rounded-xl hover:border-slate-300 transition-colors">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-bold text-slate-900">{k.name}</span>
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${k.status === "Active" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-red-50 text-red-700 border-red-200"}`}>{k.status}</span>
-                    </div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <code className="text-xs font-mono text-slate-600 bg-white border border-slate-200 px-2 py-1 rounded flex-1">{k.key}</code>
-                      <button onClick={() => toast.success("Copied!")} className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-white rounded-md transition-colors"><Copy size={13} /></button>
-                    </div>
-                    <div className="text-[10px] text-slate-400">Created: {k.created} · Last used: {k.lastUsed}</div>
-                  </div>
-                )) : (
-                  <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-6 py-8 text-sm text-slate-500">
-                    No API keys have been generated yet. Create a key to integrate external systems.
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {section === "audit" && (
-            <div>
-              <h2 className="text-sm font-bold text-slate-900 mb-5">Audit Logs</h2>
-              <div className="bg-slate-50 border border-slate-200 rounded-xl overflow-hidden">
-                <table className="w-full text-left">
-                  <thead className="bg-slate-100 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200">
-                    <tr><th className="px-4 py-3">Action</th><th className="px-4 py-3">User</th><th className="px-4 py-3">IP Address</th><th className="px-4 py-3">Timestamp</th></tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 bg-white">
-                    {auditLogs.length > 0 ? auditLogs.map((a, i) => (
-                      <tr key={i} className="hover:bg-slate-50 transition-colors">
-                        <td className="px-4 py-3 text-xs font-medium text-slate-900">{a.action}</td>
-                        <td className="px-4 py-3 text-xs text-slate-600">{a.user}</td>
-                        <td className="px-4 py-3 text-xs font-mono text-slate-500">{a.ip}</td>
-                        <td className="px-4 py-3 text-xs text-slate-500">{a.time}</td>
-                      </tr>
-                    )) : (
-                      <tr>
-                        <td colSpan={4} className="px-4 py-10 text-center text-sm text-slate-500">No audit logs are available yet.</td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-
-          {section === "about" && (
-            <div className="max-w-md">
-              <div className="flex items-center gap-4 mb-6 p-5 bg-blue-50 border border-blue-100 rounded-2xl">
-                <div className="w-14 h-14 bg-blue-600 rounded-xl flex items-center justify-center"><Monitor size={28} className="text-white" /></div>
-                <div>
-                  <div className="text-lg font-bold text-slate-900">RCC OMP</div>
-                  <div className="text-xs text-slate-500">Enterprise Operations Management Portal</div>
-                  <div className="text-xs font-bold text-blue-600 mt-1">Version 7.0.0</div>
-                </div>
-              </div>
-              {[["Organization","Rajaram Consumer Care Pvt. Ltd."],["Build Date","July 1, 2026"],["Environment","Production"],["License","Enterprise – Unlimited Users"],["License Expiry","December 31, 2026"],["Support","support@rajaram.com"]].map(([k, v]) => (
-                <div key={k} className="flex justify-between py-3 border-b border-slate-100 text-xs">
-                  <span className="text-slate-500 font-medium">{k}</span>
-                  <span className="font-semibold text-slate-900">{v}</span>
-                </div>
-              ))}
-              <div className="flex gap-3 mt-5">
-                <button onClick={() => toast.success("Support ticket opened!")} className="flex items-center gap-2 h-9 px-4 text-xs font-semibold text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"><Headphones size={13} /> Contact Support</button>
-                <button onClick={() => toast.success("Checking for updates...")} className="flex items-center gap-2 h-9 px-4 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"><RotateCw size={13} /> Check Updates</button>
-              </div>
-            </div>
-          )}
-
-          {!["general","profile","appearance","notifications","security","roles","api","audit","about"].includes(section) && (
-            <div>
-              <h2 className="text-sm font-bold text-slate-900 mb-5">{sidebar.find(s => s.id === section)?.label}</h2>
-              <div className="space-y-4">
-                {section === "machines" && <>
-                  <SettingsInput label="Default PM Reminder (days before)" value="3" />
-                  <SettingsInput label="Health Score Warning Threshold (%)" value="60" />
-                  <SettingsInput label="Health Score Critical Threshold (%)" value="30" />
-                  <SettingsInput label="Heartbeat Interval (seconds)" value="60" />
-                  <SettingsToggle label="Auto-assign PM tasks" desc="Assign to department head automatically" value={true} onChange={() => {}} />
-                </>}
-                {section === "backup" && <>
-                  <SettingsInput label="Default Retention Period (days)" value="30" />
-                  <SettingsInput label="Backup Destination (Primary)" value="NAS-BACKUP-01 / Pool-A" />
-                  <SettingsInput label="Backup Destination (Secondary)" value="TAPE-LIB-01" />
-                  <SettingsToggle label="Email on failure" desc="Send alert when backup fails" value={true} onChange={() => {}} />
-                  <SettingsToggle label="Auto-verify backup integrity" desc="Verify checksums after each backup" value={true} onChange={() => {}} />
-                </>}
-                {section === "qa" && <>
-                  <SettingsInput label="Default Inspection Frequency" value="Weekly" />
-                  <SettingsInput label="Auto-escalate after (hours)" value="24" />
-                  <SettingsToggle label="Require photo evidence" desc="Mandatory photo for failed inspections" value={false} onChange={() => {}} />
-                  <SettingsToggle label="Auto-close passed inspections" desc="No manual approval required" value={true} onChange={() => {}} />
-                </>}
-                {section === "email" && <>
-                  <SettingsInput label="SMTP Server" value="smtp.rajaram.com" />
-                  <SettingsInput label="SMTP Port" value="587" />
-                  <SettingsInput label="From Email" value="noreply@rajaram.com" />
-                  <SettingsInput label="From Name" value="RCC OMP Portal" />
-                  <SettingsInput label="SMTP Username" value="smtp_omp@rajaram.com" />
-                  <SettingsInput label="SMTP Password" value="" type="password" placeholder="••••••••" />
-                  <button onClick={() => toast.success("Test email sent!")} className="flex items-center gap-2 h-9 px-4 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"><Send size={13} /> Send Test Email</button>
-                </>}
-                {section === "system" && (
-                  systemLogs.length > 0 ? (
-                    <div className="bg-slate-900 border border-slate-700 rounded-xl p-4 font-mono text-xs text-emerald-400 overflow-x-auto">
-                      {systemLogs.map((log, i) => (
-                        <div key={i} className={log.severity === "error" ? "text-red-300" : log.severity === "warn" ? "text-amber-300" : undefined}>
-                          {log.text}
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-6 py-8 text-sm text-slate-500">
-                      No system logs are available yet. Events will appear here once the portal begins recording runtime activity.
-                    </div>
-                  )
-                )}
-                {section === "import" && (
-                  <div className="space-y-4">
-                    <div className="border-2 border-dashed border-slate-300 rounded-xl p-8 text-center hover:border-blue-400 hover:bg-blue-50/30 transition-colors">
-                      <Upload size={24} className="text-slate-300 mx-auto mb-3" />
-                      <div className="text-sm font-bold text-slate-700">Drop file here or click to upload</div>
-                      <div className="text-xs text-slate-400 mt-1">Supports .xlsx, .csv, .json (max 10MB)</div>
-                      <button className="mt-3 flex items-center gap-2 h-8 px-4 text-xs font-semibold text-blue-600 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors mx-auto"><Upload size={12} /> Choose File</button>
-                    </div>
-                    <div className="flex gap-3">
-                      <button onClick={() => toast.success("Export started – file ready in 30s")} className="flex items-center gap-2 h-9 px-4 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"><Download size={13} /> Export All Data (.xlsx)</button>
-                      <button onClick={() => toast.success("Export started – file ready in 30s")} className="flex items-center gap-2 h-9 px-4 text-xs font-semibold text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"><Download size={13} /> Export as JSON</button>
-                    </div>
-                  </div>
-                )}
-                {section === "license" && (
-                  <div className="space-y-3">
-                    {[["License Type","Enterprise – Unlimited Users"],["Licensed To","Rajaram Consumer Care Pvt. Ltd."],["License Key","RCC-ENT-2024-XXXXXX-XXXX (verified)"],["Valid From","January 1, 2024"],["Valid Until","December 31, 2026"],["Modules Licensed","All Modules"],["Support Tier","Priority Enterprise"]].map(([k, v]) => (
-                      <div key={k} className="flex justify-between p-3 bg-slate-50 border border-slate-100 rounded-xl text-xs">
-                        <span className="text-slate-500 font-medium">{k}</span>
-                        <span className="font-bold text-slate-900">{v}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-              {!["system","import","license"].includes(section) && (
-                <button onClick={() => toast.success("Settings saved!")} className="mt-5 flex items-center gap-2 h-9 px-5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"><Check size={13} /> Save Changes</button>
-              )}
-            </div>
-          )}
+          {/* Any module-specific settings removed — Settings only exposes General, Notifications, Security and Roles */}
         </div>
       </div>
     </div>

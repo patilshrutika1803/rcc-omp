@@ -35,26 +35,10 @@ function AuthContainer({ children }: { children: React.ReactNode }) {
   );
 }
 
-function InputField({ label, type = "text", placeholder, icon: Icon }: any) {
-  return (
-    <div className="mb-4">
-      <label className="text-sm font-semibold text-slate-700 mb-1.5 block">{label}</label>
-      <div className="relative">
-        {Icon && <Icon size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />}
-        <input
-          type={type}
-          placeholder={placeholder}
-          className={`w-full h-11 ${Icon ? "pl-10" : "pl-3"} pr-3 text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder-slate-400`}
-        />
-      </div>
-    </div>
-  );
-}
-
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const locationState = location.state as any;
+  const locationState = location.state as { from?: string } | null;
 
 
   const { login } = useAuth();
@@ -84,8 +68,8 @@ export default function LoginPage() {
             navigate(from && from.startsWith("/") ? from : "/dashboard", { replace: true });
 
 
-          } catch (err: any) {
-            setError(err?.message ?? "Login failed");
+          } catch (err: unknown) {
+            setError((err as { message?: string })?.message ?? "Login failed");
           } finally {
             setSubmitting(false);
           }

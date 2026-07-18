@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { Wrench, X, RefreshCw, Plus } from "lucide-react";
 import type { PMRecord, PMPriority, PMStatus } from "../types/pm";
 import type { SystemInventory } from "../../system-inventory/types/system";
@@ -7,7 +7,7 @@ import { FREQUENCIES, REMINDER_OPTIONS, PRIORITY_OPTIONS, INITIAL_STATUS_OPTIONS
 import { daysUntil } from "../utils/pmDateUtils";
 import { SystemSearchDropdown } from "./SystemSearchDropdown";
 
-export function AddPMModal({ onClose, onSave, editRecord, departments, users, eligibleSystems = [] }: { onClose: () => void; onSave: (record: PMRecord) => void; editRecord?: PMRecord; departments: string[]; users: string[]; eligibleSystems?: SystemInventory[] }) {
+export function AddPMModal({ onClose, onSave, editRecord, departments: _departments, users: _users, eligibleSystems = [] }: { onClose: () => void; onSave: (record: PMRecord) => void; editRecord?: PMRecord; departments: string[]; users: string[]; eligibleSystems?: SystemInventory[] }) {
   const isEdit = !!editRecord;
 
   const [creationMode, setCreationMode] = useState<"existing" | "manual">(

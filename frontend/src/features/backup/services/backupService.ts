@@ -21,32 +21,32 @@ export async function getBackupJobs(): Promise<BackupJob[]> {
   return [];
 }
 
-export async function createBackupJob(data: BackupJobFormData): Promise<BackupJob> {
+export async function createBackupJob(_data: BackupJobFormData): Promise<BackupJob> {
   // TODO: POST /api/backup-jobs
   throw new Error("createBackupJob is not implemented — backend not connected yet.");
 }
 
-export async function updateBackupJob(id: string, data: BackupJobFormData): Promise<BackupJob> {
+export async function updateBackupJob(_id: string, _data: BackupJobFormData): Promise<BackupJob> {
   // TODO: PATCH /api/backup-jobs/:id
   throw new Error("updateBackupJob is not implemented — backend not connected yet.");
 }
 
-export async function deleteBackupJob(id: string): Promise<void> {
+export async function deleteBackupJob(_id: string): Promise<void> {
   // TODO: DELETE /api/backup-jobs/:id
   throw new Error("deleteBackupJob is not implemented — backend not connected yet.");
 }
 
-export async function runBackupNow(id: string): Promise<void> {
+export async function runBackupNow(_id: string): Promise<void> {
   // TODO: POST /api/backup-jobs/:id/run
   throw new Error("runBackupNow is not implemented — backend not connected yet.");
 }
 
-export async function duplicateBackupJob(id: string): Promise<BackupJob> {
+export async function duplicateBackupJob(_id: string): Promise<BackupJob> {
   // TODO: POST /api/backup-jobs/:id/duplicate
   throw new Error("duplicateBackupJob is not implemented — backend not connected yet.");
 }
 
-export async function exportBackupJob(id: string): Promise<Blob> {
+export async function exportBackupJob(_id: string): Promise<Blob> {
   // TODO: GET /api/backup-jobs/:id/export
   throw new Error("exportBackupJob is not implemented — backend not connected yet.");
 }

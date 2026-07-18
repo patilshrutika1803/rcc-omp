@@ -22,7 +22,7 @@ export default function DepartmentTable({
   records,
   totalCount,
   sortField,
-  sortDir,
+  sortDir: _sortDir,
   onSort,
   onEdit,
   onDelete,

@@ -4,13 +4,8 @@
 //
 // Responsibilities (and ONLY these):
 //  - Initialize providers (AuthProvider, BrowserRouter, Toaster)
-//  - Handle the authentication wrapper (ProtectedRoute)
+//  - Handle the authentication wrapper (ProtectedRoute/PublicRoute)
 //  - Render the app shell (AppLayout) and top-level react-router routes
-//
-// All navigation constants, search data, global search overlay, sidebar,
-// header, footer, mobile drawer, profile dropdown, user profile, role
-// management and help center screens have been extracted into
-// layout/, components/GlobalSearch/, modules/, constants/ and hooks/.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import React from "react";
@@ -19,47 +14,41 @@ import { Toaster } from "sonner";
 
 import { AppLayout } from "./AppLayout";
 import { ProtectedRoute } from "./ProtectedRoute";
+import { PublicRoute } from "./PublicRoute";
 
 import LoginPage from "../pages/LoginPage";
 import ForgotPasswordPage from "../pages/ForgotPasswordPage";
 import RegisterPage from "../pages/RegisterPage";
+import NotFoundPage from "../pages/NotFoundPage";
 
-import { AuthProvider } from "../auth/AuthProvider";
-import { logout as logoutAuth } from "../auth/auth";
+import { AuthProvider, useAuth } from "../auth/AuthProvider";
 
-import PreventiveMaintenancePage from "../features/preventive-maintenance/PreventiveMaintenancePage";
-import BackupActivitiesPage from "../features/backup/BackupActivitiesPage";
-import QAPage from "../features/qa/QAPage";
-import SystemInventoryPage from "../features/system-inventory/SystemInventoryPage";
-import DepartmentPage from "../features/departments/DepartmentPage";
+function RootRedirect() {
+  const { isAuthenticated, ready } = useAuth();
+  const location = useLocation();
 
-import NotificationsPage from "../features/notificataions/pages/NotificationsPage";
-import NotesPage from "../features/notes/pages/NotesPage";
-import SettingsPage from "../features/settings/pages/SettingsPage";
+  if (!ready) return null;
 
-function LogoutAndRedirect({ closeProfileDropdown }: { closeProfileDropdown?: () => void }) {
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace state={{ from: location.pathname + location.search }} />;
+  }
+
+  return <Navigate to="/dashboard" replace />;
+}
+
+function AppShell({ closeProfileDropdown }: { closeProfileDropdown?: () => void }) {
   const navigate = useNavigate();
 
-  const onLogout = () => {
-    logoutAuth();
-    try {
-      sessionStorage.clear();
-    } catch {
-      // ignore
-    }
+  const { logout } = useAuth();
 
+  const onLogout = () => {
+    // Use the AuthProvider logout so provider state is updated.
+    logout();
     closeProfileDropdown?.();
     navigate("/login", { replace: true });
   };
 
-  const location = useLocation();
-
-  return (
-    <AppLayout
-      onLogout={onLogout}
-      initialRoutePath={location.pathname}
-    />
-  );
+  return <AppLayout onLogout={onLogout} />;
 }
 
 export default function App() {
@@ -68,89 +57,25 @@ export default function App() {
       <BrowserRouter>
         <Toaster position="bottom-right" richColors closeButton toastOptions={{ duration: 3000 }} />
         <Routes>
-          <Route path="/" element={<Navigate to="/login" replace />} />
-          <Route path="/login" element={<LoginPage />} />
+          <Route path="/" element={<RootRedirect />} />
+          <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
+          <Route path="/forgot-password" element={<PublicRoute><ForgotPasswordPage /></PublicRoute>} />
+          <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
 
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <LogoutAndRedirect />
-              </ProtectedRoute>
-            }
-          />
+          <Route path="/dashboard" element={<ProtectedRoute><AppShell /></ProtectedRoute>} />
+          <Route path="/preventive-maintenance" element={<ProtectedRoute><AppShell /></ProtectedRoute>} />
+          <Route path="/backup-activities" element={<ProtectedRoute><AppShell /></ProtectedRoute>} />
+          <Route path="/qa-activities" element={<ProtectedRoute><AppShell /></ProtectedRoute>} />
+          <Route path="/system-inventory" element={<ProtectedRoute><AppShell /></ProtectedRoute>} />
+          <Route path="/departments" element={<ProtectedRoute><AppShell /></ProtectedRoute>} />
+          <Route path="/notifications" element={<ProtectedRoute><AppShell /></ProtectedRoute>} />
+          <Route path="/notes" element={<ProtectedRoute><AppShell /></ProtectedRoute>} />
+          <Route path="/settings" element={<ProtectedRoute><AppShell /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><AppShell /></ProtectedRoute>} />
+          <Route path="/admin" element={<ProtectedRoute><AppShell /></ProtectedRoute>} />
+          <Route path="/help" element={<ProtectedRoute><AppShell /></ProtectedRoute>} />
 
-          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-
-          <Route
-            path="/preventive-maintenance"
-            element={
-              <ProtectedRoute>
-                <PreventiveMaintenancePage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/backup-activities"
-            element={
-              <ProtectedRoute>
-                <BackupActivitiesPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/qa-activities"
-            element={
-              <ProtectedRoute>
-                <QAPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/system-inventory"
-            element={
-              <ProtectedRoute>
-                <SystemInventoryPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/departments"
-            element={
-              <ProtectedRoute>
-                <DepartmentPage />
-              </ProtectedRoute>
-            }
-          />
-
-
-          <Route
-            path="/notifications"
-            element={
-              <ProtectedRoute>
-                <NotificationsPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/notes"
-            element={
-              <ProtectedRoute>
-                <NotesPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/settings"
-            element={
-              <ProtectedRoute>
-                <SettingsPage />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route path="*" element={<Navigate to="/login" replace />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

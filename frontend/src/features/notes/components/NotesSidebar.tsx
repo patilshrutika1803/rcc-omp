@@ -13,7 +13,6 @@ import {
   Copy,
 } from "lucide-react";
 
-import type { Note } from "../types/note";
 import { NOTE_FOLDERS } from "../constants/noteConstants";
 import NotesSearch from "./NotesSearch";
 

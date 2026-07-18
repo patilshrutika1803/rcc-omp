@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import type { PMRecord, PMStatus } from "../types/pm";
 import type { SystemInventory } from "../../system-inventory/types/system";
@@ -42,7 +42,7 @@ export function usePreventiveMaintenance() {
   // Populated via API; empty by default so the UI never crashes with no data.
   const [departments, setDepartments] = useState<string[]>([]);
   const [users, setUsers] = useState<string[]>([]);
-  const [eligibleSystems, setEligibleSystems] = useState<SystemInventory[]>([]);
+  const [eligibleSystems, _setEligibleSystems] = useState<SystemInventory[]>([]);
 
   // Network / request lifecycle state, ready for real API integration.
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -81,7 +81,7 @@ export function usePreventiveMaintenance() {
           setDepartments([]);
           setUsers([]);
         }
-      } catch (err) {
+      } catch (_err) {
         if (!cancelled) {
           setLoadError("Unable to load preventive maintenance data. Please try again.");
           setPmRecords([]);
@@ -157,7 +157,7 @@ export function usePreventiveMaintenance() {
       setPmRecords(prev => [record, ...prev]);
       addTimelineEntry("Added", record);
       toast.success("Preventive Maintenance Schedule Added Successfully");
-    } catch (err) {
+    } catch (_err) {
       toast.error("Failed to add maintenance schedule. Please try again.");
     }
   };
@@ -170,7 +170,7 @@ export function usePreventiveMaintenance() {
       setPmRecords(prev => prev.map(r => r.id === updated.id ? updated : r));
       addTimelineEntry("Updated", updated);
       toast.success("Maintenance Schedule Updated Successfully");
-    } catch (err) {
+    } catch (_err) {
       toast.error("Failed to update maintenance schedule. Please try again.");
     }
   };
@@ -184,7 +184,7 @@ export function usePreventiveMaintenance() {
       setPmRecords(prev => prev.filter(r => r.id !== record.id));
       addTimelineEntry("Deleted", record);
       toast.success("Maintenance Deleted Successfully");
-    } catch (err) {
+    } catch (_err) {
       toast.error("Failed to delete maintenance task. Please try again.");
     } finally {
       setIsDeleting(false);
@@ -209,7 +209,7 @@ export function usePreventiveMaintenance() {
       setPmRecords(prev => prev.map(r => r.id === updated.id ? updated : r));
       addTimelineEntry("Completed", updated);
       toast.success("Maintenance Completed Successfully");
-    } catch (err) {
+    } catch (_err) {
       toast.error("Failed to mark maintenance as complete. Please try again.");
     } finally {
       setShowCompleteDialog(false); setSelectedRecord(null);
@@ -232,7 +232,7 @@ export function usePreventiveMaintenance() {
       setPmRecords(prev => prev.map(r => r.id === updated.id ? updated : r));
       addTimelineEntry("Snoozed", updated);
       toast.success("Maintenance Snoozed Successfully");
-    } catch (err) {
+    } catch (_err) {
       toast.error("Failed to snooze maintenance task. Please try again.");
     } finally {
       setShowSnoozeDialog(false); setSelectedRecord(null);

@@ -32,19 +32,68 @@ export function RoleManagementContent() {
     e.employeeId.toLowerCase().includes(search.toLowerCase())
   );
 
-  const MODULES = ["Dashboard","Machines","Maintenance","QA","Backup","Departments","Reports","Notifications","Notes","Settings","Admin"];
+  const MODULES = ["Dashboard","Machines","Preventive Maintenance","QA","Backup","Departments","Reports","Notifications","Notes","Settings","Admin"];
+
   const ROLE_PERMS: Record<string, string[]> = {
-    "Super Admin": MODULES,
-    "IT Admin": ["Dashboard","Machines","Maintenance","Backup","Departments","Reports","Notifications","Notes","Settings"],
-    "Department Head": ["Dashboard","Machines","Maintenance","QA","Departments","Reports","Notifications","Notes"],
-    "User": ["Dashboard","Machines","Maintenance","QA","Reports","Notifications"],
-    "QA Inspector": ["Dashboard","QA","Reports","Notifications"],
-    "Viewer": ["Dashboard","Reports"],
+    "IT Head": [
+      "Dashboard",
+      "Machines",
+      "Preventive Maintenance",
+      "QA",
+      "Backup",
+      "Departments",
+      "Reports",
+      "Notifications",
+      "Notes",
+      "Settings",
+      "Admin",
+      "Export Reports",
+      "Approve Backup Activities",
+      "Approve QA Activities",
+      "Approve Preventive Maintenance",
+      "Manage Users",
+      "Manage Permissions",
+    ],
+    "IT Executive": [
+      "Dashboard",
+      "Machines",
+      "Preventive Maintenance",
+      "QA",
+      "Backup",
+      "Departments",
+      "Reports",
+      "Notifications",
+      "Notes",
+      "Create",
+      "Edit",
+      "Update",
+      "Submit for approval",
+    ],
+    "IT User": [
+      "Dashboard",
+      "Machines",
+      "Preventive Maintenance",
+      "QA",
+      "Backup",
+      "Departments",
+      "Reports",
+      "Notifications",
+      "Notes",
+      "View Only",
+    ],
   };
 
-  const ROLES_LIST = Object.keys(ROLE_PERMS);
+  const ROLES_LIST = ["IT Head", "IT Executive", "IT User"];
+
+  const ROLE_ASSIGNMENTS: Record<string, string[]> = {
+    "IT Head": ["Nikhil Sakat"],
+    "IT Executive": ["Megha Jadhav", "Kiran Yadav"],
+    "IT User": [],
+  };
 
   const ACCESS_LOGS: { user: string; action: string; resource: string; time: string; result: string }[] = [];
+
+  const totalAssigned = Object.values(ROLE_ASSIGNMENTS).reduce((s, a) => s + a.length, 0);
 
   return (
     <div className="w-full max-w-[1600px] mx-auto animate-in fade-in duration-300">
@@ -55,7 +104,7 @@ export function RoleManagementContent() {
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-sm shadow-blue-200"><ShieldCheck size={20} className="text-white" /></div>
-            <div><h1 className="text-xl font-bold text-slate-900 tracking-tight">User & Role Management</h1><p className="text-xs text-slate-500 mt-0.5">{EMPLOYEES.length} users · {ROLES_LIST.length} roles</p></div>
+            <div><h1 className="text-xl font-bold text-slate-900 tracking-tight">User & Role Management</h1><p className="text-xs text-slate-500 mt-0.5">{totalAssigned} users · {ROLES_LIST.length} roles</p></div>
           </div>
           <button onClick={() => toast.success("Invite sent!")} className="flex items-center gap-1.5 h-9 px-4 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors shadow-sm"><UserPlus size={13} /> Invite User</button>
         </div>
@@ -131,7 +180,7 @@ export function RoleManagementContent() {
               <div className="flex flex-wrap gap-1">
                 {ROLE_PERMS[role].map(p => <span key={p} className="text-[10px] bg-blue-50 text-blue-700 border border-blue-200 px-1.5 py-0.5 rounded font-medium">{p}</span>)}
               </div>
-              <div className="mt-3 text-[10px] text-slate-400">{EMPLOYEES.length} users assigned</div>
+              <div className="mt-3 text-[10px] text-slate-400">{(ROLE_ASSIGNMENTS[role] || []).length} users assigned</div>
             </div>
           ))}
         </div>

@@ -1,20 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
 
-function formatIndianDateTime(d: Date) {
-  const weekday = d.toLocaleDateString("en-IN", { weekday: "long" });
-  const day = d.getDate();
-  const month = d.toLocaleDateString("en-IN", { month: "long" });
-  const year = d.getFullYear();
-
-  const time = d.toLocaleTimeString("en-IN", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: true,
-  });
-
-  return `${weekday}, ${day} ${month} ${year} • ${time} IST`;
-}
-
 
 export default function LiveTimestamp({
   className,

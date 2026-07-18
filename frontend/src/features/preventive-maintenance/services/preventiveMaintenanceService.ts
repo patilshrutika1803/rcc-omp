@@ -35,7 +35,7 @@ const preventiveMaintenanceService = {
    * Fetch a single PM task by id.
    * TODO: GET /api/pm-records/:id
    */
-  async getTask(id: string): Promise<PMRecord | null> {
+  async getTask(_id: string): Promise<PMRecord | null> {
     return null;
   },
 
@@ -60,7 +60,7 @@ const preventiveMaintenanceService = {
    * Delete a PM task.
    * TODO: DELETE /api/pm-records/:id
    */
-  async deletePM(id: string): Promise<void> {
+  async deletePM(_id: string): Promise<void> {
     return;
   },
 
@@ -68,7 +68,7 @@ const preventiveMaintenanceService = {
    * Mark a PM task as completed.
    * TODO: POST /api/pm-records/:id/complete { notes }
    */
-  async completePM(id: string, notes: string): Promise<void> {
+  async completePM(_id: string, _notes: string): Promise<void> {
     return;
   },
 
@@ -76,7 +76,7 @@ const preventiveMaintenanceService = {
    * Snooze a PM task to a new due date.
    * TODO: POST /api/pm-records/:id/snooze { nextDue }
    */
-  async snoozePM(id: string, nextDue: string): Promise<void> {
+  async snoozePM(_id: string, _nextDue: string): Promise<void> {
     return;
   },
 
@@ -92,7 +92,7 @@ const preventiveMaintenanceService = {
    * Import PM records (e.g. from Excel).
    * TODO: POST /api/pm-records/import
    */
-  async importPM(file: File): Promise<void> {
+  async importPM(_file: File): Promise<void> {
     return;
   },
 
