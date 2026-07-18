@@ -20,6 +20,7 @@ import { useProfileMenu } from "../hooks/useProfileMenu";
 import { useGlobalSearch } from "../hooks/useGlobalSearch";
 
 import { AppRoutes, getNavIdFromPath, getRouteFromNavId } from "./AppRoutes";
+import NotFoundPage from "../pages/NotFoundPage";
 
 export function AppLayout({ onLogout }: { onLogout: () => void }) {
   const location = useLocation();
@@ -29,6 +30,11 @@ export function AppLayout({ onLogout }: { onLogout: () => void }) {
   const { isSearchOpen, setIsSearchOpen } = useGlobalSearch();
 
   const activeNav = getNavIdFromPath(location.pathname);
+
+  // Unknown path inside the authenticated shell → show NotFound
+  if (activeNav === null) {
+    return <NotFoundPage />;
+  }
 
   const handleNavigate = (nav: string) => {
     navigate(getRouteFromNavId(nav), { replace: false });

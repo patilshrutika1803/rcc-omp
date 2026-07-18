@@ -72,7 +72,7 @@ export default function App() {
           <Route path="/notes" element={<ProtectedRoute><AppShell /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><AppShell /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><AppShell /></ProtectedRoute>} />
-          <Route path="/admin" element={<ProtectedRoute><AppShell /></ProtectedRoute>} />
+          <Route path="/user-management" element={<ProtectedRoute><AppShell /></ProtectedRoute>} />
           <Route path="/help" element={<ProtectedRoute><AppShell /></ProtectedRoute>} />
 
           <Route path="*" element={<NotFoundPage />} />

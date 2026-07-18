@@ -6,7 +6,6 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import React from "react";
-import { LayoutDashboard } from "lucide-react";
 
 import DashboardPage from "../features/dashboard/DashboardPage";
 import PreventiveMaintenancePage from "../features/preventive-maintenance/PreventiveMaintenancePage";
@@ -23,8 +22,6 @@ import { UserProfileContent } from "../modules/profile/UserProfileContent";
 import { RoleManagementContent } from "../modules/admin/RoleManagementContent";
 import { HelpCenterContent } from "../modules/help/HelpCenterContent";
 
-import { NAV_ITEMS } from "../constants/navigation";
-
 export const KNOWN_NAV_IDS = ["dashboard","maintenance","backup","qa","machines","departments","notifications","notes","settings","profile","admin","help"];
 
 export const NAV_TO_ROUTE: Record<string, string> = {
@@ -38,7 +35,7 @@ export const NAV_TO_ROUTE: Record<string, string> = {
   notes: "/notes",
   settings: "/settings",
   profile: "/profile",
-  admin: "/admin",
+  admin: "/user-management",
   help: "/help",
 };
 
@@ -47,10 +44,10 @@ export const ROUTE_TO_NAV: Record<string, string> = Object.entries(NAV_TO_ROUTE)
   return acc;
 }, {} as Record<string, string>);
 
-export function getNavIdFromPath(pathname: string) {
+export function getNavIdFromPath(pathname: string): string | null {
   const normalized = pathname.split("?")[0].split("#")[0].toLowerCase();
   if (!normalized || normalized === "/") return "dashboard";
-  return ROUTE_TO_NAV[normalized] ?? "dashboard";
+  return ROUTE_TO_NAV[normalized] ?? null;
 }
 
 export function getRouteFromNavId(navId: string) {
@@ -72,13 +69,6 @@ export function AppRoutes({ activeNav }: { activeNav: string }) {
       {activeNav === "profile" && <UserProfileContent />}
       {activeNav === "admin" && <RoleManagementContent />}
       {activeNav === "help" && <HelpCenterContent />}
-      {!KNOWN_NAV_IDS.includes(activeNav) && (
-        <div className="flex-1 bg-white border border-slate-200 rounded-2xl shadow-sm p-8 flex flex-col items-center justify-center text-center">
-          <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mb-4"><LayoutDashboard size={24} className="text-blue-600" /></div>
-          <h2 className="text-lg font-bold text-slate-900">{NAV_ITEMS.find(n => n.id === activeNav)?.label}</h2>
-          <p className="text-sm text-slate-500 max-w-sm mt-2">This module is under development.</p>
-        </div>
-      )}
     </>
   );
 }
