@@ -1,8 +1,34 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { Mail, Lock } from "lucide-react";
 import { useAuth } from "../auth/AuthProvider";
 
+const REMEMBER_EMAIL_KEY = "rccomp.login.rememberedEmail";
+
+function readRememberedEmail(): string {
+  try {
+    const v = localStorage.getItem(REMEMBER_EMAIL_KEY);
+    return v ? String(v) : "";
+  } catch {
+    return "";
+  }
+}
+
+function writeRememberedEmail(email: string) {
+  try {
+    localStorage.setItem(REMEMBER_EMAIL_KEY, email);
+  } catch {
+    // ignore storage failures
+  }
+}
+
+function clearRememberedEmail() {
+  try {
+    localStorage.removeItem(REMEMBER_EMAIL_KEY);
+  } catch {
+    // ignore
+  }
+}
 
 function AuthHeader() {
   return (
@@ -45,6 +71,15 @@ export default function LoginPage() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
+
+  useEffect(() => {
+    const remembered = readRememberedEmail();
+    if (remembered) {
+      setEmail(remembered);
+      setRememberMe(true);
+    }
+  }, []);
 
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -62,7 +97,18 @@ export default function LoginPage() {
           setError(null);
           setSubmitting(true);
           try {
-            await login(email.trim(), password);
+            const normalizedEmail = email.trim();
+            await login(normalizedEmail, password);
+
+            // Remember-me behavior:
+            // - Save only email to localStorage
+            // - Never save password
+            // - Prepare for future backend integration
+            if (rememberMe) {
+              writeRememberedEmail(normalizedEmail);
+            } else {
+              clearRememberedEmail();
+            }
 
             const from = locationState?.from as string | undefined;
             navigate(from && from.startsWith("/") ? from : "/dashboard", { replace: true });
@@ -105,7 +151,17 @@ export default function LoginPage() {
 
         <div className="flex items-center justify-between mb-6">
           <label className="flex items-center gap-2 cursor-pointer group">
-            <input type="checkbox" className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 focus:ring-2" />
+            <input
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(e) => {
+                const next = e.target.checked;
+                setRememberMe(next);
+                // If user unchecks, clear stored email immediately.
+                if (!next) clearRememberedEmail();
+              }}
+              className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 focus:ring-2"
+            />
             <span className="text-sm font-medium text-slate-600 group-hover:text-slate-900 transition-colors">Remember me</span>
           </label>
           <button
