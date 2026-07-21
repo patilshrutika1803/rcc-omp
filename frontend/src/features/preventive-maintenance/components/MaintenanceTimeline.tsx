@@ -42,15 +42,23 @@ function TimelineSection({ title, items, accent }: { title: string; items: PMRec
 }
 
 export function MaintenanceTimeline({ data }: { data: PMRecord[] }) {
-  const today = data.filter(r => r.status === "Due Today" || r.status === "Overdue");
-  const tomorrow = data.filter(r => {
+  // Timeline should display ONLY:
+  // - Upcoming
+  // - Due Today
+  // - Overdue
+  // - In Progress
+  // Completed must disappear immediately.
+  const overdue = data.filter(r => r.status === "Overdue" || daysUntil(r.nextDue) < 0);
+  const dueToday = data.filter(r => r.status === "Due Today" || daysUntil(r.nextDue) === 0);
+  const inProgress = data.filter(r => r.status === "In Progress");
+  const upcoming = data.filter(r => {
     const d = daysUntil(r.nextDue);
-    return d === 1;
+    if (r.status === "Completed") return false;
+    if (r.status === "Overdue" || d < 0) return false;
+    if (r.status === "Due Today" || d === 0) return false;
+    return true;
   });
-  const thisWeek = data.filter(r => {
-    const d = daysUntil(r.nextDue);
-    return d > 1 && d <= 7;
-  });
+
 
   return (
     <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-5">
@@ -59,15 +67,18 @@ export function MaintenanceTimeline({ data }: { data: PMRecord[] }) {
           <CalendarClock size={16} className="text-blue-500" /> Maintenance Timeline
         </h3>
       </div>
-      <TimelineSection title="Due Today & Overdue" items={today} accent="text-red-600" />
-      <TimelineSection title="Tomorrow" items={tomorrow} accent="text-amber-600" />
-      <TimelineSection title="This Week" items={thisWeek} accent="text-blue-600" />
-      {today.length === 0 && tomorrow.length === 0 && thisWeek.length === 0 && (
+      <TimelineSection title="Overdue" items={overdue} accent="text-red-600" />
+      <TimelineSection title="Due Today" items={dueToday} accent="text-blue-600" />
+      <TimelineSection title="In Progress" items={inProgress} accent="text-amber-600" />
+      <TimelineSection title="Upcoming" items={upcoming} accent="text-slate-700" />
+
+      {overdue.length === 0 && dueToday.length === 0 && inProgress.length === 0 && upcoming.length === 0 && (
         <div className="text-center py-8">
           <CalendarCheck size={32} className="text-emerald-300 mx-auto mb-3" />
-          <p className="text-xs text-slate-500 font-medium">All clear — no urgent maintenance in the next 7 days.</p>
+          <p className="text-xs text-slate-500 font-medium">No scheduled maintenance items to display.</p>
         </div>
       )}
+
     </div>
   );
 }

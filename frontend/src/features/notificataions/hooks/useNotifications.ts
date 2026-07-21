@@ -7,6 +7,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useCallback, useEffect, useState } from "react";
+import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import type { Notification, NotificationFilterId } from "../types/notification";
 import { notificationService } from "../services/notificationService";
@@ -14,6 +15,7 @@ import { DEFAULT_FILTER } from "../constants/notificationConstants";
 import { buildSidebarFilters, getDisplayedNotifications, getUnreadCount, getActiveTotalCount } from "../utils/notificationHelpers";
 
 export function useNotifications() {
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [activeFilter, setActiveFilter] = useState<NotificationFilterId>(DEFAULT_FILTER);
   const [search, setSearch] = useState("");
@@ -56,6 +58,24 @@ export function useNotifications() {
     await notificationService.archiveNotification(id);
   }, []);
 
+  /**
+   * Handle clicking on a PM reminder notification.
+   * Navigates to Preventive Maintenance page and auto-opens the PM drawer.
+   */
+  const handlePMNotificationClick = useCallback(async (id: string, pmId?: string) => {
+    if (!pmId) return;
+    // Mark as read
+    await markRead(id);
+    // Store PM id in sessionStorage so PreventiveMaintenancePage opens it
+    try {
+      window.sessionStorage.setItem("rcc_omp_pm_selected_id", pmId);
+    } catch {
+      // ignore
+    }
+    // Navigate to Preventive Maintenance page
+    navigate("/preventive-maintenance");
+  }, [navigate, markRead]);
+
   const filters = buildSidebarFilters(notifications);
   const displayed = getDisplayedNotifications(notifications, activeFilter, search);
   const unreadCount = getUnreadCount(notifications);
@@ -77,5 +97,6 @@ export function useNotifications() {
     deleteNotif,
     archiveNotif,
     refresh: loadNotifications,
+    handlePMNotificationClick,
   };
 }

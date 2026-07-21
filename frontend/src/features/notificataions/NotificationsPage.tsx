@@ -28,6 +28,7 @@ export default function NotificationsPage() {
     markAllRead,
     deleteNotif,
     archiveNotif,
+    handlePMNotificationClick,
   } = useNotifications();
 
   return (
@@ -51,6 +52,7 @@ export default function NotificationsPage() {
                   onRead={() => markRead(n.id)}
                   onDelete={() => deleteNotif(n.id)}
                   onArchive={() => archiveNotif(n.id)}
+                  onPmClick={handlePMNotificationClick}
                 />
               ))}
             </div>

@@ -50,9 +50,10 @@ export function PMFilters({
           <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
-            placeholder="Search machines, users..."
+            placeholder="Search machine name/id, department, assigned user, location, status, priority..."
             value={searchQuery}
             onChange={e => onSearchQueryChange(e.target.value)}
+
             className="w-full h-9 pl-9 pr-4 text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder-slate-400"
           />
         </div>

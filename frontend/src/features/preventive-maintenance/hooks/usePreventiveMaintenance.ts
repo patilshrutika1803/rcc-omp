@@ -2,10 +2,13 @@ import { useState, useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import type { PMRecord, PMStatus } from "../types/pm";
 import type { SystemInventory } from "../../system-inventory/types/system";
-import { daysUntil } from "../utils/pmDateUtils";
+import { daysUntil, calculateNextDue } from "../utils/pmDateUtils";
 import { PM_PAGE_SIZE } from "../constants/pmConstants";
 import type { PMViewMode } from "../components/PMToolbar";
 import type { PMFilterState } from "../components/PMFilters";
+import { loadPMState, savePMState, type PersistedPMStateV1, type PMCompletionEvent } from "../utils/pmStorage";
+import { calculateReminderDate, checkAndGenerateDueReminders, clearRemindersForPM } from "../utils/pmReminderUtils";
+
 
 const INITIAL_FILTERS: PMFilterState = {
   department: "",
@@ -50,6 +53,7 @@ export function usePreventiveMaintenance() {
 
   const [filters, setFilters] = useState<PMFilterState>(INITIAL_FILTERS);
 
+
   useEffect(() => {
     let cancelled = false;
 
@@ -57,30 +61,22 @@ export function usePreventiveMaintenance() {
       setIsLoading(true);
       setLoadError(null);
       try {
-        // TODO:
-        // Fetch PM records
-        // const res = await fetch('/api/pm-records');
-        // if (!res.ok) throw new Error('Failed to fetch PM records');
-        // const data = await res.json();
-        // if (!cancelled) setPmRecords(Array.isArray(data) ? data : []);
+        const persisted: PersistedPMStateV1 = loadPMState();
+        if (cancelled) return;
 
-        // TODO:
-        // Fetch Machine List / Departments / Users
-        // const [deptRes, userRes] = await Promise.all([
-        //   fetch('/api/departments'),
-        //   fetch('/api/users'),
-        // ]);
-        // if (!cancelled) {
-        //   setDepartments(await deptRes.json());
-        //   setUsers(await userRes.json());
-        // }
+        // Load PM records + persisted filters.
+        setPmRecords(Array.isArray(persisted.records) ? persisted.records : []);
 
-        if (!cancelled) {
-          // No backend connected yet — start from a clean, empty state.
-          setPmRecords([]);
-          setDepartments([]);
-          setUsers([]);
+        if (persisted.filters) {
+          setSearchQuery(persisted.filters.searchQuery ?? "");
+          setQuickFilter(persisted.filters.quickFilter ?? "All");
+          setFilters(persisted.filters.filters);
         }
+
+        // Lookups are empty until feature modules are wired.
+        // UI uses fallbacks when empty.
+        setDepartments([]);
+        setUsers([]);
       } catch (_err) {
         if (!cancelled) {
           setLoadError("Unable to load preventive maintenance data. Please try again.");
@@ -92,24 +88,79 @@ export function usePreventiveMaintenance() {
     }
 
     loadPMData();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
+
+
+  // Check for due reminders whenever PM records are loaded
+  useEffect(() => {
+    if (!isLoading && pmRecords.length > 0) {
+      checkAndGenerateDueReminders(pmRecords);
+    }
+  }, [isLoading, pmRecords]);
+
 
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, quickFilter, filters]);
 
+  // Open PM drawer from Search Everywhere selection
+  useEffect(() => {
+    try {
+      const selectedId = window.sessionStorage.getItem("rcc_omp_pm_selected_id");
+      if (!selectedId) return;
+      // Clear once read to avoid reopening on subsequent renders.
+      window.sessionStorage.removeItem("rcc_omp_pm_selected_id");
+
+      const found = pmRecords.find(r => r.id === selectedId);
+      if (found) {
+        setSelectedRecord(found);
+        setShowDrawer(true);
+      }
+    } catch {
+      // ignore
+    }
+    // pmRecords is intentionally included because we need the records loaded first.
+  }, [pmRecords]);
+
+
+  // Persist records + persisted filters whenever they change.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const state = loadPMState();
+    const next: PersistedPMStateV1 = {
+      ...state,
+      records: pmRecords,
+      filters: {
+        searchQuery,
+        quickFilter,
+        filters,
+      },
+    };
+    savePMState(next);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pmRecords, searchQuery, quickFilter, filters]);
+
   const filteredData = useMemo(() => {
     let d = [...pmRecords];
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
       d = d.filter(r =>
         r.machine.toLowerCase().includes(q) ||
         r.machineId.toLowerCase().includes(q) ||
+        r.department.toLowerCase().includes(q) ||
+        r.location.toLowerCase().includes(q) ||
         r.user.toLowerCase().includes(q) ||
-        r.department.toLowerCase().includes(q)
+        r.status.toLowerCase().includes(q) ||
+        r.priority.toLowerCase().includes(q) ||
+        r.description.toLowerCase().includes(q) ||
+        r.frequency.toLowerCase().includes(q)
       );
     }
+
     if (quickFilter !== "All") d = d.filter(r => r.status === quickFilter);
     if (filters.department) d = d.filter(r => r.department === filters.department);
     if (filters.frequency) d = d.filter(r => r.frequency === filters.frequency);
@@ -149,13 +200,20 @@ export function usePreventiveMaintenance() {
   };
 
   const handleAddPM = (record: PMRecord) => {
-    // TODO:
-    // Create PM
-    // POST /api/pm-records — the response contains the backend-generated id,
-    // which should replace the temporary client-side id below.
+    // Auto-calculate nextDue if not provided
+    const finalRecord = { ...record };
+    if (!finalRecord.nextDue && finalRecord.lastMaintenance && finalRecord.frequency) {
+      finalRecord.nextDue = calculateNextDue(finalRecord.lastMaintenance, finalRecord.frequency);
+    }
+    // Calculate reminder date
+    if (finalRecord.reminder && finalRecord.nextDue) {
+      finalRecord.reminderDate = calculateReminderDate(finalRecord.nextDue, finalRecord.reminder);
+    }
     try {
-      setPmRecords(prev => [record, ...prev]);
-      addTimelineEntry("Added", record);
+      setPmRecords(prev => [finalRecord, ...prev]);
+      addTimelineEntry("Added", finalRecord);
+      // Generate reminder notification if due
+      checkAndGenerateDueReminders([finalRecord, ...pmRecords]);
       toast.success("Preventive Maintenance Schedule Added Successfully");
     } catch (_err) {
       toast.error("Failed to add maintenance schedule. Please try again.");
@@ -166,9 +224,19 @@ export function usePreventiveMaintenance() {
     // TODO:
     // Update PM
     // PUT /api/pm-records/:id
+    // Recalculate reminder date when due date or reminder changes
+    const finalRecord = { ...updated };
+    if (finalRecord.reminder && finalRecord.nextDue) {
+      finalRecord.reminderDate = calculateReminderDate(finalRecord.nextDue, finalRecord.reminder);
+    } else {
+      finalRecord.reminderDate = undefined;
+    }
     try {
-      setPmRecords(prev => prev.map(r => r.id === updated.id ? updated : r));
-      addTimelineEntry("Updated", updated);
+      setPmRecords(prev => prev.map(r => r.id === updated.id ? finalRecord : r));
+      addTimelineEntry("Updated", finalRecord);
+      // Re-check reminders after edit
+      const updatedRecords = pmRecords.map(r => r.id === updated.id ? finalRecord : r);
+      checkAndGenerateDueReminders(updatedRecords);
       toast.success("Maintenance Schedule Updated Successfully");
     } catch (_err) {
       toast.error("Failed to update maintenance schedule. Please try again.");
@@ -194,25 +262,121 @@ export function usePreventiveMaintenance() {
 
   const handleCompletePM = (notes: string) => {
     if (!selectedRecord) return;
-    // TODO:
-    // Complete PM
-    // POST /api/pm-records/:id/complete { notes }
     const today = new Date().toISOString().split("T")[0];
     const trimmedNotes = notes.trim();
-    const updated = {
-      ...selectedRecord,
-      status: "Completed" as PMStatus,
-      lastMaintenance: today,
-      history: [{ date: today, user: "Current User", notes: trimmedNotes || "PM completed.", status: "Completed" }, ...selectedRecord.history]
-    };
+
+    // 1. Clear any pending reminder notifications for this PM
+    clearRemindersForPM(selectedRecord.id);
+
+    // 2. Check for duplicate: don't create next cycle if there's already an
+    // upcoming/scheduled record with same machine and frequency.
+    const existingNext = pmRecords.find(
+      r =>
+        r.id !== selectedRecord.id &&
+        r.machine === selectedRecord.machine &&
+        r.machineId === selectedRecord.machineId &&
+        r.frequency === selectedRecord.frequency &&
+        (r.status === "Upcoming" || r.status === "Scheduled")
+    );
+    if (existingNext) {
+      toast.error("A recurring PM task for this machine and frequency already exists.");
+      setShowCompleteDialog(false);
+      setSelectedRecord(null);
+      return;
+    }
+
     try {
-      setPmRecords(prev => prev.map(r => r.id === updated.id ? updated : r));
-      addTimelineEntry("Completed", updated);
-      toast.success("Maintenance Completed Successfully");
+      // 2. Mark the current record as completed
+      const completedRecord: PMRecord = {
+        ...selectedRecord,
+        status: "Completed" as PMStatus,
+        lastMaintenance: today,
+        completionDate: today,
+        history: [
+          {
+            date: today,
+            user: "Current User",
+            notes: trimmedNotes || "PM completed.",
+            status: "Completed",
+          },
+          ...selectedRecord.history,
+        ],
+      };
+
+      // 3. Compute next due date from completion date + frequency
+      const nextDueDate = calculateNextDue(today, selectedRecord.frequency);
+
+      // 4. Create the new recurring PM task (exactly one)
+      const newPMRecord: PMRecord = {
+        id: `temp-${Date.now()}`,
+        machine: selectedRecord.machine,
+        machineId: selectedRecord.machineId,
+        systemId: selectedRecord.systemId,
+        systemName: selectedRecord.systemName,
+        systemType: selectedRecord.systemType,
+        department: selectedRecord.department,
+        location: selectedRecord.location,
+        assignedUser: selectedRecord.assignedUser,
+        model: selectedRecord.model,
+        user: selectedRecord.user,
+        frequency: selectedRecord.frequency,
+        reminder: selectedRecord.reminder,
+        reminderDate: selectedRecord.reminder ? calculateReminderDate(nextDueDate, selectedRecord.reminder) : undefined,
+        checklist: selectedRecord.checklist || selectedRecord.description,
+        priority: selectedRecord.priority,
+        lastMaintenance: today,
+        nextDue: nextDueDate,
+        status: "Upcoming" as PMStatus,
+        description: selectedRecord.description,
+        history: [],
+      };
+
+      setPmRecords(prev => {
+        // Replace completed record and add new cycle
+        const withoutCompleted = prev.map(r =>
+          r.id === selectedRecord.id ? completedRecord : r
+        );
+        return [newPMRecord, ...withoutCompleted];
+      });
+
+      // 5. Generate a fresh reminder for the new recurring PM
+      checkAndGenerateDueReminders([newPMRecord, ...pmRecords]);
+
+      // 6. Store completion event in storage
+      try {
+        const state = loadPMState();
+        const completionEvent: PMCompletionEvent = {
+          id: `comp-${Date.now()}`,
+          completedAt: today,
+          completedBy: "Current User",
+          checklist: [trimmedNotes || "PM completed."],
+          completionNotes: trimmedNotes || "PM completed.",
+          previousDueDate: selectedRecord.nextDue,
+          previousMaintenanceDate: selectedRecord.lastMaintenance,
+          frequency: selectedRecord.frequency,
+          status: "Completed",
+        };
+        const machineId = selectedRecord.machineId;
+        const existingHistory = state.completionHistory[machineId] || [];
+        const next: PersistedPMStateV1 = {
+          ...state,
+          completionHistory: {
+            ...state.completionHistory,
+            [machineId]: [completionEvent, ...existingHistory],
+          },
+        };
+        savePMState(next);
+      } catch {
+        // non-critical
+      }
+
+      addTimelineEntry("Completed", completedRecord);
+      toast.success("Maintenance Completed Successfully. Next cycle has been scheduled.");
     } catch (_err) {
       toast.error("Failed to mark maintenance as complete. Please try again.");
     } finally {
-      setShowCompleteDialog(false); setSelectedRecord(null);
+      setShowCompleteDialog(false);
+      setSelectedRecord(null);
     }
   };
 

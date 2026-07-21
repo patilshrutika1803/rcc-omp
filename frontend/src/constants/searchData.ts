@@ -11,6 +11,7 @@ export const SEARCH_ITEMS: {
   label: string;
   sub: string;
   status: string;
+  pmId?: string;
 }[] = [];
 
 export const RECENT_SEARCHES: string[] = [];

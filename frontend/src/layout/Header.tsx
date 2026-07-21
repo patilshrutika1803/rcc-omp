@@ -4,9 +4,10 @@
 // (everything inside the <header> element).
 // ─────────────────────────────────────────────────────────────────────────────
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Menu, PanelLeft, PanelLeftClose, Search, Bell } from "lucide-react";
 import { ProfileDropdown } from "./ProfileDropdown";
+import { getUnreadCount } from "../features/notificataions/utils/notificationStorage";
 
 export function Header({
   isSidebarCollapsed,
@@ -29,6 +30,24 @@ export function Header({
   setActiveNav: (nav: string) => void;
   onLogout: () => void;
 }) {
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  // Update badge on mount and periodically
+  useEffect(() => {
+    const updateBadge = () => setUnreadCount(getUnreadCount());
+    updateBadge();
+    const interval = setInterval(updateBadge, 5000);
+    // Also listen for focus changes
+    window.addEventListener("focus", updateBadge);
+    // Listen for storage changes (other tabs)
+    window.addEventListener("storage", updateBadge);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("focus", updateBadge);
+      window.removeEventListener("storage", updateBadge);
+    };
+  }, []);
+
   return (
     <header className="h-16 bg-white border-b border-slate-200 px-4 lg:px-6 flex items-center justify-between shrink-0 z-10 shadow-sm">
       <div className="flex items-center flex-1 gap-4">
@@ -51,7 +70,13 @@ export function Header({
         </div>
         <button onClick={() => setActiveNav("notifications")} className="relative p-2 text-slate-400 hover:text-slate-600 transition-colors">
           <Bell size={18} />
-          <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border-2 border-white" />
+          {unreadCount > 0 ? (
+            <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center px-1 border-2 border-white">
+              {unreadCount > 99 ? "99+" : unreadCount}
+            </span>
+          ) : (
+            <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border-2 border-white" />
+          )}
         </button>
         <div className="w-px h-6 bg-slate-200 hidden sm:block" />
         <ProfileDropdown

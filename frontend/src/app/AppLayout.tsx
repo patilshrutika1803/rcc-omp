@@ -6,8 +6,11 @@
 // sidebar collapse, mobile drawer, profile menu, search overlay).
 // ─────────────────────────────────────────────────────────────────────────────
 
-import React from "react";
+import React, { useMemo } from "react";
 import { useLocation, useNavigate } from "react-router";
+
+import { loadPMState } from "../features/preventive-maintenance/utils/pmStorage";
+import { buildPMGlobalSearchItems } from "../features/preventive-maintenance/utils/pmSearchIndex";
 
 import { Sidebar } from "../layout/Sidebar";
 import { Header } from "../layout/Header";
@@ -31,7 +34,17 @@ export function AppLayout({ onLogout }: { onLogout: () => void }) {
 
   const activeNav = getNavIdFromPath(location.pathname);
 
+  // PM records are persisted locally; global search should index them.
+  // This is computed once per app-load.
+  const pmExtraItems = useMemo(() => {
+    const state = loadPMState();
+    return buildPMGlobalSearchItems(state.records);
+  }, []);
+
+
+
   // Unknown path inside the authenticated shell → show NotFound
+
   if (activeNav === null) {
     return <NotFoundPage />;
   }
@@ -75,7 +88,14 @@ export function AppLayout({ onLogout }: { onLogout: () => void }) {
           <main className="flex-1 overflow-y-auto p-4 lg:p-6 xl:p-8 flex flex-col">
             <AppRoutes activeNav={activeNav} />
 
-            {isSearchOpen && <GlobalSearchOverlay onClose={() => setIsSearchOpen(false)} onNavigate={handleNavigate} />}
+            {isSearchOpen && (
+              <GlobalSearchOverlay
+                onClose={() => setIsSearchOpen(false)}
+                onNavigate={handleNavigate}
+                extraItems={pmExtraItems}
+              />
+            )}
+
 
             <Footer />
           </main>

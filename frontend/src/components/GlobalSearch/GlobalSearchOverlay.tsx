@@ -20,7 +20,17 @@ import {
 import { toast } from "sonner";
 import { SEARCH_ITEMS, RECENT_SEARCHES } from "../../constants/searchData";
 
-export function GlobalSearchOverlay({ onClose, onNavigate }: { onClose: () => void; onNavigate: (nav: string) => void }) {
+type GlobalSearchItem = (typeof SEARCH_ITEMS)[number];
+
+export function GlobalSearchOverlay({
+  onClose,
+  onNavigate,
+  extraItems = [],
+}: {
+  onClose: () => void;
+  onNavigate: (nav: string) => void;
+  extraItems?: GlobalSearchItem[];
+}) {
   const [query, setQuery] = useState("");
   const inputRef = React.useRef<HTMLInputElement>(null);
   React.useEffect(() => { inputRef.current?.focus(); }, []);
@@ -28,8 +38,11 @@ export function GlobalSearchOverlay({ onClose, onNavigate }: { onClose: () => vo
   const results = useMemo(() => {
     if (!query || query.length < 2) return [];
     const q = query.toLowerCase();
-    return SEARCH_ITEMS.filter(item => item.label.toLowerCase().includes(q) || item.sub.toLowerCase().includes(q)).slice(0, 12);
-  }, [query]);
+    const combined = [...SEARCH_ITEMS, ...extraItems];
+    return combined
+      .filter(item => item.label.toLowerCase().includes(q) || item.sub.toLowerCase().includes(q))
+      .slice(0, 12);
+  }, [query, extraItems]);
 
   const typeIcon: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
     Machine: Server,
@@ -37,7 +50,7 @@ export function GlobalSearchOverlay({ onClose, onNavigate }: { onClose: () => vo
     Employee: User,
     Note: FileText,
   };
-  const typeNav: Record<string, string> = { Machine: "machines", Department: "departments", Employee: "departments", Note: "notes" };
+  const typeNav: Record<string, string> = { Machine: "machines", Department: "departments", Employee: "departments", Note: "notes", PM: "maintenance" };
 
   const grouped = results.reduce((acc, item) => { (acc[item.type] = acc[item.type] || []).push(item); return acc; }, {} as Record<string, typeof results>);
 
@@ -98,14 +111,29 @@ export function GlobalSearchOverlay({ onClose, onNavigate }: { onClose: () => vo
               <div key={type}>
                 <div className="px-4 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50 border-y border-slate-100">{type}s</div>
                 {items.map((item, i) => (
-                  <button key={i} onClick={() => { onNavigate(typeNav[type] || "dashboard"); onClose(); toast.success(`Navigating to ${item.label}`); }}
+                  <button
+                    key={i}
+                    onClick={() => {
+                      if (item.type === "PM" && item.pmId) {
+                        try {
+                          window.sessionStorage.setItem("rcc_omp_pm_selected_id", item.pmId);
+                        } catch {
+                          // ignore
+                        }
+                        onNavigate("maintenance");
+                      } else {
+                        onNavigate(typeNav[type] || "dashboard");
+                      }
+                      onClose();
+                      toast.success(`Navigating to ${item.label}`);
+                    }}
                     className="flex items-center gap-3 w-full px-4 py-3 hover:bg-blue-50/50 transition-colors text-left border-b border-slate-50">
                     <div className="w-8 h-8 bg-blue-50 border border-blue-100 rounded-lg flex items-center justify-center shrink-0"><Icon size={13} className="text-blue-600" /></div>
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-semibold text-slate-900 truncate">{item.label}</div>
                       <div className="text-[11px] text-slate-400 truncate">{item.sub}</div>
                     </div>
-                    {item.status && <span className="text-[10px] text-slate-400 shrink-0">{item.status}</span>}
+{item.status ? <span className="text-[10px] text-slate-400 shrink-0">{item.status}</span> : null}
                     <ChevronRight size={13} className="text-slate-300 shrink-0" />
                   </button>
                 ))}

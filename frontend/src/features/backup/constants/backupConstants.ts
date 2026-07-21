@@ -1,5 +1,7 @@
 import type { BkpStatus, BkpType, WeeklyTrendPoint, StorageTrendPoint, BackupSubTab } from "../types/backup";
 import { LayoutDashboard, Archive, Calendar as CalendarIcon } from "lucide-react";
+import { DEPARTMENT_OPTIONS } from "../../../constants/departments";
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DATA SOURCE (backend-ready)
@@ -25,19 +27,10 @@ export const BKP_STORAGE_TREND: StorageTrendPoint[] = [];
 export const BKP_STATUSES: BkpStatus[] = ["Completed", "Running", "Failed", "Scheduled", "Paused", "Cancelled"];
 export const BKP_TYPES: BkpType[] = ["Full", "Incremental", "Differential", "Snapshot"];
 
-export const BKP_DEPARTMENTS = [
-  "Quality Assurance",
-  "Quality Control",
-  "Production",
-  "Warehouse",
-  "Engineering",
-  "Purchase & Accounts",
-  "HR & Admin",
-  "Environmental Health & Safety",
-  "IT Department",
-];
+export const BKP_DEPARTMENTS = [...DEPARTMENT_OPTIONS];
 
 export const BKP_FREQUENCIES = ["Daily", "Weekly", "Monthly", "Quarterly", "Hourly"];
+
 // "Backup Destination" and "Assigned User" are free-text fields (manually
 // entered by the user) rather than fixed option lists — see BackupJobModal.
 

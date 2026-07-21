@@ -20,6 +20,14 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { Notification } from "../types/notification";
+import {
+  loadNotifications,
+  saveNotifications,
+  addNotification as storageAddNotification,
+  markAllAsRead as storageMarkAllAsRead,
+  removeNotification,
+  updateNotification,
+} from "../utils/notificationStorage";
 
 export const notificationService = {
   /**
@@ -27,14 +35,15 @@ export const notificationService = {
    * TODO: replace with Supabase query (e.g. supabase.from('notifications').select('*'))
    */
   async getNotifications(): Promise<Notification[]> {
-    return [];
+    return loadNotifications();
   },
 
   /**
    * Mark a single notification as read.
    * TODO: replace with Supabase update call.
    */
-  async markAsRead(_id: string): Promise<void> {
+  async markAsRead(id: string): Promise<void> {
+    updateNotification(id, { read: true });
     return;
   },
 
@@ -43,6 +52,7 @@ export const notificationService = {
    * TODO: replace with Supabase bulk update / RPC call.
    */
   async markAllAsRead(): Promise<void> {
+    storageMarkAllAsRead();
     return;
   },
 
@@ -50,7 +60,8 @@ export const notificationService = {
    * Archive a notification.
    * TODO: replace with Supabase update call.
    */
-  async archiveNotification(_id: string): Promise<void> {
+  async archiveNotification(id: string): Promise<void> {
+    updateNotification(id, { archived: true });
     return;
   },
 
@@ -58,7 +69,8 @@ export const notificationService = {
    * Delete a notification.
    * TODO: replace with Supabase delete call.
    */
-  async deleteNotification(_id: string): Promise<void> {
+  async deleteNotification(id: string): Promise<void> {
+    removeNotification(id);
     return;
   },
 
@@ -69,7 +81,19 @@ export const notificationService = {
    * the client. Kept here to complete the service contract.
    */
   async createNotification(_notification: Omit<Notification, "id">): Promise<Notification | null> {
-    return null;
+    const newNotification: Notification = {
+      ..._notification,
+      id: `notif-${Date.now()}`,
+      time: _notification.time || new Date().toLocaleString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+    };
+    storageAddNotification(newNotification);
+    return newNotification;
   },
 
   /**
@@ -77,6 +101,7 @@ export const notificationService = {
    * TODO: replace with Supabase bulk delete call.
    */
   async clearNotifications(): Promise<void> {
+    saveNotifications([]);
     return;
   },
 };

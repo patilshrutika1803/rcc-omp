@@ -5,8 +5,8 @@ import {
   Wrench,
   Plus,
   Download,
-  FileSpreadsheet,
   Table2,
+
   Grid3x3,
   Calendar as CalendarIcon,
 } from "lucide-react";
@@ -70,11 +70,10 @@ export function PMToolbar({
             className="flex items-center gap-1.5 h-9 px-3 text-xs font-semibold text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors shadow-sm">
             <Download size={14} /> Export PDF
           </button>
-          <button className="flex items-center gap-1.5 h-9 px-3 text-xs font-semibold text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors shadow-sm">
-            <FileSpreadsheet size={14} /> Import Excel
-          </button>
+
 
           {/* View Toggle */}
+
           <div className="flex items-center bg-slate-100 rounded-lg p-1 border border-slate-200 ml-1">
             {viewToggleOptions.map(v => (
               <button

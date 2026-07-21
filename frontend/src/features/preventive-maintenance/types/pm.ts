@@ -37,5 +37,11 @@ export interface PMRecord {
   status: PMStatus;
   description: string;
 
+  // PM scheduling fields
+  reminder?: string;
+  reminderDate?: string;
+  checklist?: string;
+  completionDate?: string;
+
   history: { date: string; user: string; notes: string; status: string }[];
 }

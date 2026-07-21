@@ -1,11 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Wrench, X, RefreshCw, Plus } from "lucide-react";
 import type { PMRecord, PMPriority, PMStatus } from "../types/pm";
 import type { SystemInventory } from "../../system-inventory/types/system";
 
 import { FREQUENCIES, REMINDER_OPTIONS, PRIORITY_OPTIONS, INITIAL_STATUS_OPTIONS } from "../constants/pmConstants";
-import { daysUntil } from "../utils/pmDateUtils";
+import { daysUntil, calculateNextDue } from "../utils/pmDateUtils";
 import { SystemSearchDropdown } from "./SystemSearchDropdown";
+import { PM_DEPARTMENT_OPTIONS } from "../constants/departmentAndUserConstants";
 
 export function AddPMModal({ onClose, onSave, editRecord, departments: _departments, users: _users, eligibleSystems = [] }: { onClose: () => void; onSave: (record: PMRecord) => void; editRecord?: PMRecord; departments: string[]; users: string[]; eligibleSystems?: SystemInventory[] }) {
   const isEdit = !!editRecord;
@@ -20,8 +21,10 @@ export function AddPMModal({ onClose, onSave, editRecord, departments: _departme
 
   const [selectedSystem, setSelectedSystem] = useState<SystemInventory | null>(initialSystem);
 
+  // Track if user has manually edited the due date
+  const manuallyEditedDueDate = useRef(false);
+
   const [form, setForm] = useState({
-    // Legacy UI fields
     machine: editRecord?.machine ?? "",
     machineId: editRecord?.machineId ?? "",
     department: editRecord?.department ?? "",
@@ -29,17 +32,14 @@ export function AddPMModal({ onClose, onSave, editRecord, departments: _departme
     user: editRecord?.user ?? "",
     frequency: editRecord?.frequency ?? "Monthly",
     priority: editRecord?.priority ?? "High",
-    reminder: "1 Day Before",
+    reminder: editRecord?.reminder ?? "1 Day Before",
     lastMaintenanceDate: editRecord?.lastMaintenance ?? new Date().toISOString().split("T")[0],
-    dueDate: editRecord?.nextDue ?? new Date().toISOString().split("T")[0],
-
-    // AWS-ready snapshot fields
+    dueDate: editRecord?.nextDue ?? "",
     systemId: editRecord?.systemId ?? null,
     systemName: editRecord?.systemName ?? "",
     systemType: editRecord?.systemType ?? "",
     assignedUser: editRecord?.assignedUser ?? "",
     model: editRecord?.model ?? "",
-
     description: editRecord?.description ?? "",
     status: editRecord?.status ?? "Upcoming" as PMStatus,
   });
@@ -47,18 +47,26 @@ export function AddPMModal({ onClose, onSave, editRecord, departments: _departme
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSaving, setIsSaving] = useState(false);
 
+  // Auto-calculate due date when frequency or lastMaintenanceDate changes
+  // Only if user has not manually edited the due date
+  useEffect(() => {
+    if (manuallyEditedDueDate.current) return;
+    if (!form.frequency || !form.lastMaintenanceDate) return;
+    const calculated = calculateNextDue(form.lastMaintenanceDate, form.frequency);
+    if (calculated) {
+      setForm(prev => ({ ...prev, dueDate: calculated }));
+    }
+  }, [form.frequency, form.lastMaintenanceDate]);
+
   const handleSelectSystem = (system: SystemInventory) => {
     setSelectedSystem(system);
     setForm(prev => ({
       ...prev,
-      // PM legacy display fields
       machine: system.systemName,
       machineId: system.systemId,
       department: system.department,
       location: system.location,
       user: system.assignedUser,
-
-      // Snapshot fields for AWS / backend compatibility
       systemId: system.systemId,
       systemName: system.systemName,
       systemType: system.systemType,
@@ -70,60 +78,55 @@ export function AddPMModal({ onClose, onSave, editRecord, departments: _departme
 
   const validate = () => {
     const e: Record<string, string> = {};
-
     if (creationMode === "existing") {
       if (!form.systemId) e.systemId = "Please select a system";
     } else {
       if (!form.machine.trim()) e.machine = "Machine name is required";
       if (!form.machineId.trim()) e.machineId = "Machine ID is required";
     }
-
     if (!form.frequency) e.frequency = "Frequency is required";
     if (!form.priority) e.priority = "Priority is required";
-
     if (!form.lastMaintenanceDate || isNaN(new Date(form.lastMaintenanceDate).getTime())) {
       e.lastMaintenanceDate = "A valid last maintenance date is required";
     }
     if (!form.dueDate || isNaN(new Date(form.dueDate).getTime())) e.dueDate = "A valid due date is required";
-
     return e;
   };
 
   const handleSave = () => {
     const e = validate();
     if (Object.keys(e).length > 0) { setErrors(e); return; }
-
     setIsSaving(true);
     setTimeout(() => {
-      const d = daysUntil(form.dueDate);
+      // If dueDate is empty and not manually edited, calculate it
+      let finalDueDate = form.dueDate;
+      if (!finalDueDate && form.lastMaintenanceDate && form.frequency) {
+        finalDueDate = calculateNextDue(form.lastMaintenanceDate, form.frequency);
+      }
+      const d = daysUntil(finalDueDate);
       const autoStatus: PMStatus = d < 0 ? "Overdue" : d === 0 ? "Due Today" : "Upcoming";
-
       const record: PMRecord = {
         id: editRecord?.id ?? `temp-${Date.now()}`,
         machine: form.machine.trim(),
         machineId: form.machineId.trim(),
-
         systemId: creationMode === "manual" ? null : form.systemId,
         systemName: creationMode === "manual" ? form.machine.trim() : form.systemName,
         systemType: creationMode === "manual" ? form.systemType || form.machine.trim() : form.systemType,
-
         department: form.department,
         location: form.location,
         assignedUser: form.user,
-
         model: creationMode === "manual" ? form.model : form.model,
-
         frequency: form.frequency,
+        reminder: form.reminder,
+        checklist: form.description.trim(),
         lastMaintenance: form.lastMaintenanceDate,
-        nextDue: form.dueDate,
+        nextDue: finalDueDate,
         priority: form.priority as PMPriority,
         user: form.user,
         status: autoStatus,
         description: form.description.trim(),
-
         history: editRecord?.history ?? [],
       };
-
       setIsSaving(false);
       onSave(record);
       onClose();
@@ -212,12 +215,19 @@ export function AddPMModal({ onClose, onSave, editRecord, departments: _departme
                 )}
               </div>
 
-              {/* Auto-filled from the selected system — not editable here */}
+              {/* Auto-filled from the selected system — editable fields */}
               <div className="grid grid-cols-3 gap-4">
                 <div>
                   <label className="text-xs font-semibold text-slate-700 mb-1.5 block">Department</label>
-                  <input type="text" value={form.department} readOnly placeholder="Auto-filled"
-                    className="w-full h-9 px-3 text-sm bg-slate-50 border border-slate-200 rounded-lg text-slate-500 placeholder-slate-400 cursor-not-allowed" />
+                  <select
+                    value={form.department}
+                    disabled
+                    className="w-full h-9 px-3 text-sm bg-slate-50 border border-slate-200 rounded-lg text-slate-500 cursor-not-allowed"
+                  >
+                    {PM_DEPARTMENT_OPTIONS.map(d => (
+                      <option key={d} value={d}>{d}</option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-slate-700 mb-1.5 block">Location</label>
@@ -225,9 +235,14 @@ export function AddPMModal({ onClose, onSave, editRecord, departments: _departme
                     className="w-full h-9 px-3 text-sm bg-slate-50 border border-slate-200 rounded-lg text-slate-500 placeholder-slate-400 cursor-not-allowed" />
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-slate-700 mb-1.5 block">Assigned User</label>
-                  <input type="text" value={form.user} readOnly placeholder="Auto-filled"
-                    className="w-full h-9 px-3 text-sm bg-slate-50 border border-slate-200 rounded-lg text-slate-500 placeholder-slate-400 cursor-not-allowed" />
+                  <label className="text-xs font-semibold text-slate-700 mb-1.5 block">Assigned User <span className="text-red-500">*</span></label>
+                  <input
+                    type="text"
+                    value={form.user}
+                    onChange={e => { setForm({ ...form, user: e.target.value }); setErrors(prev => ({ ...prev, user: "" })); }}
+                    placeholder="Enter assigned user"
+                    className="w-full h-9 px-3 text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-700 placeholder-slate-400"
+                  />
                 </div>
               </div>
             </>
@@ -261,13 +276,16 @@ export function AddPMModal({ onClose, onSave, editRecord, departments: _departme
               <div className="grid grid-cols-3 gap-4">
                 <div>
                   <label className="text-xs font-semibold text-slate-700 mb-1.5 block">Department <span className="text-red-500">*</span></label>
-                  <input
-                    type="text"
+                  <select
                     value={form.department}
                     onChange={e => setForm({ ...form, department: e.target.value })}
-                    placeholder="e.g. Maintenance"
-                    className="w-full h-9 px-3 text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-700 placeholder-slate-400"
-                  />
+                    className="w-full h-9 px-3 text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-700"
+                  >
+                    <option value="">Select Department</option>
+                    {PM_DEPARTMENT_OPTIONS.map(d => (
+                      <option key={d} value={d}>{d}</option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-slate-700 mb-1.5 block">Location <span className="text-red-500">*</span></label>
@@ -284,8 +302,8 @@ export function AddPMModal({ onClose, onSave, editRecord, departments: _departme
                   <input
                     type="text"
                     value={form.user}
-                    onChange={e => setForm({ ...form, user: e.target.value })}
-                    placeholder="e.g. John Doe"
+                    placeholder="Enter assigned user"
+                    onChange={e => { setForm({ ...form, user: e.target.value }); setErrors(prev => ({ ...prev, user: "" })); }}
                     className="w-full h-9 px-3 text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-700 placeholder-slate-400"
                   />
                 </div>
@@ -345,7 +363,11 @@ export function AddPMModal({ onClose, onSave, editRecord, departments: _departme
               <input
                 type="date"
                 value={form.dueDate}
-                onChange={e => { setForm({ ...form, dueDate: e.target.value }); setErrors(prev => ({ ...prev, dueDate: "" })); }}
+                onChange={e => {
+                  manuallyEditedDueDate.current = true;
+                  setForm({ ...form, dueDate: e.target.value });
+                  setErrors(prev => ({ ...prev, dueDate: "" }));
+                }}
                 className={fieldClass("dueDate") + " text-slate-700"}
               />
               {errors.dueDate && <p className="text-[11px] text-red-500 mt-1">{errors.dueDate}</p>}
@@ -409,3 +431,4 @@ export function AddPMModal({ onClose, onSave, editRecord, departments: _departme
 }
 
 export default AddPMModal;
+

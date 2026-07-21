@@ -21,6 +21,15 @@ export interface Notification {
   time: string;
   read: boolean;
   archived: boolean;
+
+  // PM Reminder fields (for Preventive Maintenance notifications)
+  pmId?: string;
+  machineId?: string;
+  machineName?: string;
+  department?: string;
+  assignedUser?: string;
+  dueDate?: string;
+  notificationType?: string;
 }
 
 export type NotificationFilterId =

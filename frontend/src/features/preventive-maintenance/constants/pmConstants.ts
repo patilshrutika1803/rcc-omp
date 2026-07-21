@@ -12,7 +12,16 @@ export const FREQUENCIES = ["Daily", "Weekly", "Bi-Weekly", "Monthly", "Quarterl
 // never appear here.
 export const PM_ELIGIBLE_TYPES = ["Laptop", "Desktop PC"];
 
-export const REMINDER_OPTIONS = ["Same Day", "1 Day Before", "3 Days Before", "1 Week Before"];
+export const REMINDER_OPTIONS = ["Same Day", "1 Day Before", "3 Days Before", "7 Days Before", "15 Days Before", "30 Days Before"];
+
+export const REMINDER_DAYS_MAP: Record<string, number> = {
+  "Same Day": 0,
+  "1 Day Before": 1,
+  "3 Days Before": 3,
+  "7 Days Before": 7,
+  "15 Days Before": 15,
+  "30 Days Before": 30,
+};
 
 export const PRIORITY_OPTIONS = ["Critical", "High", "Medium", "Low"];
 

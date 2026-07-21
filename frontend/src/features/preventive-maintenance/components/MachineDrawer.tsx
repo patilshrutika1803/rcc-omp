@@ -15,14 +15,14 @@ import { StatusBadge } from "./StatusBadge";
 import { PriorityBadge } from "./PriorityBadge";
 
 export function MachineDrawer({ record, onClose, onEdit, onComplete, onSnooze }: { record: PMRecord; onClose: () => void; onEdit: (r: PMRecord) => void; onComplete: (r: PMRecord) => void; onSnooze: (r: PMRecord) => void }) {
-  const [tab, setTab] = useState<"info" | "history" | "schedule" | "timeline">("info");
+  const [tab, setTab] = useState<"info" | "history" | "schedule">("info");
+
   const Icon = machineIcon(record.department);
 
   const tabs = [
     { id: "info", label: "Machine Info" },
     { id: "history", label: "History" },
     { id: "schedule", label: "Schedule" },
-    { id: "timeline", label: "Timeline" },
   ] as const;
 
   return (
@@ -175,27 +175,7 @@ export function MachineDrawer({ record, onClose, onEdit, onComplete, onSnooze }:
             </div>
           )}
 
-          {tab === "timeline" && (
-            <div>
-              <div className="text-xs font-bold text-slate-700 mb-4">Activity Timeline</div>
-              <div className="relative border-l-2 border-slate-100 ml-2 space-y-5">
-                {[
-                  { time: "2 hours ago", title: "PM Task updated", desc: `Status changed to ${record.status}`, color: "bg-blue-100 text-blue-600" },
-                  { time: formatDate(record.lastMaintenance), title: "Maintenance completed", desc: `Completed by ${record.user}`, color: "bg-emerald-100 text-emerald-600" },
-                  { time: "PM created", title: "Task created", desc: "Recurring PM schedule added to the system", color: "bg-slate-100 text-slate-600" },
-                ].map((log, i) => (
-                  <div key={i} className="relative pl-6">
-                    <div className="absolute -left-[9px] top-0.5 w-4 h-4 rounded-full bg-white border-2 border-slate-200 flex items-center justify-center">
-                      <div className="w-1.5 h-1.5 rounded-full bg-slate-400" />
-                    </div>
-                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">{log.time}</div>
-                    <div className="text-xs font-bold text-slate-800">{log.title}</div>
-                    <div className="text-[11px] text-slate-500 mt-0.5">{log.desc}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+
         </div>
 
         {/* Drawer Footer */}
