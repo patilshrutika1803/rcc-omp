@@ -8,7 +8,19 @@ import { daysUntil, calculateNextDue } from "../utils/pmDateUtils";
 import { SystemSearchDropdown } from "./SystemSearchDropdown";
 import { PM_DEPARTMENT_OPTIONS } from "../constants/departmentAndUserConstants";
 
-export function AddPMModal({ onClose, onSave, editRecord, departments: _departments, users: _users, eligibleSystems = [] }: { onClose: () => void; onSave: (record: PMRecord) => void; editRecord?: PMRecord; departments: string[]; users: string[]; eligibleSystems?: SystemInventory[] }) {
+function generateRecurrenceId(): string {
+  return `rec-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`;
+}
+
+export function AddPMModal({ onClose, onSave, editRecord, departments: _departments, users: _users, eligibleSystems = [], existingRecords = [] }: {
+  onClose: () => void;
+  onSave: (record: PMRecord) => void;
+  editRecord?: PMRecord;
+  departments: string[];
+  users: string[];
+  eligibleSystems?: SystemInventory[];
+  existingRecords?: PMRecord[];
+}) {
   const isEdit = !!editRecord;
 
   const [creationMode, setCreationMode] = useState<"existing" | "manual">(
@@ -83,6 +95,18 @@ export function AddPMModal({ onClose, onSave, editRecord, departments: _departme
     } else {
       if (!form.machine.trim()) e.machine = "Machine name is required";
       if (!form.machineId.trim()) e.machineId = "Machine ID is required";
+      // Duplicate machineId check: only block active (non-completed) PMs with the same machineId
+      if (form.machineId.trim()) {
+        const duplicateExists = existingRecords.some(
+          r =>
+            r.id !== editRecord?.id &&
+            r.machineId.toLowerCase() === form.machineId.trim().toLowerCase() &&
+            r.status !== "Completed"
+        );
+        if (duplicateExists) {
+          e.machineId = "A PM task with this Machine ID already exists for an active schedule.";
+        }
+      }
     }
     if (!form.frequency) e.frequency = "Frequency is required";
     if (!form.priority) e.priority = "Priority is required";
@@ -90,6 +114,14 @@ export function AddPMModal({ onClose, onSave, editRecord, departments: _departme
       e.lastMaintenanceDate = "A valid last maintenance date is required";
     }
     if (!form.dueDate || isNaN(new Date(form.dueDate).getTime())) e.dueDate = "A valid due date is required";
+    // Validate that due date is not before last maintenance date
+    if (form.lastMaintenanceDate && form.dueDate) {
+      const lm = new Date(form.lastMaintenanceDate);
+      const dd = new Date(form.dueDate);
+      if (!isNaN(lm.getTime()) && !isNaN(dd.getTime()) && dd < lm) {
+        e.dueDate = "Due date cannot be before last maintenance date";
+      }
+    }
     return e;
   };
 
@@ -105,7 +137,7 @@ export function AddPMModal({ onClose, onSave, editRecord, departments: _departme
       }
       const d = daysUntil(finalDueDate);
       const autoStatus: PMStatus = d < 0 ? "Overdue" : d === 0 ? "Due Today" : "Upcoming";
-      const record: PMRecord = {
+const record: PMRecord = {
         id: editRecord?.id ?? `temp-${Date.now()}`,
         machine: form.machine.trim(),
         machineId: form.machineId.trim(),
@@ -125,6 +157,9 @@ export function AddPMModal({ onClose, onSave, editRecord, departments: _departme
         user: form.user,
         status: autoStatus,
         description: form.description.trim(),
+        // Generate a recurrenceId for new PMs; preserve existing for edits
+        recurrenceId: editRecord?.recurrenceId ?? `recur-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        parentId: editRecord?.parentId,
         history: editRecord?.history ?? [],
       };
       setIsSaving(false);

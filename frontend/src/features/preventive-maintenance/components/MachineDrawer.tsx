@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   X,
   Edit2,
@@ -6,10 +6,19 @@ import {
   CheckCircle2,
   RotateCcw,
   User,
+  Clock,
 } from "lucide-react";
 import type { PMRecord } from "../types/pm";
 import { machineIcon } from "../utils/pmHelpers";
-import { daysUntil, formatDate } from "../utils/pmDateUtils";
+import {
+  daysUntil,
+  formatDate,
+  formatDateTime,
+  getRelativeLabel,
+  getDueDateBg,
+  getDueDateLabelColor,
+  getDueDateValueColor,
+} from "../utils/pmDateUtils";
 import { FREQUENCY_INTERVAL_DAYS } from "../constants/pmConstants";
 import { StatusBadge } from "./StatusBadge";
 import { PriorityBadge } from "./PriorityBadge";
@@ -82,7 +91,6 @@ export function MachineDrawer({ record, onClose, onEdit, onComplete, onSnooze }:
                   { label: "Model", value: record.model },
                   { label: "User", value: record.user },
                   { label: "Frequency", value: record.frequency },
-                  { label: "Next Due", value: formatDate(record.nextDue) },
                 ].map(item => (
                   <div key={item.label} className="bg-slate-50 border border-slate-100 rounded-xl p-3">
                     <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">{item.label}</div>
@@ -93,33 +101,36 @@ export function MachineDrawer({ record, onClose, onEdit, onComplete, onSnooze }:
               <div>
                 <div className="text-xs font-bold text-slate-700 mb-2">Maintenance Description</div>
                 <div className="text-sm text-slate-600 leading-relaxed bg-slate-50 rounded-xl p-4 border border-slate-100">
-                  {record.description}
+                  {record.description || "\u2014"}
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-3 text-center">
-                  <div className="text-xs text-emerald-600 font-semibold mb-1">Last Maintenance</div>
-                  <div className="text-sm font-bold text-emerald-800">{formatDate(record.lastMaintenance)}</div>
-                </div>
-                <div className={`rounded-xl p-3 text-center border ${
-                  daysUntil(record.nextDue) < 0
-                    ? "bg-red-50 border-red-100"
-                    : daysUntil(record.nextDue) === 0
-                    ? "bg-blue-50 border-blue-100"
-                    : "bg-amber-50 border-amber-100"
-                }`}>
-                  <div className={`text-xs font-semibold mb-1 ${daysUntil(record.nextDue) < 0 ? "text-red-600" : daysUntil(record.nextDue) === 0 ? "text-blue-600" : "text-amber-600"}`}>
-                    Next Due
+              {/* Next Due — always calculated from the stored nextDue value */}
+              {(() => {
+                const days = daysUntil(record.nextDue);
+                const relativeLabel = getRelativeLabel(record.nextDue);
+                const bgClass = getDueDateBg(days);
+                const labelColorClass = getDueDateLabelColor(days);
+                const valueColorClass = getDueDateValueColor(days);
+                return (
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-3 text-center">
+                      <div className="text-xs text-emerald-600 font-semibold mb-1">Last Maintenance</div>
+                      <div className="text-sm font-bold text-emerald-800">{formatDate(record.lastMaintenance)}</div>
+                    </div>
+                    <div className={`rounded-xl p-3 text-center border ${bgClass}`}>
+                      <div className={`text-xs font-semibold mb-1 ${labelColorClass}`}>
+                        Next Due
+                      </div>
+                      <div className={`text-sm font-bold ${valueColorClass}`}>
+                        {formatDate(record.nextDue)}
+                      </div>
+                      <div className={`text-[10px] mt-0.5 font-medium ${labelColorClass}`}>
+                        {relativeLabel}
+                      </div>
+                    </div>
                   </div>
-                  <div className={`text-sm font-bold ${daysUntil(record.nextDue) < 0 ? "text-red-800" : daysUntil(record.nextDue) === 0 ? "text-blue-800" : "text-amber-800"}`}>
-                    {daysUntil(record.nextDue) === 0
-                      ? "Today"
-                      : daysUntil(record.nextDue) < 0
-                      ? `${Math.abs(daysUntil(record.nextDue))}d overdue`
-                      : `In ${daysUntil(record.nextDue)} days`}
-                  </div>
-                </div>
-              </div>
+                );
+              })()}
             </div>
           )}
 
@@ -129,20 +140,55 @@ export function MachineDrawer({ record, onClose, onEdit, onComplete, onSnooze }:
                 <h3 className="text-xs font-bold text-slate-700">Maintenance History</h3>
                 <span className="text-[11px] text-slate-500">{record.history.length} records</span>
               </div>
-              {record.history.map((h, i) => (
-                <div key={i} className="bg-white border border-slate-200 rounded-xl p-4 hover:border-slate-300 transition-colors">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-bold text-slate-900">{formatDate(h.date)}</span>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
-                      {h.status}
-                    </span>
-                  </div>
-                  <div className="text-xs text-slate-700 leading-relaxed mb-2">{h.notes}</div>
-                  <div className="flex items-center gap-1 text-[11px] text-slate-500">
-                    <User size={11} /> {h.user}
-                  </div>
+              {record.history.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-xs text-slate-400 font-medium">No maintenance history recorded yet.</p>
                 </div>
-              ))}
+              ) : (
+                record.history.map((h, i) => (
+                  <div key={i} className="bg-white border border-slate-200 rounded-xl p-4 hover:border-slate-300 transition-colors">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-slate-900">{formatDate(h.date)}</span>
+                        {h.completionTime && (
+                          <span className="text-[10px] text-slate-400 flex items-center gap-1">
+                            <Clock size={10} /> {h.completionTime}
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        {h.status || "Completed"}
+                      </span>
+                    </div>
+                    {h.notes && (
+                      <div className="text-xs text-slate-700 leading-relaxed mb-3 bg-slate-50 rounded-lg p-3 border border-slate-100">
+                        {h.notes}
+                      </div>
+                    )}
+                    <div className="flex items-center gap-3 text-[11px] text-slate-500 flex-wrap">
+                      <span className="flex items-center gap-1">
+                        <User size={11} /> {h.user}
+                      </span>
+                      {h.previousMaintenanceDate && (
+                        <span className="flex items-center gap-1">
+                          Previous PM: {formatDate(h.previousMaintenanceDate)}
+                        </span>
+                      )}
+                      {h.previousDueDate && (
+                        <span className="flex items-center gap-1">
+                          Previous Due: {formatDate(h.previousDueDate)}
+                        </span>
+                      )}
+                      {h.frequency && (
+                        <span className="flex items-center gap-1">
+                          <RotateCcw size={10} /> {h.frequency}
+                        </span>
+                      )}
+                      {h.priority && <PriorityBadge priority={h.priority as any} />}
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           )}
 

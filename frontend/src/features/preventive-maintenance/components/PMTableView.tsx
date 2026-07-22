@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import type { PMRecord } from "../types/pm";
 import { machineIcon } from "../utils/pmHelpers";
-import { daysUntil, formatDate } from "../utils/pmDateUtils";
+import { daysUntil, formatDate, getRelativeLabel, getDueDateColor } from "../utils/pmDateUtils";
 import { StatusBadge } from "./StatusBadge";
 import { PriorityBadge } from "./PriorityBadge";
 import { EmptyState } from "./EmptyState";
@@ -37,6 +37,7 @@ export function PMTableView({
   onSnooze,
   onDelete,
   onAdd,
+  onResetFilters,
 }: {
   filteredData: PMRecord[];
   pagedData: PMRecord[];
@@ -54,6 +55,7 @@ export function PMTableView({
   onSnooze: (r: PMRecord) => void;
   onDelete: (r: PMRecord) => void;
   onAdd: () => void;
+  onResetFilters?: () => void;
 }) {
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -84,7 +86,7 @@ export function PMTableView({
       </div>
 
       {filteredData.length === 0 ? (
-        <EmptyState onAdd={onAdd} />
+        <EmptyState onAdd={onAdd} onResetFilters={onResetFilters} />
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-left whitespace-nowrap">
@@ -147,11 +149,11 @@ export function PMTableView({
                     </td>
                     <td className="px-4 py-3.5">
                       <div>
-                        <div className={`text-xs font-bold ${days < 0 ? "text-red-600" : days === 0 ? "text-blue-600" : days <= 7 ? "text-amber-600" : "text-slate-700"}`}>
+                        <div className={`text-xs font-bold ${getDueDateColor(days)}`}>
                           {formatDate(record.nextDue)}
                         </div>
                         <div className={`text-[10px] mt-0.5 font-medium ${days < 0 ? "text-red-400" : days === 0 ? "text-blue-400" : "text-slate-400"}`}>
-                          {days === 0 ? "Today" : days < 0 ? `${Math.abs(days)}d ago` : `in ${days}d`}
+                          {getRelativeLabel(record.nextDue)}
                         </div>
                       </div>
                     </td>

@@ -43,5 +43,21 @@ export interface PMRecord {
   checklist?: string;
   completionDate?: string;
 
-  history: { date: string; user: string; notes: string; status: string }[];
+  // Recurrence tracking — stable identifier for the recurrence chain.
+  // All PMs generated from the same original task share the same recurrenceId.
+  recurrenceId?: string;
+  // Parent PM id that generated this recurring PM (null for original/root PMs).
+  parentId?: string;
+
+  history: {
+    date: string;
+    user: string;
+    notes: string;
+    status: string;
+    completionTime?: string;
+    previousMaintenanceDate?: string;
+    previousDueDate?: string;
+    frequency?: string;
+    priority?: string;
+  }[];
 }

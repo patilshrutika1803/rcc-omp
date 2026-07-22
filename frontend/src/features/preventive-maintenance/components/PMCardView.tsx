@@ -2,7 +2,7 @@ import React from "react";
 import { MoreVertical, AlarmClock, CheckCircle2 } from "lucide-react";
 import type { PMRecord } from "../types/pm";
 import { machineIcon } from "../utils/pmHelpers";
-import { daysUntil, formatDate } from "../utils/pmDateUtils";
+import { daysUntil, formatDate, getRelativeLabel, getDueDateColor } from "../utils/pmDateUtils";
 import { StatusBadge } from "./StatusBadge";
 import { PriorityBadge } from "./PriorityBadge";
 
@@ -18,6 +18,7 @@ export function PMCardView({ data, onViewDetails, onComplete, onSnooze }: {
       {data.map(record => {
         const Icon = machineIcon(record.department);
         const days = daysUntil(record.nextDue);
+        const relativeLabel = getRelativeLabel(record.nextDue);
         return (
           <div
             key={record.id}
@@ -66,8 +67,11 @@ export function PMCardView({ data, onViewDetails, onComplete, onSnooze }: {
                 </div>
                 <div className={`rounded-lg p-2 ${days < 0 ? "bg-red-50" : days === 0 ? "bg-blue-50" : "bg-amber-50"}`}>
                   <div className={`text-[10px] font-bold uppercase mb-0.5 ${days < 0 ? "text-red-400" : days === 0 ? "text-blue-400" : "text-amber-400"}`}>Due Date</div>
-                  <div className={`font-bold text-[11px] ${days < 0 ? "text-red-700" : days === 0 ? "text-blue-700" : "text-amber-700"}`}>
-                    {days === 0 ? "Today" : days < 0 ? `${Math.abs(days)}d overdue` : `In ${days}d`}
+                  <div className={`font-bold text-[11px] ${getDueDateColor(days)}`}>
+                    {formatDate(record.nextDue)}
+                  </div>
+                  <div className={`text-[10px] mt-0.5 font-medium ${days < 0 ? "text-red-400" : days === 0 ? "text-blue-400" : "text-amber-400"}`}>
+                    {relativeLabel}
                   </div>
                 </div>
               </div>
