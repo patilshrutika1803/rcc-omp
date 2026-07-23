@@ -7,6 +7,7 @@ import {
   RotateCcw,
   User,
   Clock,
+  ClipboardCheck,
 } from "lucide-react";
 import type { PMRecord } from "../types/pm";
 import { machineIcon } from "../utils/pmHelpers";
@@ -23,7 +24,7 @@ import { FREQUENCY_INTERVAL_DAYS } from "../constants/pmConstants";
 import { StatusBadge } from "./StatusBadge";
 import { PriorityBadge } from "./PriorityBadge";
 
-export function MachineDrawer({ record, onClose, onEdit, onComplete, onSnooze }: { record: PMRecord; onClose: () => void; onEdit: (r: PMRecord) => void; onComplete: (r: PMRecord) => void; onSnooze: (r: PMRecord) => void }) {
+export function MachineDrawer({ record, onClose, onEdit, onComplete, onSnooze, onViewChecklist }: { record: PMRecord; onClose: () => void; onEdit: (r: PMRecord) => void; onComplete: (r: PMRecord) => void; onSnooze: (r: PMRecord) => void; onViewChecklist?: (r: PMRecord) => void }) {
   const [tab, setTab] = useState<"info" | "history" | "schedule">("info");
 
   const Icon = machineIcon(record.department);
@@ -37,7 +38,7 @@ export function MachineDrawer({ record, onClose, onEdit, onComplete, onSnooze }:
   return (
     <div className="fixed inset-0 z-[60] flex">
       <div className="flex-1 bg-slate-900/30 backdrop-blur-[2px]" onClick={onClose} />
-      <div className="w-[520px] bg-white border-l border-slate-200 shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
+      <div className="w-full max-w-[520px] bg-white border-l border-slate-200 shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
         {/* Drawer Header */}
         <div className="px-6 py-5 border-b border-slate-100">
           <div className="flex items-start justify-between mb-4">
@@ -226,15 +227,21 @@ export function MachineDrawer({ record, onClose, onEdit, onComplete, onSnooze }:
 
         {/* Drawer Footer */}
         <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/50 flex gap-3 shrink-0">
-          <button onClick={() => onEdit(record)} className="flex items-center gap-2 px-3 py-2 text-xs font-semibold text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-100 transition-colors">
-            <Edit2 size={13} /> Edit
-          </button>
-          <button onClick={() => onSnooze(record)} className="flex items-center gap-2 px-3 py-2 text-xs font-semibold text-amber-600 bg-amber-50 border border-amber-200 rounded-lg hover:bg-amber-100 transition-colors">
-            <AlarmClock size={13} /> Snooze
-          </button>
-          <button onClick={() => onComplete(record)} className="flex-1 flex items-center justify-center gap-2 py-2 text-xs font-semibold text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors">
-            <CheckCircle2 size={13} /> Mark Complete
-          </button>
+          {record.status === "Completed" ? <>
+            <button onClick={() => onViewChecklist?.(record)} className="flex items-center gap-2 px-3 py-2 text-xs font-semibold text-blue-600 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors">
+              <ClipboardCheck size={13} /> View Checklist
+            </button>
+          </> : <>
+            <button onClick={() => onEdit(record)} className="flex items-center gap-2 px-3 py-2 text-xs font-semibold text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-100 transition-colors">
+              <Edit2 size={13} /> Edit
+            </button>
+            <button onClick={() => onSnooze(record)} className="flex items-center gap-2 px-3 py-2 text-xs font-semibold text-amber-600 bg-amber-50 border border-amber-200 rounded-lg hover:bg-amber-100 transition-colors">
+              <AlarmClock size={13} /> Snooze
+            </button>
+            <button onClick={() => onComplete(record)} className="flex-1 flex items-center justify-center gap-2 py-2 text-xs font-semibold text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors">
+              <CheckCircle2 size={13} /> Mark Complete
+            </button>
+          </>}
         </div>
       </div>
     </div>

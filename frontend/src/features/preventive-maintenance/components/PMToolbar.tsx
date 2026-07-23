@@ -4,13 +4,11 @@ import {
   ChevronRight,
   Wrench,
   Plus,
-  Download,
   Table2,
   Grid3x3,
   Calendar as CalendarIcon,
   History,
 } from "lucide-react";
-import { toast } from "sonner";
 import LiveTimestamp from "../../../app/components/LiveTimestamp";
 
 export type PMViewMode = "table" | "card" | "calendar";
@@ -77,14 +75,6 @@ export function PMToolbar(props: PMToolbarProps): ReactElement {
               className="flex items-center gap-1.5 h-9 px-4 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
             >
               <Plus size={14} /> Add PM
-            </button>
-          )}
-          {!showHistory && (
-            <button
-              onClick={() => { toast.loading("Exporting..."); setTimeout(() => toast.success("Export Completed"), 1500); }}
-              className="flex items-center gap-1.5 h-9 px-3 text-xs font-semibold text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors shadow-sm"
-            >
-              <Download size={14} /> Export PDF
             </button>
           )}
           {!showHistory && (

@@ -1,4 +1,4 @@
-import type { PMRecord, PMStatus } from "../types/pm";
+import type { PMChecklistItem, PMRecord, PMStatus } from "../types/pm";
 
 export type PMFiltersPersisted = {
   searchQuery: string;
@@ -21,6 +21,7 @@ export type PMReminderRule = {
 
 export type PMCompletionEvent = {
   id: string;
+  pmId?: string;
   completedAt: string;
   completedBy: string;
   checklist: string[];
@@ -29,6 +30,7 @@ export type PMCompletionEvent = {
   previousMaintenanceDate: string;
   frequency: string;
   status: PMStatus;
+  checklistResponses?: PMChecklistItem[];
 };
 
 export type PersistedPMStateV1 = {
@@ -121,5 +123,23 @@ export function removeCompletedPM(id: string): void {
   const state = loadPMState();
   state.completedPMs = state.completedPMs.filter(pm => pm.id !== id);
   savePMState(state);
+}
+
+export function removePMArtifacts(record: PMRecord): void {
+  const state = loadPMState();
+  const nextHistory = { ...state.completionHistory };
+  const history = nextHistory[record.machineId];
+  if (history) {
+    nextHistory[record.machineId] = history.filter(event => event.pmId !== record.id);
+    if (nextHistory[record.machineId].length === 0) delete nextHistory[record.machineId];
+  }
+  const next: PersistedPMStateV1 = {
+    ...state,
+    records: state.records.filter(pm => pm.id !== record.id),
+    completedPMs: state.completedPMs.filter(pm => pm.id !== record.id),
+    completionHistory: nextHistory,
+    reminders: Object.fromEntries(Object.entries(state.reminders).filter(([id]) => id !== record.id)),
+  };
+  savePMState(next);
 }
 

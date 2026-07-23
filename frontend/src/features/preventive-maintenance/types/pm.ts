@@ -5,6 +5,14 @@
 
 export type PMStatus = "Due Today" | "Upcoming" | "Completed" | "Overdue" | "In Progress" | "Scheduled";
 export type PMPriority = "Critical" | "High" | "Medium" | "Low";
+export type PMChecklistStatus = "Completed" | "Not Required";
+
+export interface PMChecklistItem {
+  number: string;
+  label: string;
+  status: PMChecklistStatus;
+  observation: string;
+}
 
 export interface PMRecord {
   id: string;
@@ -41,7 +49,10 @@ export interface PMRecord {
   reminder?: string;
   reminderDate?: string;
   checklist?: string;
+  checklistResponses?: PMChecklistItem[];
+  completionNotes?: string;
   completionDate?: string;
+  generatedPdfReference?: string;
 
   // Recurrence tracking — stable identifier for the recurrence chain.
   // All PMs generated from the same original task share the same recurrenceId.

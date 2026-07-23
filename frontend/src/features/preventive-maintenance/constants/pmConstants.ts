@@ -46,6 +46,18 @@ export const CALENDAR_LEGEND = [
 
 export const PM_PAGE_SIZE = 10;
 
+export const SOP_CHECKLIST: Array<{ number: string; label: string }> = [
+  { number: "1.0", label: "Visible damage, loose connections, or wear on cables, ports, and components" },
+  { number: "2.0", label: "Power cables, surge protectors, and UPS functionality" },
+  { number: "3.0", label: "Blow the dust from the workstation" },
+  { number: "4.0", label: "Clean the dust from monitor" },
+  { number: "5.0", label: "Blow dust from keyboard" },
+  { number: "6.0", label: "Clean the RAM" },
+  { number: "7.0", label: "Check all the connections" },
+  { number: "8.0", label: "CHKDSK / SCANDISK (If required)" },
+  { number: "9.0", label: "CMOS battery replaced" },
+];
+
 // Interval (in days) used to project the next few upcoming maintenance dates
 // in the Machine Drawer "Schedule" tab, keyed by frequency label.
 export const FREQUENCY_INTERVAL_DAYS: Record<string, number> = {

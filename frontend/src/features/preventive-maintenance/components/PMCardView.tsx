@@ -1,17 +1,23 @@
-import React from "react";
-import { MoreVertical, AlarmClock, CheckCircle2 } from "lucide-react";
+import React, { useState } from "react";
+import { MoreVertical, AlarmClock, CheckCircle2, ClipboardCheck, Copy, Download, Edit2, Eye, Trash2 } from "lucide-react";
 import type { PMRecord } from "../types/pm";
 import { machineIcon } from "../utils/pmHelpers";
 import { daysUntil, formatDate, getRelativeLabel, getDueDateColor } from "../utils/pmDateUtils";
 import { StatusBadge } from "./StatusBadge";
 import { PriorityBadge } from "./PriorityBadge";
 
-export function PMCardView({ data, onViewDetails, onComplete, onSnooze }: {
+export function PMCardView({ data, onViewDetails, onEdit, onDuplicate, onComplete, onSnooze, onDelete, onViewChecklist, onExportPDF }: {
   data: PMRecord[];
   onViewDetails: (r: PMRecord) => void;
+  onEdit: (r: PMRecord) => void;
+  onDuplicate: (r: PMRecord) => void;
   onComplete: (r: PMRecord) => void;
   onSnooze: (r: PMRecord) => void;
+  onDelete: (r: PMRecord) => void;
+  onViewChecklist: (r: PMRecord) => void;
+  onExportPDF: (r: PMRecord) => void;
 }) {
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   if (data.length === 0) return null;
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -22,7 +28,7 @@ export function PMCardView({ data, onViewDetails, onComplete, onSnooze }: {
         return (
           <div
             key={record.id}
-            className="bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md hover:border-slate-300 transition-all group cursor-pointer flex flex-col"
+            className="relative bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md hover:border-slate-300 transition-all group cursor-pointer flex flex-col"
             onClick={() => onViewDetails(record)}
           >
             <div className="p-4 flex-1">
@@ -38,11 +44,25 @@ export function PMCardView({ data, onViewDetails, onComplete, onSnooze }: {
                   </div>
                 </div>
                 <button
-                  onClick={e => e.stopPropagation()}
+                  onClick={e => { e.stopPropagation(); setOpenMenuId(openMenuId === record.id ? null : record.id); }}
                   className="p-1 text-slate-300 hover:text-slate-600 rounded opacity-0 group-hover:opacity-100 transition-all"
                 >
                   <MoreVertical size={15} />
                 </button>
+                {openMenuId === record.id && <div className="absolute right-4 top-12 z-50 bg-white border border-slate-200 rounded-xl shadow-lg py-1 w-44" onClick={e => e.stopPropagation()}>
+                  <button onClick={() => { onViewDetails(record); setOpenMenuId(null); }} className="flex items-center gap-2 px-3 py-2 text-xs text-slate-700 hover:bg-slate-50 w-full text-left"><Eye size={13} /> View Details</button>
+                  {record.status === "Completed" ? <>
+                    <button onClick={() => { onEdit(record); setOpenMenuId(null); }} className="flex items-center gap-2 px-3 py-2 text-xs text-slate-700 hover:bg-slate-50 w-full text-left"><Edit2 size={13} /> Edit</button>
+                    <button onClick={() => { onViewChecklist(record); setOpenMenuId(null); }} className="flex items-center gap-2 px-3 py-2 text-xs text-slate-700 hover:bg-slate-50 w-full text-left"><ClipboardCheck size={13} /> View Checklist</button>
+                    <button onClick={() => { onExportPDF(record); setOpenMenuId(null); }} className="flex items-center gap-2 px-3 py-2 text-xs text-blue-700 hover:bg-blue-50 w-full text-left"><Download size={13} /> Export PDF</button>
+                  </> : <>
+                    <button onClick={() => { onEdit(record); setOpenMenuId(null); }} className="flex items-center gap-2 px-3 py-2 text-xs text-slate-700 hover:bg-slate-50 w-full text-left"><Edit2 size={13} /> Edit</button>
+                    <button onClick={() => { onDuplicate(record); setOpenMenuId(null); }} className="flex items-center gap-2 px-3 py-2 text-xs text-slate-700 hover:bg-slate-50 w-full text-left"><Copy size={13} /> Duplicate</button>
+                    <button onClick={() => { onSnooze(record); setOpenMenuId(null); }} className="flex items-center gap-2 px-3 py-2 text-xs text-amber-700 hover:bg-amber-50 w-full text-left"><AlarmClock size={13} /> Snooze</button>
+                    <button onClick={() => { onComplete(record); setOpenMenuId(null); }} className="flex items-center gap-2 px-3 py-2 text-xs text-emerald-700 hover:bg-emerald-50 w-full text-left"><CheckCircle2 size={13} /> Mark Complete</button>
+                  </>}
+                  <div className="border-t border-slate-100 mt-1 pt-1"><button onClick={() => { onDelete(record); setOpenMenuId(null); }} className="flex items-center gap-2 px-3 py-2 text-xs text-red-600 hover:bg-red-50 w-full text-left"><Trash2 size={13} /> Delete</button></div>
+                </div>}
               </div>
 
               {/* Status + Priority */}
@@ -92,20 +112,10 @@ export function PMCardView({ data, onViewDetails, onComplete, onSnooze }: {
             </div>
 
             {/* Card Footer */}
-            <div className="border-t border-slate-100 px-4 py-3 flex gap-2" onClick={e => e.stopPropagation()}>
-              <button
-                onClick={() => onSnooze(record)}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-amber-600 bg-amber-50 border border-amber-100 rounded-lg hover:bg-amber-100 transition-colors"
-              >
-                <AlarmClock size={12} /> Snooze
-              </button>
-              <button
-                onClick={() => onComplete(record)}
-                className="flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-semibold text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors"
-              >
-                <CheckCircle2 size={12} /> Complete
-              </button>
-            </div>
+            {record.status !== "Completed" && <div className="border-t border-slate-100 px-4 py-3 flex gap-2" onClick={e => e.stopPropagation()}>
+              <button onClick={() => onSnooze(record)} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-amber-600 bg-amber-50 border border-amber-100 rounded-lg hover:bg-amber-100 transition-colors"><AlarmClock size={12} /> Snooze</button>
+              <button onClick={() => onComplete(record)} className="flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-semibold text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors"><CheckCircle2 size={12} /> Complete</button>
+            </div>}
           </div>
         );
       })}

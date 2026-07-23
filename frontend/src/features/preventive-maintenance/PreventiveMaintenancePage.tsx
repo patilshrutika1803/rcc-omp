@@ -4,7 +4,8 @@
 // classes are unchanged from the original monolithic version.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import React from "react";
+import React, { useState } from "react";
+import { ClipboardCheck, Download, Edit2, Eye, Trash2 } from "lucide-react";
 
 import { usePreventiveMaintenance } from "./hooks/usePreventiveMaintenance";
 
@@ -19,10 +20,11 @@ import { PMCalendarView } from "./components/PMCalendarView";
 import { MaintenanceTimeline } from "./components/MaintenanceTimeline";
 import { AddPMModal } from "./components/AddPMModal";
 import { MachineDrawer } from "./components/MachineDrawer";
-import { CompleteDialog } from "./components/CompleteDialog";
+import { ChecklistDrawer } from "./components/ChecklistDrawer";
 import { SnoozeDialog } from "./components/SnoozeDialog";
 import { DeleteDialog } from "./components/DeleteDialog";
 import { PriorityBadge } from "./components/PriorityBadge";
+import { exportPMChecklistPdf } from "./utils/pmPdf";
 
 // Re-exported for backward compatibility — other modules may still import
 // these badges, the legacy PM_DATA constant, or PM types from this file path.
@@ -33,6 +35,13 @@ export type { PMRecord, PMPriority, PMStatus } from "./types/pm";
 
 export default function PreventiveMaintenancePage() {
   const pm = usePreventiveMaintenance();
+  const [readOnlyChecklist, setReadOnlyChecklist] = useState(false);
+
+  const openChecklist = (record: import("./types/pm").PMRecord, readOnly: boolean) => {
+    pm.setSelectedRecord(record);
+    setReadOnlyChecklist(readOnly);
+    pm.setShowCompleteDialog(true);
+  };
 
   return (
     <div className="w-full max-w-[1600px] mx-auto animate-in fade-in duration-300">
@@ -94,6 +103,7 @@ export default function PreventiveMaintenancePage() {
                     <th className="px-4 py-3">Assigned User</th>
                     <th className="px-4 py-3">Priority</th>
                     <th className="px-4 py-3">Notes</th>
+                    <th className="px-4 py-3 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-slate-700">
@@ -142,6 +152,15 @@ export default function PreventiveMaintenancePage() {
                             "\u2014"
                           )}
                         </td>
+                        <td className="px-4 py-3.5">
+                          <div className="flex items-center justify-end gap-1.5">
+                            <button aria-label="View completed PM details" title="View Details" onClick={() => { pm.setSelectedRecord(record); pm.setShowDrawer(true); }} className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md"><Eye size={14} /></button>
+                            <button aria-label="Edit completed PM" title="Edit" onClick={() => { pm.setSelectedRecord(record); pm.setShowEditModal(true); }} className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-md"><Edit2 size={14} /></button>
+                            <button aria-label="View completed checklist" title="View Checklist" onClick={() => openChecklist(record, true)} className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-md"><ClipboardCheck size={14} /></button>
+                            <button aria-label="Export completed PM PDF" title="Export PDF" onClick={() => exportPMChecklistPdf(record)} className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md"><Download size={14} /></button>
+                            <button aria-label="Delete completed PM" title="Delete" onClick={() => { pm.setSelectedRecord(record); pm.setShowDeleteDialog(true); }} className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md"><Trash2 size={14} /></button>
+                          </div>
+                        </td>
                       </tr>
                     );
                   })}
@@ -171,9 +190,11 @@ export default function PreventiveMaintenancePage() {
                   onView={r => { pm.setSelectedRecord(r); pm.setShowDrawer(true); }}
                   onEdit={r => { pm.setSelectedRecord(r); pm.setShowEditModal(true); }}
                   onDuplicate={pm.handleDuplicate}
-                  onComplete={r => { pm.setSelectedRecord(r); pm.setShowCompleteDialog(true); }}
+                  onComplete={r => { pm.setShowDrawer(false); openChecklist(r, false); }}
                   onSnooze={r => { pm.setSelectedRecord(r); pm.setShowSnoozeDialog(true); }}
                   onDelete={r => { pm.setSelectedRecord(r); pm.setShowDeleteDialog(true); }}
+                  onViewChecklist={r => openChecklist(r, true)}
+                  onExportPDF={exportPMChecklistPdf}
                   onAdd={() => pm.setShowAddModal(true)}
                   onResetFilters={() => {
                     pm.setSearchQuery("");
@@ -198,8 +219,13 @@ export default function PreventiveMaintenancePage() {
                 <PMCardView
                   data={pm.filteredData}
                   onViewDetails={r => { pm.setSelectedRecord(r); pm.setShowDrawer(true); }}
-                  onComplete={r => { pm.setSelectedRecord(r); pm.setShowCompleteDialog(true); }}
+                  onEdit={r => { pm.setSelectedRecord(r); pm.setShowEditModal(true); }}
+                  onDuplicate={pm.handleDuplicate}
+                  onComplete={r => openChecklist(r, false)}
                   onSnooze={r => { pm.setSelectedRecord(r); pm.setShowSnoozeDialog(true); }}
+                  onDelete={r => { pm.setSelectedRecord(r); pm.setShowDeleteDialog(true); }}
+                  onViewChecklist={r => openChecklist(r, true)}
+                  onExportPDF={exportPMChecklistPdf}
                 />
               )}
             </div>
@@ -238,15 +264,17 @@ export default function PreventiveMaintenancePage() {
           record={pm.selectedRecord}
           onClose={() => pm.setShowDrawer(false)}
           onEdit={(r) => { pm.setShowDrawer(false); pm.setSelectedRecord(r); pm.setShowEditModal(true); }}
-          onComplete={(r) => { pm.setSelectedRecord(r); pm.setShowCompleteDialog(true); }}
+          onComplete={(r) => { pm.setShowDrawer(false); openChecklist(r, false); }}
+          onViewChecklist={r => { pm.setShowDrawer(false); openChecklist(r, true); }}
           onSnooze={(r) => { pm.setSelectedRecord(r); pm.setShowSnoozeDialog(true); }}
         />
       )}
       {pm.showCompleteDialog && pm.selectedRecord && (
-        <CompleteDialog
+        <ChecklistDrawer
           record={pm.selectedRecord}
           onClose={() => { pm.setShowCompleteDialog(false); pm.setSelectedRecord(null); }}
-          onConfirm={pm.handleCompletePM}
+          onSubmit={pm.handleCompletePM}
+          readOnly={readOnlyChecklist}
         />
       )}
       {pm.showSnoozeDialog && pm.selectedRecord && (

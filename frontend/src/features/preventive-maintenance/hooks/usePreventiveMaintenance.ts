@@ -6,8 +6,9 @@ import { daysUntil, calculateNextDue } from "../utils/pmDateUtils";
 import { PM_PAGE_SIZE } from "../constants/pmConstants";
 import type { PMViewMode } from "../components/PMToolbar";
 import type { PMFilterState } from "../components/PMFilters";
-import { loadPMState, savePMState, type PersistedPMStateV1, type PMCompletionEvent, addCompletedPM, getCompletedPMs } from "../utils/pmStorage";
+import { loadPMState, savePMState, removePMArtifacts, type PersistedPMStateV1, type PMCompletionEvent } from "../utils/pmStorage";
 import { calculateReminderDate, checkAndGenerateDueReminders, clearRemindersForPM } from "../utils/pmReminderUtils";
+import type { PMChecklistSubmission } from "../components/ChecklistDrawer";
 
 
 const INITIAL_FILTERS: PMFilterState = {
@@ -150,15 +151,13 @@ export function usePreventiveMaintenance() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pmRecords, completedPMs, searchQuery, quickFilter, filters]);
 
-  // BUG 5: Filter out completed PMs from the active list.
-  // Only show: Upcoming, Due Today, Overdue, In Progress, Scheduled.
-  // Completed PMs are stored separately in completedPMs.
+  // Completed PMs remain in the main record list so their record actions stay available.
   const activeRecords = useMemo(() => {
     return pmRecords.filter(r => r.status !== "Completed");
   }, [pmRecords]);
 
   const filteredData = useMemo(() => {
-    let d = [...activeRecords];
+    let d = [...pmRecords];
 
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim();
@@ -192,7 +191,7 @@ export function usePreventiveMaintenance() {
       return sortDir === "asc" ? cmp : -cmp;
     });
     return d;
-  }, [activeRecords, searchQuery, quickFilter, filters, sortField, sortDir]);
+  }, [pmRecords, searchQuery, quickFilter, filters, sortField, sortDir]);
 
   const kpis = useMemo(() => ({
     total: activeRecords.length,
@@ -274,12 +273,11 @@ export function usePreventiveMaintenance() {
   };
 
   const handleDeletePM = (record: PMRecord) => {
-    // TODO:
-    // Delete PM
-    // DELETE /api/pm-records/:id
     setIsDeleting(true);
     try {
       setPmRecords(prev => prev.filter(r => r.id !== record.id));
+      setCompletedPMs(prev => prev.filter(r => r.id !== record.id));
+      removePMArtifacts(record);
       addTimelineEntry("Deleted", record);
       toast.success("Maintenance Deleted Successfully");
     } catch (_err) {
@@ -290,10 +288,10 @@ export function usePreventiveMaintenance() {
     }
   };
 
-  const handleCompletePM = (notes: string) => {
+  const handleCompletePM = (submission: PMChecklistSubmission) => {
     if (!selectedRecord) return;
     const today = new Date().toISOString().split("T")[0];
-    const trimmedNotes = notes.trim();
+    const trimmedNotes = submission.notes.trim();
 
     // 1. Clear any pending reminder notifications for this PM (BUG 2)
     clearRemindersForPM(selectedRecord.id);
@@ -376,6 +374,7 @@ export function usePreventiveMaintenance() {
         status: "Completed" as PMStatus,
         lastMaintenance: today,
         completionDate: today,
+        completionNotes: trimmedNotes,
         history: [
           {
             date: today,
@@ -391,13 +390,11 @@ export function usePreventiveMaintenance() {
           ...selectedRecord.history,
         ],
       };
+      completedRecord.checklistResponses = submission.items;
 
-      // BUG 5: Remove completed PM from active records and store in completedPMs
-      setPmRecords(prev => prev.filter(r => r.id !== selectedRecord.id));
+      // Save the completed checklist and create the next recurring PM together.
+      setPmRecords(prev => [newPMRecord, completedRecord, ...prev.filter(r => r.id !== selectedRecord.id)]);
       setCompletedPMs(prev => [completedRecord, ...prev]);
-
-      // Add the new recurring PM to active records
-      setPmRecords(prev => [newPMRecord, ...prev]);
 
       // BUG 2: Generate a fresh reminder ONLY for the new recurring PM
       checkAndGenerateDueReminders([newPMRecord]);
@@ -407,14 +404,16 @@ export function usePreventiveMaintenance() {
         const state = loadPMState();
         const completionEvent: PMCompletionEvent = {
           id: `comp-${Date.now()}`,
+          pmId: completedRecord.id,
           completedAt: today,
           completedBy: "Current User",
-          checklist: [trimmedNotes || "PM completed."],
+          checklist: submission.items.map(item => `${item.number} ${item.label}`),
           completionNotes: trimmedNotes || "PM completed.",
           previousDueDate: selectedRecord.nextDue,
           previousMaintenanceDate: selectedRecord.lastMaintenance,
           frequency: selectedRecord.frequency,
           status: "Completed",
+          checklistResponses: submission.items,
         };
         const machineId = selectedRecord.machineId;
         const existingHistory = state.completionHistory[machineId] || [];

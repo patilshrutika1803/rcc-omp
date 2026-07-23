@@ -11,6 +11,8 @@ import {
   CheckCircle2,
   AlarmClock,
   Trash2,
+  ClipboardCheck,
+  Download,
 } from "lucide-react";
 import type { PMRecord } from "../types/pm";
 import { machineIcon } from "../utils/pmHelpers";
@@ -36,6 +38,8 @@ export function PMTableView({
   onComplete,
   onSnooze,
   onDelete,
+  onViewChecklist,
+  onExportPDF,
   onAdd,
   onResetFilters,
 }: {
@@ -54,6 +58,8 @@ export function PMTableView({
   onComplete: (r: PMRecord) => void;
   onSnooze: (r: PMRecord) => void;
   onDelete: (r: PMRecord) => void;
+  onViewChecklist: (r: PMRecord) => void;
+  onExportPDF: (r: PMRecord) => void;
   onAdd: () => void;
   onResetFilters?: () => void;
 }) {
@@ -187,30 +193,16 @@ export function PMTableView({
                             >
                               <Eye size={13} /> View Details
                             </button>
-                            <button
-                              onClick={() => { onEdit(record); setOpenMenuId(null); }}
-                              className="flex items-center gap-2 px-3 py-2 text-xs text-slate-700 hover:bg-slate-50 w-full text-left"
-                            >
-                              <Edit2 size={13} /> Edit
-                            </button>
-                            <button
-                              onClick={() => { onDuplicate(record); setOpenMenuId(null); }}
-                              className="flex items-center gap-2 px-3 py-2 text-xs text-slate-700 hover:bg-slate-50 w-full text-left"
-                            >
-                              <Copy size={13} /> Duplicate
-                            </button>
-                            <button
-                              onClick={() => { onComplete(record); setOpenMenuId(null); }}
-                              className="flex items-center gap-2 px-3 py-2 text-xs text-emerald-700 hover:bg-emerald-50 w-full text-left"
-                            >
-                              <CheckCircle2 size={13} /> Mark Complete
-                            </button>
-                            <button
-                              onClick={() => { onSnooze(record); setOpenMenuId(null); }}
-                              className="flex items-center gap-2 px-3 py-2 text-xs text-amber-700 hover:bg-amber-50 w-full text-left"
-                            >
-                              <AlarmClock size={13} /> Snooze
-                            </button>
+                            {record.status === "Completed" ? <>
+                              <button onClick={() => { onEdit(record); setOpenMenuId(null); }} className="flex items-center gap-2 px-3 py-2 text-xs text-slate-700 hover:bg-slate-50 w-full text-left"><Edit2 size={13} /> Edit</button>
+                              <button onClick={() => { onViewChecklist(record); setOpenMenuId(null); }} className="flex items-center gap-2 px-3 py-2 text-xs text-slate-700 hover:bg-slate-50 w-full text-left"><ClipboardCheck size={13} /> View Checklist</button>
+                              <button onClick={() => { onExportPDF(record); setOpenMenuId(null); }} className="flex items-center gap-2 px-3 py-2 text-xs text-blue-700 hover:bg-blue-50 w-full text-left"><Download size={13} /> Export PDF</button>
+                            </> : <>
+                              <button onClick={() => { onEdit(record); setOpenMenuId(null); }} className="flex items-center gap-2 px-3 py-2 text-xs text-slate-700 hover:bg-slate-50 w-full text-left"><Edit2 size={13} /> Edit</button>
+                              <button onClick={() => { onDuplicate(record); setOpenMenuId(null); }} className="flex items-center gap-2 px-3 py-2 text-xs text-slate-700 hover:bg-slate-50 w-full text-left"><Copy size={13} /> Duplicate</button>
+                              <button onClick={() => { onSnooze(record); setOpenMenuId(null); }} className="flex items-center gap-2 px-3 py-2 text-xs text-amber-700 hover:bg-amber-50 w-full text-left"><AlarmClock size={13} /> Snooze</button>
+                              <button onClick={() => { onComplete(record); setOpenMenuId(null); }} className="flex items-center gap-2 px-3 py-2 text-xs text-emerald-700 hover:bg-emerald-50 w-full text-left"><CheckCircle2 size={13} /> Mark Complete</button>
+                            </>}
                             <div className="border-t border-slate-100 mt-1 pt-1">
                               <button
                                 onClick={() => { onDelete(record); setOpenMenuId(null); }}
