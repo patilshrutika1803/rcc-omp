@@ -319,7 +319,7 @@ pnpm run build
 
 **Shrutika Patil**
 
-B.Tech Computer Engineering
+B.Tech Computer Engineering - Third Year
 
 Built as an enterprise operational management solution for the IT Department of Rajaram Consumer Care Pvt. Ltd.
 
