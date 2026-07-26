@@ -82,6 +82,7 @@ export default function SystemInventoryPage() {
         onView={openDrawer}
         onEdit={openEditModal}
         onDelete={openDeleteDialog}
+        onAdd={openAddModal}
       />
 
       {/* ── MODALS & OVERLAYS ── */}

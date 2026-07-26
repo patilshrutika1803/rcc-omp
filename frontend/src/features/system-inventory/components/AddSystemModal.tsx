@@ -3,6 +3,7 @@ import { Server, X, CalendarClock, Info, RefreshCw, Plus } from "lucide-react";
 import type { SystemInventory, SystemPMSettings, SystemType } from "../types/system";
 import { DEPARTMENTS, SYSTEM_TYPES, STATUS_OPTIONS, PM_FREQUENCIES, PM_PRIORITIES, PM_REMINDERS } from "../constants/systemConstants";
 import { emptySystem, validateSystemForm } from "../utils/systemHelpers";
+import { calculateNextDue } from "../../preventive-maintenance/utils/pmDateUtils";
 
 export function AddSystemModal({
   onClose,
@@ -28,19 +29,33 @@ export function AddSystemModal({
   };
 
   const updatePm = (key: keyof SystemPMSettings, value: string) => {
-    setForm(prev => ({
-      ...prev,
-      pmSettings: {
-        frequency: prev.pmSettings?.frequency ?? "Monthly",
-        lastMaintenance: prev.pmSettings?.lastMaintenance ?? "",
-        nextDue: prev.pmSettings?.nextDue ?? "",
-        priority: prev.pmSettings?.priority ?? "Medium",
-        description: prev.pmSettings?.description ?? "",
-        assignedUser: prev.pmSettings?.assignedUser ?? "",
-        reminder: prev.pmSettings?.reminder ?? "1 Day Before",
+    setForm(prev => {
+      const currentPmSettings = prev.pmSettings ?? {
+        frequency: "Monthly",
+        lastMaintenance: "",
+        nextDue: "",
+        priority: "Medium",
+        description: "",
+        assignedUser: "",
+        reminder: "1 Day Before",
+      };
+
+      const nextPmSettings = {
+        ...currentPmSettings,
         [key]: value,
-      },
-    }));
+      };
+
+      if (key === "frequency" || key === "lastMaintenance") {
+        const frequency = key === "frequency" ? value : nextPmSettings.frequency;
+        const lastMaintenance = key === "lastMaintenance" ? value : nextPmSettings.lastMaintenance;
+        nextPmSettings.nextDue = frequency && lastMaintenance ? calculateNextDue(lastMaintenance, frequency) : "";
+      }
+
+      return {
+        ...prev,
+        pmSettings: nextPmSettings,
+      };
+    });
   };
 
   const handleTypeChange = (value: string) => {

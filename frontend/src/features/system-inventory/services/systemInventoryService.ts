@@ -26,9 +26,44 @@ import type { SystemInventory } from "../types/system";
 import { DEPARTMENTS, PM_ELIGIBLE_TYPES } from "../constants/systemConstants";
 import { validateSystemForm } from "../utils/systemHelpers";
 
-// Backend-ready: starts empty. No hardcoded/demo/mock records.
-// TODO: GET /api/system-inventory (or Supabase) -> replace/seed this list.
-const SYSTEMS: SystemInventory[] = [];
+const STORAGE_KEY = "rcc_omp_system_inventory";
+const LEGACY_DEMO_SYSTEM_IDS = new Set(["SYS-1001", "SYS-1002"]);
+const LEGACY_DEMO_SYSTEM_NAMES = new Set(["Dell Latitude 7420", "HP EliteDesk 800 G6"]);
+
+function sanitizeSystems(systems: unknown): SystemInventory[] {
+  if (!Array.isArray(systems)) return [];
+
+  const cleaned = systems.filter((system): system is SystemInventory => {
+    if (!system || typeof system !== "object") return false;
+    const candidate = system as SystemInventory;
+    const systemId = candidate.systemId?.trim() ?? "";
+    const systemName = candidate.systemName?.trim() ?? "";
+    return !LEGACY_DEMO_SYSTEM_IDS.has(systemId) && !LEGACY_DEMO_SYSTEM_NAMES.has(systemName);
+  });
+
+  return cleaned;
+}
+
+function readStoredSystems(): SystemInventory[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as unknown;
+    const sanitized = sanitizeSystems(parsed);
+    if (sanitized.length !== (Array.isArray(parsed) ? parsed.length : 0)) {
+      writeStoredSystems(sanitized);
+    }
+    return sanitized;
+  } catch {
+    return [];
+  }
+}
+
+function writeStoredSystems(systems: SystemInventory[]) {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(systems));
+}
 
 export interface ServiceResult<T> {
   data: T | null;
@@ -40,8 +75,7 @@ export interface ServiceResult<T> {
  * TODO: GET /api/system-inventory -> Supabase `systems` table select.
  */
 export async function getSystems(): Promise<ServiceResult<SystemInventory[]>> {
-  // Placeholder — returns local in-memory state shape until backend is wired.
-  return { data: SYSTEMS, error: null };
+  return { data: readStoredSystems(), error: null };
 }
 
 /**
@@ -49,7 +83,8 @@ export async function getSystems(): Promise<ServiceResult<SystemInventory[]>> {
  * TODO: GET /api/system-inventory/:id -> Supabase `.eq('id', id).single()`.
  */
 export async function getSystemById(systemId: string): Promise<ServiceResult<SystemInventory | null>> {
-  const found = SYSTEMS.find(s => s.systemId === systemId) ?? null;
+  const systems = readStoredSystems();
+  const found = systems.find(s => s.systemId === systemId) ?? null;
   return { data: found, error: null };
 }
 
@@ -62,7 +97,10 @@ export async function getSystemById(systemId: string): Promise<ServiceResult<Sys
  */
 export async function createSystem(payload: SystemInventory): Promise<ServiceResult<SystemInventory>> {
   const now = new Date().toISOString();
+  const systems = readStoredSystems();
   const record: SystemInventory = { ...payload, createdAt: now, updatedAt: now };
+  const nextSystems = [record, ...systems];
+  writeStoredSystems(nextSystems);
   return { data: record, error: null };
 }
 
@@ -72,7 +110,10 @@ export async function createSystem(payload: SystemInventory): Promise<ServiceRes
  */
 export async function updateSystem(systemId: string, payload: SystemInventory): Promise<ServiceResult<SystemInventory>> {
   const now = new Date().toISOString();
+  const systems = readStoredSystems();
   const record: SystemInventory = { ...payload, updatedAt: now };
+  const nextSystems = systems.map(system => (system.systemId === systemId ? record : system));
+  writeStoredSystems(nextSystems);
   return { data: record, error: null };
 }
 
@@ -80,7 +121,10 @@ export async function updateSystem(systemId: string, payload: SystemInventory): 
  * Delete a system record.
  * TODO: DELETE /api/system-inventory/:id -> Supabase delete.
  */
-export async function deleteSystem(_systemId: string): Promise<ServiceResult<boolean>> {
+export async function deleteSystem(systemId: string): Promise<ServiceResult<boolean>> {
+  const systems = readStoredSystems();
+  const nextSystems = systems.filter(system => system.systemId !== systemId);
+  writeStoredSystems(nextSystems);
   return { data: true, error: null };
 }
 

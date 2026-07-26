@@ -59,8 +59,8 @@ export function AddPMModal({ onClose, onSave, editRecord, departments: _departme
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSaving, setIsSaving] = useState(false);
 
-  // Auto-calculate due date when frequency or lastMaintenanceDate changes
-  // Only if user has not manually edited the due date
+  // Auto-calculate due date when frequency or lastMaintenanceDate changes.
+  // Manual edits to the due date should remain intact until the user changes it again.
   useEffect(() => {
     if (manuallyEditedDueDate.current) return;
     if (!form.frequency || !form.lastMaintenanceDate) return;
@@ -71,20 +71,27 @@ export function AddPMModal({ onClose, onSave, editRecord, departments: _departme
   }, [form.frequency, form.lastMaintenanceDate]);
 
   const handleSelectSystem = (system: SystemInventory) => {
+    const pmSettings = system.pmSettings;
     setSelectedSystem(system);
     setForm(prev => ({
       ...prev,
       machine: system.systemName,
       machineId: system.systemId,
-      department: system.department,
-      location: system.location,
-      user: system.assignedUser,
+      department: system.department || prev.department,
+      location: system.location || prev.location,
+      user: system.assignedUser || prev.user,
+      frequency: pmSettings?.frequency || prev.frequency,
+      reminder: pmSettings?.reminder || prev.reminder,
+      priority: pmSettings?.priority || prev.priority,
+      lastMaintenanceDate: pmSettings?.lastMaintenance || prev.lastMaintenanceDate,
+      dueDate: pmSettings?.nextDue || prev.dueDate,
       systemId: system.systemId,
       systemName: system.systemName,
       systemType: system.systemType,
-      assignedUser: system.assignedUser,
-      model: system.model ?? prev.model,
+      assignedUser: system.assignedUser || prev.assignedUser,
+      model: system.model || prev.model,
     }));
+    manuallyEditedDueDate.current = true;
     setErrors(prev => ({ ...prev, systemId: "", machineId: "" }));
   };
 
@@ -142,7 +149,7 @@ const record: PMRecord = {
         machine: form.machine.trim(),
         machineId: form.machineId.trim(),
         systemId: creationMode === "manual" ? null : form.systemId,
-        systemName: creationMode === "manual" ? form.machine.trim() : form.systemName,
+        systemName: form.machine.trim(),
         systemType: creationMode === "manual" ? form.systemType || form.machine.trim() : form.systemType,
         department: form.department,
         location: form.location,
@@ -210,7 +217,7 @@ const record: PMRecord = {
                   Existing System Inventory
                 </p>
                 <p className="text-[11px] text-slate-500 mt-0.5">
-                  Create PM from an already registered machine.
+                  Recommended for systems already registered.
                 </p>
               </button>
               <button
@@ -226,7 +233,7 @@ const record: PMRecord = {
                   Manual Machine
                 </p>
                 <p className="text-[11px] text-slate-500 mt-0.5">
-                  Create a maintenance schedule without System Inventory.
+                  Used for temporary systems, legacy systems, rented equipment or machines not yet added to System Inventory.
                 </p>
               </button>
             </div>
@@ -235,14 +242,14 @@ const record: PMRecord = {
           {creationMode === "existing" ? (
             <>
               <div>
-                <label className="text-xs font-semibold text-slate-700 mb-1.5 block">System <span className="text-red-500">*</span></label>
+                <label className="text-xs font-semibold text-slate-700 mb-1.5 block">Select System <span className="text-red-500">*</span></label>
                 <SystemSearchDropdown
                   systems={eligibleSystems}
                   selected={selectedSystem}
                   onSelect={handleSelectSystem}
-                  hasError={!!errors.machineId}
+                  hasError={!!errors.systemId}
                 />
-                {errors.machineId && <p className="text-[11px] text-red-500 mt-1">{errors.machineId}</p>}
+                {errors.systemId && <p className="text-[11px] text-red-500 mt-1">{errors.systemId}</p>}
                 {eligibleSystems.length === 0 && (
                   <p className="text-[11px] text-slate-400 mt-1">
                     No Laptop / Desktop PC systems are registered yet. Add one from System Inventory first.
@@ -250,15 +257,38 @@ const record: PMRecord = {
                 )}
               </div>
 
-              {/* Auto-filled from the selected system — editable fields */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-semibold text-slate-700 mb-1.5 block">System Name</label>
+                  <input
+                    type="text"
+                    value={form.machine}
+                    onChange={e => { setForm({ ...form, machine: e.target.value, systemName: e.target.value }); setErrors(prev => ({ ...prev, machine: "" })); }}
+                    placeholder="Auto-filled from selected system"
+                    className="w-full h-9 px-3 text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-700 placeholder-slate-400"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-700 mb-1.5 block">System ID</label>
+                  <input
+                    type="text"
+                    value={form.machineId}
+                    onChange={e => { setForm({ ...form, machineId: e.target.value, systemId: e.target.value }); setErrors(prev => ({ ...prev, machineId: "" })); }}
+                    placeholder="Auto-filled from selected system"
+                    className="w-full h-9 px-3 text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-700 placeholder-slate-400"
+                  />
+                </div>
+              </div>
+
               <div className="grid grid-cols-3 gap-4">
                 <div>
                   <label className="text-xs font-semibold text-slate-700 mb-1.5 block">Department</label>
                   <select
                     value={form.department}
-                    disabled
-                    className="w-full h-9 px-3 text-sm bg-slate-50 border border-slate-200 rounded-lg text-slate-500 cursor-not-allowed"
+                    onChange={e => setForm({ ...form, department: e.target.value })}
+                    className="w-full h-9 px-3 text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-700"
                   >
+                    <option value="">Select Department</option>
                     {PM_DEPARTMENT_OPTIONS.map(d => (
                       <option key={d} value={d}>{d}</option>
                     ))}
@@ -266,11 +296,16 @@ const record: PMRecord = {
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-slate-700 mb-1.5 block">Location</label>
-                  <input type="text" value={form.location} readOnly placeholder="Auto-filled"
-                    className="w-full h-9 px-3 text-sm bg-slate-50 border border-slate-200 rounded-lg text-slate-500 placeholder-slate-400 cursor-not-allowed" />
+                  <input
+                    type="text"
+                    value={form.location}
+                    onChange={e => setForm({ ...form, location: e.target.value })}
+                    placeholder="Auto-filled from selected system"
+                    className="w-full h-9 px-3 text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-700 placeholder-slate-400"
+                  />
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-slate-700 mb-1.5 block">Assigned User <span className="text-red-500">*</span></label>
+                  <label className="text-xs font-semibold text-slate-700 mb-1.5 block">Assigned User</label>
                   <input
                     type="text"
                     value={form.user}
@@ -351,7 +386,10 @@ const record: PMRecord = {
               <label className="text-xs font-semibold text-slate-700 mb-1.5 block">Frequency <span className="text-red-500">*</span></label>
               <select
                 value={form.frequency}
-                onChange={e => setForm({ ...form, frequency: e.target.value })}
+                onChange={e => {
+                  manuallyEditedDueDate.current = false;
+                  setForm({ ...form, frequency: e.target.value });
+                }}
                 className="w-full h-9 px-3 text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-700"
               >
                 {FREQUENCIES.map(f => <option key={f} value={f}>{f}</option>)}
@@ -385,7 +423,11 @@ const record: PMRecord = {
               <input
                 type="date"
                 value={form.lastMaintenanceDate}
-                onChange={e => { setForm({ ...form, lastMaintenanceDate: e.target.value }); setErrors(prev => ({ ...prev, lastMaintenanceDate: "" })); }}
+                onChange={e => {
+                  manuallyEditedDueDate.current = false;
+                  setForm({ ...form, lastMaintenanceDate: e.target.value });
+                  setErrors(prev => ({ ...prev, lastMaintenanceDate: "" }));
+                }}
                 className={fieldClass("lastMaintenanceDate") + " text-slate-700"}
               />
               {errors.lastMaintenanceDate && <p className="text-[11px] text-red-500 mt-1">{errors.lastMaintenanceDate}</p>}

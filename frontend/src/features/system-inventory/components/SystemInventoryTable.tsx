@@ -14,11 +14,13 @@ export function SystemInventoryTable({
   onView,
   onEdit,
   onDelete,
+  onAdd,
 }: {
   systems: SystemInventory[];
   onView: (s: SystemInventory) => void;
   onEdit: (s: SystemInventory) => void;
   onDelete: (s: SystemInventory) => void;
+  onAdd: () => void;
 }) {
   const [search, setSearch] = useState("");
   const [filterDept, setFilterDept] = useState("");
@@ -57,7 +59,7 @@ export function SystemInventoryTable({
       {/* Table */}
       <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
         {filtered.length === 0 ? (
-          <EmptyState onAdd={() => {}} />
+          <EmptyState onAdd={onAdd} />
         ) : (
           <>
             <div className="overflow-x-auto">

@@ -9,6 +9,7 @@ import type { PMFilterState } from "../components/PMFilters";
 import { loadPMState, savePMState, removePMArtifacts, type PersistedPMStateV1, type PMCompletionEvent } from "../utils/pmStorage";
 import { calculateReminderDate, checkAndGenerateDueReminders, clearRemindersForPM } from "../utils/pmReminderUtils";
 import type { PMChecklistSubmission } from "../components/ChecklistDrawer";
+import preventiveMaintenanceService from "../services/preventiveMaintenanceService";
 
 
 const INITIAL_FILTERS: PMFilterState = {
@@ -50,7 +51,7 @@ export function usePreventiveMaintenance() {
   // Populated via API; empty by default so the UI never crashes with no data.
   const [departments, setDepartments] = useState<string[]>([]);
   const [users, setUsers] = useState<string[]>([]);
-  const [eligibleSystems, _setEligibleSystems] = useState<SystemInventory[]>([]);
+  const [eligibleSystems, setEligibleSystems] = useState<SystemInventory[]>([]);
 
   // Network / request lifecycle state, ready for real API integration.
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -80,10 +81,15 @@ export function usePreventiveMaintenance() {
           setFilters(persisted.filters.filters);
         }
 
-        // Lookups are empty until feature modules are wired.
-        // UI uses fallbacks when empty.
-        setDepartments([]);
-        setUsers([]);
+        const [systemsResult] = await Promise.all([
+          preventiveMaintenanceService.getEligibleSystems(),
+        ]);
+
+        if (!cancelled) {
+          setEligibleSystems(systemsResult);
+          setDepartments([]);
+          setUsers([]);
+        }
       } catch (_err) {
         if (!cancelled) {
           setLoadError("Unable to load preventive maintenance data. Please try again.");
