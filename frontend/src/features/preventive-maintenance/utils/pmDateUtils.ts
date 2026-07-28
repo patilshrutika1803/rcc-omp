@@ -112,37 +112,15 @@ export function addDays(dateStr: string, days: number): string {
  * - Half-Yearly → +6 months
  * - Yearly → +12 months
  */
-export function calculateNextDue(lastMaintenance: string, frequency: string): string {
-  const d = new Date(lastMaintenance);
-  if (isNaN(d.getTime())) return "";
+import { calculateNextDueDate } from "../../shared/utils/recurringWorkflow";
 
-  switch (frequency) {
-    case "Daily":
-      d.setDate(d.getDate() + 1);
-      break;
-    case "Weekly":
-      d.setDate(d.getDate() + 7);
-      break;
-    case "Bi-Weekly":
-      d.setDate(d.getDate() + 14);
-      break;
-    case "Monthly":
-      d.setMonth(d.getMonth() + 1);
-      break;
-    case "Quarterly":
-      d.setMonth(d.getMonth() + 3);
-      break;
-    case "Half-Yearly":
-      d.setMonth(d.getMonth() + 6);
-      break;
-    case "Yearly":
-      d.setFullYear(d.getFullYear() + 1);
-      break;
-    default:
-      // Daily or unknown frequency — default to +1 day
-      d.setDate(d.getDate() + 1);
-      break;
+export function calculateNextDue(lastMaintenance: string, frequency: string): string {
+  if (frequency === "Bi-Weekly") {
+    const d = new Date(lastMaintenance);
+    if (isNaN(d.getTime())) return "";
+    d.setDate(d.getDate() + 14);
+    return d.toISOString().split("T")[0];
   }
 
-  return d.toISOString().split("T")[0];
+  return calculateNextDueDate(lastMaintenance, frequency);
 }

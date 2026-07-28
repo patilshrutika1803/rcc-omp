@@ -5,6 +5,7 @@ import {
   hasNotificationForBackup,
   removeBackupNotifications,
 } from "../../notificataions/utils/notificationStorage";
+import { calculateNextDueDate, calculateReminderDate as calculateSharedReminderDate } from "../../shared/utils/recurringWorkflow";
 
 const REMINDER_DAYS_MAP: Record<string, number> = {
   "Same Day": 0,
@@ -46,11 +47,7 @@ export function calculateReminderDate(
   const days = REMINDER_DAYS_MAP[reminderOption];
   if (days === undefined) return undefined;
 
-  const parsed = parseBackupDateValue(nextBackup);
-  if (!parsed) return undefined;
-
-  parsed.setDate(parsed.getDate() - days);
-  return formatDateOnly(parsed);
+  return calculateSharedReminderDate(nextBackup, reminderOption);
 }
 
 export function calculateNextBackupDate(
@@ -70,30 +67,16 @@ export function calculateNextBackupDate(
     return `${fallback.toISOString().split("T")[0]} ${backupTime ?? "02:00"}`;
   }
 
-  switch (frequency) {
-    case "Hourly":
-      parsed.setHours(parsed.getHours() + 1);
-      break;
-    case "Daily":
-      parsed.setDate(parsed.getDate() + 1);
-      break;
-    case "Weekly":
-      parsed.setDate(parsed.getDate() + 7);
-      break;
-    case "Monthly":
-      parsed.setMonth(parsed.getMonth() + 1);
-      break;
-    case "Quarterly":
-      parsed.setMonth(parsed.getMonth() + 3);
-      break;
-    default:
-      parsed.setDate(parsed.getDate() + 1);
-      break;
+  const candidateDate = calculateNextDueDate(currentNextBackup.split(" ")[0], frequency);
+  if (!candidateDate) {
+    parsed.setDate(parsed.getDate() + 1);
+    const fallbackDate = parsed.toISOString().split("T")[0];
+    const timePart = backupTime ?? currentNextBackup.split(" ")[1] ?? "02:00";
+    return `${fallbackDate} ${timePart}`;
   }
 
-  const datePart = parsed.toISOString().split("T")[0];
   const timePart = backupTime ?? currentNextBackup.split(" ")[1] ?? "02:00";
-  return `${datePart} ${timePart}`;
+  return `${candidateDate} ${timePart}`;
 }
 
 export function getSeverityFromPriority(priority: string): Notification["severity"] {

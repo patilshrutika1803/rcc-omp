@@ -234,7 +234,9 @@ export function useQA() {
           actionNotes: actionNote || item.actionNotes || "",
         };
       });
-      if (recurringActivity) return [recurringActivity, ...updated];
+      if (recurringActivity) {
+        return [recurringActivity, ...updated.filter((item) => item.id !== recurringActivity.id)];
+      }
       return updated;
     });
 

@@ -166,9 +166,17 @@ export function useBackupActivities() {
     }
 
     const completedAt = `${values.backupDate} ${values.backupTime}`;
-    const nextBackup = calculateNextBackupDate(job.nextBackup, job.frequency, values.backupTime);
-    const nextReminderDate = calculateReminderDate(nextBackup, job.reminder);
-    const nextJob = buildRecurringBackupJob(job, completedAt, nextBackup, nextReminderDate, `BK-${Date.now() + 1}`);
+    const shouldRecur = !!job.frequency && job.frequency !== "One Time";
+    const nextBackup = shouldRecur ? calculateNextBackupDate(job.nextBackup, job.frequency, values.backupTime) : job.nextBackup;
+    const nextReminderDate = shouldRecur ? calculateReminderDate(nextBackup, job.reminder) : undefined;
+    const nextJob = shouldRecur ? buildRecurringBackupJob(job, completedAt, nextBackup, nextReminderDate, `BK-${Date.now() + 1}`) : null;
+    const existingNext = jobs.some((candidate) => candidate.id !== job.id && candidate.recurringParentId === job.id && candidate.status !== "Completed");
+    if (existingNext) {
+      toast.error("A recurring backup activity for this cycle already exists.");
+      setShowExecutionForm(false);
+      setCompletingJob(null);
+      return;
+    }
 
     const historyEntry = {
       date: completedAt,
@@ -204,8 +212,14 @@ export function useBackupActivities() {
         lastVerified: values.verifiedBy,
         history: [historyEntry, ...jj.history.slice(0, 9)],
       })));
-      return [...updated, nextJob];
+      if (!nextJob) {
+        return updated;
+      }
+      return [nextJob, ...updated.filter((candidate) => candidate.id !== nextJob.id)];
     });
+    if (nextJob) {
+      checkAndGenerateDueBackupReminders([nextJob]);
+    }
 
     if (selectedJob?.id === job.id) {
       setSelectedJob((prev) => (prev ? {

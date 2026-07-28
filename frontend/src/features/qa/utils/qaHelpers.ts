@@ -5,6 +5,7 @@ import type {
   QATrendPoint,
   QAStatus,
 } from "../types/qa";
+import { calculateNextDueDate as calculateSharedNextDueDate, calculateReminderDate as calculateSharedReminderDate } from "../../shared/utils/recurringWorkflow";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // QA MODULE — HELPERS
@@ -30,46 +31,11 @@ function formatDateOnly(date: Date): string {
 }
 
 export function calculateReminderDate(dueDate: string, reminderOption: string | undefined): string | undefined {
-  if (!reminderOption || !dueDate) return undefined;
-  const days = REMINDER_DAYS_MAP[reminderOption];
-  if (days === undefined) return undefined;
-
-  const parsed = parseDateValue(dueDate);
-  if (!parsed) return undefined;
-  parsed.setDate(parsed.getDate() - days);
-  return formatDateOnly(parsed);
+  return calculateSharedReminderDate(dueDate, reminderOption);
 }
 
 export function calculateNextDueDate(currentDueDate: string, frequency: string): string {
-  const parsed = parseDateValue(currentDueDate);
-  if (!parsed) return "";
-
-  switch (frequency) {
-    case "Daily":
-      parsed.setDate(parsed.getDate() + 1);
-      break;
-    case "Weekly":
-      parsed.setDate(parsed.getDate() + 7);
-      break;
-    case "Monthly":
-      parsed.setMonth(parsed.getMonth() + 1);
-      break;
-    case "Quarterly":
-      parsed.setMonth(parsed.getMonth() + 3);
-      break;
-    case "Half-Yearly":
-    case "Half Yearly":
-      parsed.setMonth(parsed.getMonth() + 6);
-      break;
-    case "Yearly":
-      parsed.setFullYear(parsed.getFullYear() + 1);
-      break;
-    case "One Time":
-    default:
-      return "";
-  }
-
-  return formatDateOnly(parsed);
+  return calculateSharedNextDueDate(currentDueDate, frequency);
 }
 
 export function isOverdue(activity: QAActivity): boolean {

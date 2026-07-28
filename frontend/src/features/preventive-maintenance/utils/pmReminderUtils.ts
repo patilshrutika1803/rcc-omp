@@ -18,6 +18,7 @@ import {
   hasNotificationForPM,
   removePMNotifications,
 } from "../../notificataions/utils/notificationStorage";
+import { calculateReminderDate as calculateSharedReminderDate } from "../../shared/utils/recurringWorkflow";
 
 /**
  * Calculate the reminder date for a PM record.
@@ -32,11 +33,7 @@ export function calculateReminderDate(
   const days = REMINDER_DAYS_MAP[reminderOption];
   if (days === undefined) return undefined;
 
-  const date = new Date(dueDate);
-  if (isNaN(date.getTime())) return undefined;
-
-  date.setDate(date.getDate() - days);
-  return date.toISOString().split("T")[0];
+  return calculateSharedReminderDate(dueDate, reminderOption);
 }
 
 /**

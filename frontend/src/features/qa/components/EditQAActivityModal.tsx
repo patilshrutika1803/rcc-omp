@@ -1,5 +1,6 @@
 import { X } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
+import type { RefObject } from "react";
 import { toast } from "sonner";
 import type { QAActivity, QAActivityFormState } from "../types/qa";
 import { DEPARTMENTS, FREQUENCY_OPTIONS, PRIORITY_OPTIONS, REMINDER_OPTIONS } from "../constants/qaConstants";
@@ -62,7 +63,7 @@ export function EditQAActivityModal({ activity, onClose, onSave }: EditQAActivit
       toast.error(`Validation Failed: ${labels.join(", ")}`);
 
       const first = missing[0];
-      const refMap: Record<string, React.RefObject<HTMLElement>> = {
+      const refMap: Record<string, RefObject<HTMLElement | null>> = {
         qmsNumber: qmsNumberRef,
         qmsType: qmsTypeRef,
         qmsDescription: qmsDescriptionRef,

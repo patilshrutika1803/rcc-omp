@@ -339,11 +339,11 @@ export function usePreventiveMaintenance() {
     }
 
     try {
-      // 3. Compute next due date from completion date + frequency (BUG 1 - uses today as completion date)
-      const nextDueDate = calculateNextDue(today, selectedRecord.frequency);
+      const shouldRecur = !!selectedRecord.frequency && selectedRecord.frequency !== "One Time";
+      const nextDueDate = shouldRecur ? calculateNextDue(today, selectedRecord.frequency) : "";
+      const nextReminderDate = shouldRecur && nextDueDate && selectedRecord.reminder ? calculateReminderDate(nextDueDate, selectedRecord.reminder) : undefined;
 
-      // 4. Create the new recurring PM task (exactly one) (BUG 3)
-      const newPMRecord: PMRecord = {
+      const newPMRecord: PMRecord | null = shouldRecur && nextDueDate ? {
         id: `temp-${Date.now()}`,
         machine: selectedRecord.machine,
         machineId: selectedRecord.machineId,
@@ -357,20 +357,17 @@ export function usePreventiveMaintenance() {
         user: selectedRecord.user,
         frequency: selectedRecord.frequency,
         reminder: selectedRecord.reminder,
-        reminderDate: selectedRecord.reminder ? calculateReminderDate(nextDueDate, selectedRecord.reminder) : undefined,
+        reminderDate: nextReminderDate,
         checklist: selectedRecord.checklist || selectedRecord.description,
         priority: selectedRecord.priority,
-        // BUG 1: Last Maintenance = Completion Date (today)
         lastMaintenance: today,
-        // BUG 1: Next Due = Completion Date + Frequency
         nextDue: nextDueDate,
         status: "Upcoming" as PMStatus,
         description: selectedRecord.description,
-        // Preserve recurrence chain (BUG 4)
         recurrenceId: selectedRecord.recurrenceId || `recur-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
         parentId: selectedRecord.id,
         history: [],
-      };
+      } : null;
 
       // 5. Mark the current record as completed
       const now = new Date();
@@ -399,11 +396,18 @@ export function usePreventiveMaintenance() {
       completedRecord.checklistResponses = submission.items;
 
       // Save the completed checklist and create the next recurring PM together.
-      setPmRecords(prev => [newPMRecord, completedRecord, ...prev.filter(r => r.id !== selectedRecord.id)]);
+      setPmRecords(prev => {
+        if (!newPMRecord) {
+          return [completedRecord, ...prev.filter(r => r.id !== selectedRecord.id)];
+        }
+        return [newPMRecord, completedRecord, ...prev.filter(r => r.id !== selectedRecord.id)];
+      });
       setCompletedPMs(prev => [completedRecord, ...prev]);
 
       // BUG 2: Generate a fresh reminder ONLY for the new recurring PM
-      checkAndGenerateDueReminders([newPMRecord]);
+      if (newPMRecord) {
+        checkAndGenerateDueReminders([newPMRecord]);
+      }
 
       // 6. Store completion event in storage
       try {
