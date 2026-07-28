@@ -64,17 +64,36 @@ export function useNotifications() {
    */
   const handlePMNotificationClick = useCallback(async (id: string, pmId?: string) => {
     if (!pmId) return;
-    // Mark as read
     await markRead(id);
-    // Store PM id in sessionStorage so PreventiveMaintenancePage opens it
     try {
       window.sessionStorage.setItem("rcc_omp_pm_selected_id", pmId);
     } catch {
       // ignore
     }
-    // Navigate to Preventive Maintenance page
     navigate("/preventive-maintenance");
   }, [navigate, markRead]);
+
+  const handleBackupNotificationClick = useCallback(async (id: string, backupJobId?: string) => {
+    if (!backupJobId) return;
+    await markRead(id);
+    try {
+      window.sessionStorage.setItem("rcc_omp_backup_selected_id", backupJobId);
+    } catch {
+      // ignore
+    }
+    window.location.assign("/backup-activities");
+  }, [markRead]);
+
+  const handleQANotificationClick = useCallback(async (id: string, qaActivityId?: string) => {
+    if (!qaActivityId) return;
+    await markRead(id);
+    try {
+      window.sessionStorage.setItem("rcc_omp_qa_selected_id", qaActivityId);
+    } catch {
+      // ignore
+    }
+    window.location.assign("/qa-activities");
+  }, [markRead]);
 
   const filters = buildSidebarFilters(notifications);
   const displayed = getDisplayedNotifications(notifications, activeFilter, search);
@@ -98,5 +117,7 @@ export function useNotifications() {
     archiveNotif,
     refresh: loadNotifications,
     handlePMNotificationClick,
+    handleBackupNotificationClick,
+    handleQANotificationClick,
   };
 }

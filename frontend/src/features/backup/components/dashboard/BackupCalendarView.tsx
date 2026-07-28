@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download, History as HistoryIcon } from "lucide-react";
 import type { BackupJob } from "../../types/backup";
 import { getJobsForDay, isJobNextOnDay } from "../../utils/backupHelpers";
 import { BKP_CALENDAR_LEGEND, BKP_CALENDAR_WEEKDAYS } from "../../constants/backupConstants";
 
-export function BackupCalendarView({ jobs }: { jobs: BackupJob[] }) {
+export function BackupCalendarView({ jobs, onSelectJob, onViewExecution, onExportPdf }: { jobs: BackupJob[]; onSelectJob: (job: BackupJob) => void; onViewExecution: (job: BackupJob) => void; onExportPdf: (job: BackupJob) => void }) {
   const [currentMonth, setCurrentMonth] = useState({ year: 2026, month: 6 });
   const [expandedDays, setExpandedDays] = useState<Set<number>>(new Set());
 
@@ -83,8 +83,20 @@ export function BackupCalendarView({ jobs }: { jobs: BackupJob[] }) {
                     : j.status === "Running"   ? "bg-blue-50 text-blue-700 border-blue-200"
                     : "bg-slate-50 text-slate-600 border-slate-200";
                   return (
-                    <div key={`bkp-cal-job-${j.id}-${ji}`} className={`px-1.5 py-0.5 rounded text-[10px] font-semibold truncate border cursor-pointer hover:opacity-80 ${dotColor}`} title={j.name}>
-                      {j.name.split(" ").slice(0, 2).join(" ")}
+                    <div key={`bkp-cal-job-${j.id}-${ji}`} className="flex items-center gap-1">
+                      <button type="button" onClick={() => onSelectJob(j)} className={`flex-1 px-1.5 py-0.5 rounded text-[10px] font-semibold truncate border cursor-pointer hover:opacity-80 ${dotColor}`} title={j.name}>
+                        {j.name.split(" ").slice(0, 2).join(" ")}
+                      </button>
+                      {j.status === "Completed" && (
+                        <>
+                          <button type="button" title="View execution form" onClick={(event) => { event.stopPropagation(); onViewExecution(j); }} className="rounded border border-slate-200 bg-white p-0.5 text-slate-500 hover:text-sky-600">
+                            <HistoryIcon size={10} />
+                          </button>
+                          <button type="button" title="Export PDF" onClick={(event) => { event.stopPropagation(); onExportPdf(j); }} className="rounded border border-slate-200 bg-white p-0.5 text-slate-500 hover:text-blue-600">
+                            <Download size={10} />
+                          </button>
+                        </>
+                      )}
                     </div>
                   );
                 })}

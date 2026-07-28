@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Archive, X } from "lucide-react";
 import type { BackupJob, BackupJobFormData, BkpType } from "../../types/backup";
-import { BKP_DEPARTMENTS, BKP_FREQUENCIES, BKP_TYPES, BKP_DEFAULT_FORM_TIME, BKP_DEFAULT_FORM_QUOTA } from "../../constants/backupConstants";
+import { BKP_DEPARTMENTS, BKP_FREQUENCIES, BKP_TYPES, BKP_DEFAULT_FORM_TIME, BKP_DEFAULT_FORM_QUOTA, BKP_REMINDER_OPTIONS, BKP_PRIORITY_OPTIONS } from "../../constants/backupConstants";
 import { isBackupJobFormValid } from "../../utils/backupValidation";
 
 export function BackupJobModal({ mode, initial, onSave, onCancel }: {
@@ -20,6 +20,8 @@ export function BackupJobModal({ mode, initial, onSave, onCancel }: {
     user:    initial?.user    ?? "",
     quota:       initial?.quota       ?? BKP_DEFAULT_FORM_QUOTA,
     description: initial?.description ?? "",
+    priority: initial?.priority ?? "Medium",
+    reminder: initial?.reminder ?? "1 Day Before",
   });
 
   const set = (k: keyof BackupJobFormData, v: string | number) => setForm(f => ({ ...f, [k]: v }));
@@ -66,6 +68,20 @@ export function BackupJobModal({ mode, initial, onSave, onCancel }: {
             <div>
               <div className="text-xs font-bold text-slate-700 mb-1">Backup Time</div>
               <input type="time" value={form.backupTime} onChange={e => set("backupTime", e.target.value)} className="w-full h-9 px-3 text-sm border border-slate-300 rounded-lg focus:outline-none focus:border-blue-400" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <div className="text-xs font-bold text-slate-700 mb-1">Priority</div>
+              <select value={form.priority} onChange={e => set("priority", e.target.value)} className="w-full h-9 px-3 text-sm border border-slate-300 rounded-lg focus:outline-none focus:border-blue-400">
+                {BKP_PRIORITY_OPTIONS.map(priority => <option key={priority}>{priority}</option>)}
+              </select>
+            </div>
+            <div>
+              <div className="text-xs font-bold text-slate-700 mb-1">Reminder</div>
+              <select value={form.reminder} onChange={e => set("reminder", e.target.value)} className="w-full h-9 px-3 text-sm border border-slate-300 rounded-lg focus:outline-none focus:border-blue-400">
+                {BKP_REMINDER_OPTIONS.map(option => <option key={option}>{option}</option>)}
+              </select>
             </div>
           </div>
           <div>

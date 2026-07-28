@@ -41,10 +41,12 @@ export function Header({
     window.addEventListener("focus", updateBadge);
     // Listen for storage changes (other tabs)
     window.addEventListener("storage", updateBadge);
+    window.addEventListener("notifications:changed", updateBadge);
     return () => {
       clearInterval(interval);
       window.removeEventListener("focus", updateBadge);
       window.removeEventListener("storage", updateBadge);
+      window.removeEventListener("notifications:changed", updateBadge);
     };
   }, []);
 

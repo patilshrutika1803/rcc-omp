@@ -29,6 +29,8 @@ export default function NotificationsPage() {
     deleteNotif,
     archiveNotif,
     handlePMNotificationClick,
+    handleBackupNotificationClick,
+    handleQANotificationClick,
   } = useNotifications();
 
   return (
@@ -53,6 +55,8 @@ export default function NotificationsPage() {
                   onDelete={() => deleteNotif(n.id)}
                   onArchive={() => archiveNotif(n.id)}
                   onPmClick={handlePMNotificationClick}
+                  onBackupClick={handleBackupNotificationClick}
+                  onQaClick={handleQANotificationClick}
                 />
               ))}
             </div>

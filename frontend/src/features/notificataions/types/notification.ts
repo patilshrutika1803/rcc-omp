@@ -22,7 +22,7 @@ export interface Notification {
   read: boolean;
   archived: boolean;
 
-  // PM Reminder fields (for Preventive Maintenance notifications)
+  // Reminder fields for Preventive Maintenance, Backup, and QA notifications
   pmId?: string;
   machineId?: string;
   machineName?: string;
@@ -30,6 +30,12 @@ export interface Notification {
   assignedUser?: string;
   dueDate?: string;
   notificationType?: string;
+  backupJobId?: string;
+  backupJobName?: string;
+  priority?: string;
+  backupType?: string;
+  qaActivityId?: string;
+  qaActivityNumber?: string;
 }
 
 export type NotificationFilterId =

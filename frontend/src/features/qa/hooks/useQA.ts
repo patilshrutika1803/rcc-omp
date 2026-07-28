@@ -1,78 +1,121 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import type {
-  QAActivity,
-  QAActivityFormState,
-  QAColumnsState,
-  QAFiltersState,
-  QASubTab,
-} from "../types/qa";
+import type { QAActivity, QAActivityFormState, QAColumnsState, QAFiltersState, QAViewMode } from "../types/qa";
 import { DEFAULT_COLUMNS, DEFAULT_FILTERS, EMPTY_FORM, INITIAL_QA_ACTIVITIES } from "../constants/qaConstants";
-import { filterActivities, getDashboardMetrics, getDepartmentBreakdown, getTrendData } from "../utils/qaHelpers";
-import { apiCreateQAActivity, apiDeleteQAActivity, apiUpdateQAActivity } from "../services/qaService";
+import { calculateNextDueDate, calculateReminderDate, filterActivities, getDashboardMetrics, getDepartmentBreakdown, getTrendData } from "../utils/qaHelpers";
 import { validateNewQAActivity } from "../utils/qaValidation";
-
-// ─────────────────────────────────────────────────────────────────────────────
-// useQA — centralizes all QA module state, derived data and CRUD handlers.
-// QAPage (and its child components) should mostly render JSX and consume
-// the values/handlers returned here.
-// ─────────────────────────────────────────────────────────────────────────────
+import { loadPersistedQAActivities, persistQAActivities } from "../utils/qaStorage";
+import { addNotification, hasNotificationForQA, removeQANotifications } from "../../notificataions/utils/notificationStorage";
+import type { Notification } from "../../notificataions/types/notification";
 
 export function useQA() {
-  const [subTab, setSubTab] = useState<QASubTab>("dashboard");
-  const [activities, setActivities] = useState<QAActivity[]>(INITIAL_QA_ACTIVITIES);
+  const [viewMode, setViewMode] = useState<QAViewMode>("table");
   const [search, setSearch] = useState("");
   const [selectedRecord, setSelectedRecord] = useState<QAActivity | null>(null);
-
-  // Loaders
-  const [isLoading, setIsLoading] = useState(false);
-  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
-
-  // New QA Activity State
+  const [showDrawer, setShowDrawer] = useState(false);
   const [showNew, setShowNew] = useState(false);
-  const [newForm, setNewForm] = useState<QAActivityFormState>(EMPTY_FORM);
-
-  // Filter & Columns State
+  const [editingRecord, setEditingRecord] = useState<QAActivity | null>(null);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [showColumns, setShowColumns] = useState(false);
   const [filters, setFilters] = useState<QAFiltersState>(DEFAULT_FILTERS);
   const [columns, setColumns] = useState<QAColumnsState>(DEFAULT_COLUMNS);
+  const [newForm, setNewForm] = useState<QAActivityFormState>(EMPTY_FORM);
+  const persistedActivities = useMemo(() => loadPersistedQAActivities(), []);
+  const [activities, setActivities] = useState<QAActivity[]>(() => (persistedActivities.length > 0 ? persistedActivities : INITIAL_QA_ACTIVITIES));
+  const [isHydrated, setIsHydrated] = useState(false);
 
-  // Filtered Data
-  const filteredActivities = useMemo(
-    () => filterActivities(activities, search, filters),
-    [activities, search, filters]
-  );
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
-  // Dashboard metrics
-  const { totalCount, pendingCount, completedCount, overdueCount, upcomingCount } = useMemo(
-    () => getDashboardMetrics(activities),
-    [activities]
-  );
+  useEffect(() => {
+    persistQAActivities(activities);
+  }, [activities]);
 
+  useEffect(() => {
+    if (!isHydrated) return;
+    const requestedId = window.sessionStorage.getItem("rcc_omp_qa_selected_id");
+    if (requestedId) {
+      const match = activities.find((activity) => activity.id === requestedId);
+      if (match) {
+        setSelectedRecord(match);
+        setShowDrawer(true);
+      }
+      window.sessionStorage.removeItem("rcc_omp_qa_selected_id");
+    }
+  }, [activities, isHydrated]);
+
+  const filteredActivities = useMemo(() => filterActivities(activities, search, filters), [activities, search, filters]);
+  const { totalCount, pendingCount, completedCount, overdueCount, upcomingCount } = useMemo(() => getDashboardMetrics(activities), [activities]);
   const trendData = useMemo(() => getTrendData(activities), [activities]);
   const departmentBreakdown = useMemo(() => getDepartmentBreakdown(activities), [activities]);
 
-  // ───────────────────────────────────────────────────────────────────────
-  // Handlers — currently operate on local state, wired through the API
-  // layer above so the swap to a real AWS backend is a small, isolated change.
-  // ───────────────────────────────────────────────────────────────────────
-
-  const handleUpdateRecord = (updated: QAActivity, newActionNote?: string) => {
-    setIsLoading(true);
-    const withAction: QAActivity = newActionNote
-      ? { ...updated, actionHistory: [{ time: "Just now", note: newActionNote }, ...updated.actionHistory] }
-      : updated;
-
-    apiUpdateQAActivity(withAction)
-      .then(saved => {
-        setActivities(prev => prev.map(p => (p.id === saved.id ? saved : p)));
-        setSelectedRecord(prev => (prev && prev.id === saved.id ? saved : prev));
-        toast.success("QA Activity Updated Successfully");
-      })
-      .catch(() => toast.error("Failed to update QA Activity"))
-      .finally(() => setIsLoading(false));
+  const openRecord = (record: QAActivity | null) => {
+    if (!record) return;
+    const latest = activities.find((activity) => activity.id === record.id) ?? record;
+    setSelectedRecord(latest);
+    setShowDrawer(true);
   };
+
+  const closeDrawer = () => {
+    setShowDrawer(false);
+    setSelectedRecord(null);
+    setEditingRecord(null);
+  };
+
+  const createReminderNotification = (activity: QAActivity): Notification => {
+    const dueDate = activity.dueDate || activity.targetDate;
+    const now = new Date();
+    const timeStr = now.toLocaleString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+    const severity = activity.priority === "Critical" || activity.priority === "High" ? "critical" : activity.priority === "Medium" ? "warning" : "info";
+
+    return {
+      id: `qa-reminder-${activity.id}-${Date.now()}`,
+      title: "QA Activity Reminder",
+      message: `QMS Number:\n${activity.qmsNumber}\n\nQMS Type:\n${activity.qmsType}\n\nDepartment:\n${activity.department}\n\nDue Date:\n${dueDate}\n\nPriority:\n${activity.priority}\n\nReminder:\n${activity.reminder}\n\nNotification Type:\nQA Activity`,
+      category: "qa",
+      severity,
+      time: timeStr,
+      read: false,
+      archived: false,
+      department: activity.department,
+      assignedUser: activity.assignedUser,
+      dueDate,
+      notificationType: "QA Activity",
+      priority: activity.priority,
+      qaActivityId: activity.id,
+      qaActivityNumber: activity.qmsNumber,
+    } as Notification & { qaActivityId?: string; qaActivityNumber?: string };
+  };
+
+  const generateReminderIfDue = (activity: QAActivity) => {
+    if (!activity.reminderDate || activity.status === "Completed") return false;
+    const today = new Date().toISOString().split("T")[0];
+    if (activity.reminderDate > today) return false;
+    if (hasNotificationForQA(activity.id)) return false;
+    addNotification(createReminderNotification(activity));
+    return true;
+  };
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    activities.forEach((activity) => generateReminderIfDue(activity));
+
+    const interval = setInterval(() => {
+      const current = loadPersistedQAActivities();
+      current.forEach((activity) => generateReminderIfDue(activity));
+    }, 1000 * 60 * 60);
+
+    return () => clearInterval(interval);
+  }, [activities, isHydrated]);
 
   const handleCreate = () => {
     const result = validateNewQAActivity(newForm);
@@ -80,89 +123,180 @@ export function useQA() {
       toast.error(result.message);
       return;
     }
-    setIsLoading(true);
-    const payload: Omit<QAActivity, "id" | "createdAt" | "updatedAt"> = {
+
+    const dueDate = newForm.dueDate || newForm.targetDate;
+    const reminderDate = calculateReminderDate(dueDate, newForm.reminder);
+    const createdAt = new Date().toISOString();
+    const newActivity: QAActivity = {
+      id: `QA-${Date.now()}`,
       qmsNumber: newForm.qmsNumber,
       qmsType: newForm.qmsType,
       qmsDescription: newForm.qmsDescription,
       department: newForm.department,
       targetDate: newForm.targetDate,
+      dueDate,
       reminder: newForm.reminder,
-      completed: newForm.completed,
-      actionHistory: newForm.action.trim() ? [{ time: "Just now", note: newForm.action.trim() }] : [],
+      reminderDate,
+      priority: newForm.priority,
+      assignedUser: newForm.assignedUser,
+      status: "Upcoming",
+      frequency: newForm.frequency,
+      actionHistory: [],
+      actionNotes: "",
+      createdAt,
+      updatedAt: createdAt,
     };
 
-    apiCreateQAActivity(payload)
-      .then(created => {
-        setActivities(prev => [created, ...prev]);
-        setShowNew(false);
-        setNewForm(EMPTY_FORM);
-        toast.success("QA Activity Created Successfully");
-      })
-      .catch(() => toast.error("Failed to create QA Activity"))
-      .finally(() => setIsLoading(false));
+    setActivities((prev) => [newActivity, ...prev]);
+    setShowNew(false);
+    setNewForm(EMPTY_FORM);
+    generateReminderIfDue(newActivity);
+    toast.success("QA Activity created successfully.");
+  };
+
+  const handleUpdateRecord = (updated: QAActivity, newActionNote?: string) => {
+    const current = activities.find((activity) => activity.id === updated.id);
+    const shouldClearReminder = current && (current.dueDate !== updated.dueDate || current.reminder !== updated.reminder);
+
+    const base: QAActivity = { ...updated, updatedAt: new Date().toISOString() };
+    const dueDate = base.dueDate || base.targetDate;
+    const reminderDate = calculateReminderDate(dueDate, base.reminder);
+    const withAction: QAActivity = newActionNote
+      ? { ...base, reminderDate, actionHistory: [{ time: "Just now", note: newActionNote }, ...base.actionHistory], actionNotes: newActionNote }
+      : { ...base, reminderDate };
+
+    if (shouldClearReminder) {
+      removeQANotifications(updated.id);
+    }
+
+    setActivities((prev) => prev.map((activity) => (activity.id === withAction.id ? withAction : activity)));
+    setSelectedRecord(withAction);
+    setEditingRecord(null);
+    setShowDrawer(false);
+    generateReminderIfDue(withAction);
+    toast.success("QA Activity updated successfully.");
+  };
+
+  const handleEdit = (activity: QAActivity) => {
+    setEditingRecord(activity);
+    setSelectedRecord(activity);
+    setShowDrawer(false);
+  };
+
+  const handleComplete = (activity: QAActivity, actionNote?: string, completedBy?: string) => {
+    if (activity.status === "Completed") {
+      toast.info("Activity is already completed.");
+      return;
+    }
+
+    const completedAt = new Date().toISOString();
+    const dueDate = activity.dueDate || activity.targetDate;
+    const shouldRecur = activity.frequency && activity.frequency !== "One Time";
+    const nextDueDate = shouldRecur ? calculateNextDueDate(dueDate, activity.frequency) : "";
+    const nextReminderDate = nextDueDate ? calculateReminderDate(nextDueDate, activity.reminder) : undefined;
+    const alreadyHasRecurringChild = activities.some((item) => item.id !== activity.id && item.status !== "Completed" && item.recurringParentId === activity.id);
+
+    const recurringActivity: QAActivity | null = shouldRecur && nextDueDate && !alreadyHasRecurringChild ? {
+      id: `QA-${Date.now() + 1}`,
+      qmsNumber: activity.qmsNumber,
+      qmsType: activity.qmsType,
+      qmsDescription: activity.qmsDescription,
+      department: activity.department,
+      targetDate: nextDueDate,
+      dueDate: nextDueDate,
+      reminder: activity.reminder,
+      reminderDate: nextReminderDate,
+      priority: activity.priority,
+      assignedUser: activity.assignedUser,
+      status: "Upcoming",
+      frequency: activity.frequency,
+      lastDueDate: dueDate,
+      actionHistory: [],
+      actionNotes: "",
+      createdAt: completedAt,
+      updatedAt: completedAt,
+      recurringParentId: activity.id,
+    } : null;
+
+    removeQANotifications(activity.id);
+    setActivities((prev) => {
+      const updated: QAActivity[] = prev.map((item): QAActivity => {
+        if (item.id !== activity.id) return item;
+        return {
+          ...item,
+          status: "Completed" as QAActivity["status"],
+          updatedAt: completedAt,
+          lastDueDate: dueDate,
+          completionDate: completedAt.split("T")[0],
+          completionNotes: actionNote?.trim() || item.actionNotes || "",
+          completedBy: completedBy?.trim() || item.completedBy || "Current User",
+          actionHistory: actionNote ? [{ time: "Just now", note: actionNote }, ...item.actionHistory] : item.actionHistory,
+          actionNotes: actionNote || item.actionNotes || "",
+        };
+      });
+      if (recurringActivity) return [recurringActivity, ...updated];
+      return updated;
+    });
+
+    if (recurringActivity) generateReminderIfDue(recurringActivity);
+    setShowDrawer(false);
+    setSelectedRecord(null);
+
+    if (recurringActivity) {
+      toast.success(`"${activity.qmsNumber}" marked as completed and a new recurring QA activity was created.`);
+    } else {
+      toast.success(`"${activity.qmsNumber}" marked as completed.`);
+    }
+  };
+
+  const handleDuplicate = (record: QAActivity) => {
+    const duplicate: QAActivity = {
+      ...record,
+      id: `QA-${Date.now()}`,
+      qmsNumber: `${record.qmsNumber}-COPY`,
+      status: "Upcoming",
+      dueDate: record.dueDate,
+      targetDate: record.targetDate,
+      reminderDate: record.reminderDate,
+      actionHistory: [],
+      actionNotes: "",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      recurringParentId: undefined,
+    };
+    setActivities((prev) => [duplicate, ...prev]);
+    generateReminderIfDue(duplicate);
+    toast.success("QA Activity duplicated.");
   };
 
   const handleDelete = (id: string) => {
-    apiDeleteQAActivity(id)
-      .then(() => {
-        setActivities(prev => prev.filter(p => p.id !== id));
-        toast.success("QA Activity Deleted");
-      })
-      .catch(() => toast.error("Failed to delete QA Activity"));
+    removeQANotifications(id);
+    setActivities((prev) => prev.filter((activity) => activity.id !== id));
+    if (selectedRecord?.id === id) {
+      setShowDrawer(false);
+      setSelectedRecord(null);
+    }
+    toast.success("QA Activity deleted.");
   };
 
-  const handleDuplicate = (rec: QAActivity) => {
-    const payload: Omit<QAActivity, "id" | "createdAt" | "updatedAt"> = {
-      qmsNumber: `${rec.qmsNumber}-COPY`,
-      qmsType: rec.qmsType,
-      qmsDescription: rec.qmsDescription,
-      department: rec.department,
-      targetDate: rec.targetDate,
-      reminder: rec.reminder,
-      completed: "Pending",
-      actionHistory: [],
-    };
-    apiCreateQAActivity(payload)
-      .then(created => {
-        setActivities(prev => [created, ...prev]);
-        toast.success("QA Activity Duplicated");
-      })
-      .catch(() => toast.error("Failed to duplicate QA Activity"));
-  };
-
-  const handleGlobalExport = () => {
-    // Placeholder – Word export will be implemented in a future release
+  const handleSnooze = (activity: QAActivity) => {
+    setActivities((prev) => prev.map((item) => (item.id === activity.id ? { ...item, status: "Paused", updatedAt: new Date().toISOString() } : item)));
+    toast.success(`"${activity.qmsNumber}" has been snoozed.`);
   };
 
   return {
-    // Tabs
-    subTab, setSubTab,
-
-    // Data
-    activities, filteredActivities,
-
-    // Search
+    viewMode, setViewMode,
     search, setSearch,
-
-    // Drawer
     selectedRecord, setSelectedRecord,
-
-    // Loading / menus
-    isLoading, openMenuId, setOpenMenuId,
-
-    // New activity modal
+    showDrawer, setShowDrawer,
     showNew, setShowNew, newForm, setNewForm,
-
-    // Filters / columns
+    editingRecord, setEditingRecord,
+    openMenuId, setOpenMenuId,
     showFilters, setShowFilters, showColumns, setShowColumns, filters, setFilters, columns, setColumns,
-
-    // Dashboard metrics
+    activities, filteredActivities,
     totalCount, pendingCount, completedCount, overdueCount, upcomingCount,
     trendData, departmentBreakdown,
-
-    // Handlers
-    handleUpdateRecord, handleCreate, handleDelete, handleDuplicate, handleGlobalExport,
+    openRecord, closeDrawer, handleCreate, handleUpdateRecord, handleEdit, handleComplete, handleDuplicate, handleDelete, handleSnooze,
   };
 }
 

@@ -1,5 +1,5 @@
 import type { BkpStatus, BkpType, WeeklyTrendPoint, StorageTrendPoint, BackupSubTab } from "../types/backup";
-import { LayoutDashboard, Archive, Calendar as CalendarIcon } from "lucide-react";
+import { Archive, Calendar as CalendarIcon } from "lucide-react";
 import { DEPARTMENT_OPTIONS } from "../../../constants/departments";
 
 
@@ -24,18 +24,19 @@ export const BKP_WEEKLY_TREND: WeeklyTrendPoint[] = [];
 // aggregation query from the backend once available.
 export const BKP_STORAGE_TREND: StorageTrendPoint[] = [];
 
-export const BKP_STATUSES: BkpStatus[] = ["Completed", "Running", "Failed", "Scheduled", "Paused", "Cancelled"];
+export const BKP_STATUSES: BkpStatus[] = ["Completed", "Running", "Failed", "Scheduled", "Upcoming", "Paused", "Cancelled"];
 export const BKP_TYPES: BkpType[] = ["Full", "Incremental", "Differential", "Snapshot"];
 
 export const BKP_DEPARTMENTS = [...DEPARTMENT_OPTIONS];
 
 export const BKP_FREQUENCIES = ["Daily", "Weekly", "Monthly", "Quarterly", "Hourly"];
+export const BKP_REMINDER_OPTIONS = ["Same Day", "1 Day Before", "3 Days Before", "7 Days Before", "15 Days Before", "30 Days Before"];
+export const BKP_PRIORITY_OPTIONS = ["Low", "Medium", "High", "Critical"] as const;
 
 // "Backup Destination" and "Assigned User" are free-text fields (manually
 // entered by the user) rather than fixed option lists — see BackupJobModal.
 
-export const BKP_SUB_TABS: { id: BackupSubTab; label: string; icon: typeof LayoutDashboard }[] = [
-  { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+export const BKP_SUB_TABS: { id: BackupSubTab; label: string; icon: typeof Archive }[] = [
   { id: "jobs", label: "Backup Jobs", icon: Archive },
   { id: "calendar", label: "Calendar", icon: CalendarIcon },
 ];
@@ -56,6 +57,7 @@ export const BKP_CALENDAR_LEGEND = [
   { color: "bg-blue-500", label: "Running" },
   { color: "bg-red-500", label: "Failed" },
   { color: "bg-slate-400", label: "Scheduled" },
+  { color: "bg-amber-500", label: "Upcoming" },
 ];
 
 export const BKP_CALENDAR_WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];

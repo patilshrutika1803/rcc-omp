@@ -2,19 +2,14 @@
 // QA MODULE — TYPES
 // ─────────────────────────────────────────────────────────────────────────────
 
-export type CompletedStatus = "Pending" | "Completed";
+export type QAStatus = "Upcoming" | "Completed" | "Paused" | "Cancelled";
+export type QAPriority = "Low" | "Medium" | "High" | "Critical";
 
-// A single action / follow-up / remark entry. QA Activities can accumulate
-// multiple action entries over time (corrective actions, observations, etc).
 export interface QAActionEntry {
   time: string;
   note: string;
 }
 
-// Core QA Activity record. This shape maps directly to the future backend
-// document / row (MongoDB document or PostgreSQL row) so integration later
-// requires minimal changes — only the data-access functions in services/
-// need to be swapped from local state to real HTTP calls.
 export interface QAActivity {
   id: string;
   qmsNumber: string;
@@ -22,11 +17,22 @@ export interface QAActivity {
   qmsDescription: string;
   department: string;
   targetDate: string;
+  dueDate: string;
   reminder: string;
-  completed: CompletedStatus;
+  reminderDate?: string;
+  priority: QAPriority;
+  assignedUser: string;
+  status: QAStatus;
+  frequency: string;
+  lastDueDate?: string;
+  completionDate?: string;
+  completionNotes?: string;
+  completedBy?: string;
   actionHistory: QAActionEntry[];
+  actionNotes?: string;
   createdAt: string;
   updatedAt: string;
+  recurringParentId?: string;
 }
 
 export interface QAActivityFormState {
@@ -35,24 +41,31 @@ export interface QAActivityFormState {
   qmsDescription: string;
   department: string;
   targetDate: string;
+  dueDate: string;
   reminder: string;
-  completed: CompletedStatus;
+  priority: QAPriority;
+  assignedUser: string;
+  frequency: string;
   action: string;
 }
 
 export interface QAFiltersState {
   department: string;
   reminder: string;
-  completed: string;
+  status: string;
+  priority: string;
   targetDate: string;
 }
 
 export interface QAColumnsState {
   qmsType: boolean;
   department: boolean;
-  targetDate: boolean;
+  dueDate: boolean;
+  lastDueDate?: boolean;
   reminder: boolean;
-  completed: boolean;
+  frequency: boolean;
+  priority: boolean;
+  status: boolean;
   action: boolean;
 }
 
@@ -67,4 +80,4 @@ export interface QADepartmentBreakdownPoint {
   score: number;
 }
 
-export type QASubTab = "dashboard" | "activities";
+export type QAViewMode = "table" | "card" | "calendar";

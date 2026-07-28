@@ -9,27 +9,40 @@ interface NotificationCardProps {
   onDelete: () => void;
   onArchive: () => void;
   onPmClick?: (id: string, pmId?: string) => void;
+  onBackupClick?: (id: string, backupJobId?: string) => void;
+  onQaClick?: (id: string, qaActivityId?: string) => void;
 }
 
-export function NotificationCard({ n, onRead, onDelete, onArchive, onPmClick }: NotificationCardProps) {
+export function NotificationCard({ n, onRead, onDelete, onArchive, onPmClick, onBackupClick, onQaClick }: NotificationCardProps) {
   const borderColor = getSeverityBorderColor(n.severity);
   const badgeClasses = getSeverityBadgeClasses(n.severity);
 
   const isPMReminder = n.notificationType === "Preventive Maintenance" && !!n.pmId;
+  const isBackupReminder = n.notificationType === "Backup Activity" && !!n.backupJobId;
+  const isQAReminder = n.notificationType === "QA Activity" && !!n.qaActivityId;
 
   const handleCardClick = () => {
     if (isPMReminder && onPmClick) {
       onPmClick(n.id, n.pmId);
+    } else if (isBackupReminder && onBackupClick) {
+      onBackupClick(n.id, n.backupJobId);
+    } else if (isQAReminder && onQaClick) {
+      onQaClick(n.id, n.qaActivityId);
     } else if (!n.read) {
       onRead();
     }
+  };
+
+  const handleActionClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    handleCardClick();
   };
 
   return (
     <div
       className={`bg-white border border-slate-200 border-l-4 ${borderColor} rounded-xl shadow-sm p-4 hover:shadow-md transition-all ${
         !n.read ? "bg-blue-50/20" : ""
-      } ${isPMReminder ? "cursor-pointer" : ""}`}
+      } ${isPMReminder || isBackupReminder || isQAReminder ? "cursor-pointer" : ""}`}
       onClick={handleCardClick}
     >
       <div className="flex items-start gap-3">
@@ -51,6 +64,32 @@ export function NotificationCard({ n, onRead, onDelete, onArchive, onPmClick }: 
             {isPMReminder && (
               <span className="text-[10px] font-semibold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">
                 Click to view PM
+              </span>
+            )}
+            {isBackupReminder && (
+              <span
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (onBackupClick) {
+                    onBackupClick(n.id, n.backupJobId);
+                  }
+                }}
+                className="text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded cursor-pointer"
+              >
+                Click to view Backup
+              </span>
+            )}
+            {isQAReminder && (
+              <span
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (onQaClick) {
+                    onQaClick(n.id, n.qaActivityId);
+                  }
+                }}
+                className="text-[10px] font-semibold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded cursor-pointer"
+              >
+                Click to view QA
               </span>
             )}
             <div className="ml-auto flex items-center gap-1">

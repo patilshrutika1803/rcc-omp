@@ -34,15 +34,22 @@ export function saveNotifications(notifications: Notification[]): void {
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(notifications));
 }
 
+function emitNotificationChange(): void {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new Event("notifications:changed"));
+}
+
 export function addNotification(notification: Notification): void {
   const notifications = loadNotifications();
   notifications.unshift(notification);
   saveNotifications(notifications);
+  emitNotificationChange();
 }
 
 export function removeNotification(id: string): void {
   const notifications = loadNotifications().filter((n) => n.id !== id);
   saveNotifications(notifications);
+  emitNotificationChange();
 }
 
 export function updateNotification(
@@ -53,6 +60,7 @@ export function updateNotification(
     n.id === id ? { ...n, ...updates } : n
   );
   saveNotifications(notifications);
+  emitNotificationChange();
 }
 
 /**
@@ -64,6 +72,23 @@ export function removePMNotifications(pmId: string): void {
     (n) => !(n.pmId === pmId && !n.read)
   );
   saveNotifications(notifications);
+  emitNotificationChange();
+}
+
+export function removeBackupNotifications(backupJobId: string): void {
+  const notifications = loadNotifications().filter(
+    (n) => !(n.backupJobId === backupJobId && !n.read)
+  );
+  saveNotifications(notifications);
+  emitNotificationChange();
+}
+
+export function removeQANotifications(qaActivityId: string): void {
+  const notifications = loadNotifications().filter(
+    (n) => !(n.qaActivityId === qaActivityId && !n.read)
+  );
+  saveNotifications(notifications);
+  emitNotificationChange();
 }
 
 /**
@@ -73,6 +98,16 @@ export function removePMNotifications(pmId: string): void {
 export function hasNotificationForPM(pmId: string): boolean {
   const notifications = loadNotifications();
   return notifications.some((n) => n.pmId === pmId && !n.read);
+}
+
+export function hasNotificationForBackup(backupJobId: string): boolean {
+  const notifications = loadNotifications();
+  return notifications.some((n) => n.backupJobId === backupJobId && !n.read);
+}
+
+export function hasNotificationForQA(qaActivityId: string): boolean {
+  const notifications = loadNotifications();
+  return notifications.some((n) => n.qaActivityId === qaActivityId && !n.read);
 }
 
 /**
@@ -88,5 +123,6 @@ export function getUnreadCount(): number {
 export function markAllAsRead(): void {
   const notifications = loadNotifications().map((n) => ({ ...n, read: true }));
   saveNotifications(notifications);
+  emitNotificationChange();
 }
 
