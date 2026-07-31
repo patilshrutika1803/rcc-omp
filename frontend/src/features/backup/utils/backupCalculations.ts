@@ -24,7 +24,7 @@ export function computeSuccessRate(jobs: BackupJob[], kpi: BackupKpi): number {
 }
 
 export function getTodayJobs(jobs: BackupJob[]): BackupJob[] {
-  return jobs.filter(j => j.lastBackup.startsWith("2026-07-03") || j.status === "Running");
+  return jobs.filter(j => (j.lastBackup ?? "").startsWith("2026-07-03") || j.status === "Running");
 }
 
 export function computeUsedPct(sizeGB: number, quota: number): number {

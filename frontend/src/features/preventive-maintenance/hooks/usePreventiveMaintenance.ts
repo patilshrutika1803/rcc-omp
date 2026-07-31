@@ -157,7 +157,9 @@ export function usePreventiveMaintenance() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pmRecords, completedPMs, searchQuery, quickFilter, filters]);
 
-  // Completed PMs remain in the main record list so their record actions stay available.
+  // Active records are used for KPIs and recurring workflow state, but completed
+  // PMs must remain visible in the main list so their completed-specific actions
+  // (including Export PDF) stay available.
   const activeRecords = useMemo(() => {
     return pmRecords.filter(r => r.status !== "Completed");
   }, [pmRecords]);
@@ -340,7 +342,8 @@ export function usePreventiveMaintenance() {
 
     try {
       const shouldRecur = !!selectedRecord.frequency && selectedRecord.frequency !== "One Time";
-      const nextDueDate = shouldRecur ? calculateNextDue(today, selectedRecord.frequency) : "";
+      const completedCycleDueDate = selectedRecord.nextDue || selectedRecord.lastMaintenance || today;
+      const nextDueDate = shouldRecur ? calculateNextDue(completedCycleDueDate, selectedRecord.frequency) : "";
       const nextReminderDate = shouldRecur && nextDueDate && selectedRecord.reminder ? calculateReminderDate(nextDueDate, selectedRecord.reminder) : undefined;
 
       const newPMRecord: PMRecord | null = shouldRecur && nextDueDate ? {
@@ -360,8 +363,9 @@ export function usePreventiveMaintenance() {
         reminderDate: nextReminderDate,
         checklist: selectedRecord.checklist || selectedRecord.description,
         priority: selectedRecord.priority,
-        lastMaintenance: today,
+        lastMaintenance: completedCycleDueDate,
         nextDue: nextDueDate,
+        scheduledNextDue: nextDueDate,
         status: "Upcoming" as PMStatus,
         description: selectedRecord.description,
         recurrenceId: selectedRecord.recurrenceId || `recur-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -375,9 +379,11 @@ export function usePreventiveMaintenance() {
       const completedRecord: PMRecord = {
         ...selectedRecord,
         status: "Completed" as PMStatus,
-        lastMaintenance: today,
+        lastMaintenance: completedCycleDueDate,
+        nextDue: "",
         completionDate: today,
         completionNotes: trimmedNotes,
+        scheduledNextDue: nextDueDate || "",
         history: [
           {
             date: today,

@@ -15,8 +15,10 @@ export function BackupJobModal({ mode, initial, onSave, onCancel }: {
     department:  initial?.department  ?? BKP_DEPARTMENTS[0],
     backupType:  initial?.backupType  ?? "Full",
     frequency:   initial?.frequency   ?? "Daily",
+    initialDueDate: initial?.nextDueDate ?? initial?.dueDate ?? initial?.nextBackup?.split(" ")[0] ?? "",
+    lastBackupDate: initial?.lastBackupDate ?? initial?.lastBackup ?? "",
     destination: initial?.destination ?? "",
-    backupTime:  initial?.lastBackup?.split(" ")[1] ?? BKP_DEFAULT_FORM_TIME,
+    backupTime:  initial?.nextBackup?.split(" ")[1] ?? initial?.backupTime ?? BKP_DEFAULT_FORM_TIME,
     user:    initial?.user    ?? "",
     quota:       initial?.quota       ?? BKP_DEFAULT_FORM_QUOTA,
     description: initial?.description ?? "",
@@ -68,6 +70,16 @@ export function BackupJobModal({ mode, initial, onSave, onCancel }: {
             <div>
               <div className="text-xs font-bold text-slate-700 mb-1">Backup Time</div>
               <input type="time" value={form.backupTime} onChange={e => set("backupTime", e.target.value)} className="w-full h-9 px-3 text-sm border border-slate-300 rounded-lg focus:outline-none focus:border-blue-400" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <div className="text-xs font-bold text-slate-700 mb-1">Initial Due Date <span className="text-red-500">*</span></div>
+              <input type="date" value={form.initialDueDate} onChange={e => set("initialDueDate", e.target.value)} className="w-full h-9 px-3 text-sm border border-slate-300 rounded-lg focus:outline-none focus:border-blue-400" />
+            </div>
+            <div>
+              <div className="text-xs font-bold text-slate-700 mb-1">Last Backup Date</div>
+              <input type="date" value={form.lastBackupDate} onChange={e => set("lastBackupDate", e.target.value)} className="w-full h-9 px-3 text-sm border border-slate-300 rounded-lg focus:outline-none focus:border-blue-400" />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">

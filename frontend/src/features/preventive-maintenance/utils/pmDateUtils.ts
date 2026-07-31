@@ -3,12 +3,16 @@
 // Centralized date utilities used across all PM components.
 // ─────────────────────────────────────────────────────────────────────────────
 
+import type { PMRecord } from "../types/pm";
+
 /**
  * Calculate the number of days between now and a target date.
  * Positive = future, Negative = past, Zero = today.
  */
 export function daysUntil(dateStr: string): number {
+  if (!dateStr) return 0;
   const due = new Date(dateStr);
+  if (Number.isNaN(due.getTime())) return 0;
   const now = new Date();
   // Reset time to midnight for accurate day comparison
   const dueMidnight = new Date(due.getFullYear(), due.getMonth(), due.getDate());
@@ -99,6 +103,21 @@ export function addDays(dateStr: string, days: number): string {
   if (isNaN(d.getTime())) return "";
   d.setDate(d.getDate() + days);
   return d.toISOString().split("T")[0];
+}
+
+export function getTimelineBucket(record: PMRecord | null | undefined): "Overdue" | "Due Today" | "Upcoming" | null {
+  if (!record || record.status === "Completed") return null;
+
+  const dueDate = record.nextDue?.trim();
+  if (!dueDate) return null;
+
+  const due = new Date(dueDate);
+  if (Number.isNaN(due.getTime())) return null;
+
+  const diff = daysUntil(dueDate);
+  if (diff < 0) return "Overdue";
+  if (diff === 0) return "Due Today";
+  return "Upcoming";
 }
 
 /**

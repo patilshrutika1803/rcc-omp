@@ -29,7 +29,7 @@ export const BKP_TYPES: BkpType[] = ["Full", "Incremental", "Differential", "Sna
 
 export const BKP_DEPARTMENTS = [...DEPARTMENT_OPTIONS];
 
-export const BKP_FREQUENCIES = ["Daily", "Weekly", "Monthly", "Quarterly", "Hourly"];
+export const BKP_FREQUENCIES = ["Daily", "Weekly", "Monthly", "Quarterly", "Half-Yearly", "Yearly", "One Time"];
 export const BKP_REMINDER_OPTIONS = ["Same Day", "1 Day Before", "3 Days Before", "7 Days Before", "15 Days Before", "30 Days Before"];
 export const BKP_PRIORITY_OPTIONS = ["Low", "Medium", "High", "Critical"] as const;
 

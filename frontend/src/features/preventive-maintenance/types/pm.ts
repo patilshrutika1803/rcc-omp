@@ -52,6 +52,7 @@ export interface PMRecord {
   checklistResponses?: PMChecklistItem[];
   completionNotes?: string;
   completionDate?: string;
+  scheduledNextDue?: string;
   generatedPdfReference?: string;
 
   // Recurrence tracking — stable identifier for the recurrence chain.

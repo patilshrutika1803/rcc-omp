@@ -16,7 +16,7 @@ export function BackupJobDrawer({ job, onClose, onEdit, onRunNow, onViewExecutio
   const latestExecution = job.history[0]?.executionDetails;
   const isCompleted = job.status === "Completed";
   const reminderLabel = job.reminder || "None";
-  const dueDateLabel = job.nextBackup || "—";
+  const dueDateLabel = job.nextDueDate || job.nextBackup || "—";
 
   return (
     <div className="fixed inset-0 z-[60] flex">

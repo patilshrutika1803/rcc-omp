@@ -29,32 +29,65 @@ export interface BackupJobHistoryEntry {
   executionDetails?: BackupJobExecutionDetails;
 }
 
+export interface BackupJobExecutionData {
+  institutionName: string;
+  system: string;
+  department: string;
+  backupFrequency: string;
+  systemId: string;
+  instrumentName: string;
+  backupDate: string;
+  backupTime: string;
+  backupSize: number;
+  unit: string;
+  doneBy: string;
+  verifiedBy: string;
+  executionNotes: string;
+}
+
 export interface BackupJob {
   id: string;
   name: string;
   server: string;
   backupType: BkpType;
   frequency: string;
-  lastBackup: string;
-  nextBackup: string;
-  status: BkpStatus;
-  progress: number;
-  user: string;
-  sizeGB: number;
+  department: string;
   destination: string;
+  quota: number;
+  priority?: "Low" | "Medium" | "High" | "Critical";
+  reminder?: string;
+  notes?: string;
+  status: BkpStatus;
+  dueDate: string;
+  lastDueDate?: string;
+  nextDueDate: string;
+  reminderDate?: string;
+  nextReminderDate?: string;
+  scheduledNextBackup?: string;
+  nextBackup: string;
+  backupTime: string;
+  lastBackup?: string;
+  lastBackupDate?: string;
+  sizeGB: number;
   retention: string;
   duration: string;
-  department: string;
   lastVerified: string;
   recoveryPoints: number;
   compressionRatio: string;
-  quota: number;
   description: string;
   history: BackupJobHistoryEntry[];
-  reminder?: string;
-  reminderDate?: string;
-  priority?: "Low" | "Medium" | "High" | "Critical";
-  recurringParentId?: string;
+  executionData?: BackupJobExecutionData;
+  completionDate?: string;
+  completionRemarks?: string;
+  completedBy?: string;
+  completionNotes?: string;
+  verifiedBy?: string;
+  progress: number;
+  user: string;
+  // Recurrence tracking to mirror Preventive Maintenance architecture
+  recurrenceId?: string;
+  parentId?: string;
+  originalDueDate?: string;
 }
 
 export interface BackupJobFormData {
@@ -62,6 +95,8 @@ export interface BackupJobFormData {
   department: string;
   backupType: BkpType;
   frequency: string;
+  initialDueDate: string;
+  lastBackupDate?: string;
   destination: string;
   backupTime: string;
   user: string;

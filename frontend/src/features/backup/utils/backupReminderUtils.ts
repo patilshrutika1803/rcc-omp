@@ -5,29 +5,10 @@ import {
   hasNotificationForBackup,
   removeBackupNotifications,
 } from "../../notificataions/utils/notificationStorage";
-import { calculateNextDueDate, calculateReminderDate as calculateSharedReminderDate } from "../../shared/utils/recurringWorkflow";
-
-const REMINDER_DAYS_MAP: Record<string, number> = {
-  "Same Day": 0,
-  "1 Day Before": 1,
-  "3 Days Before": 3,
-  "7 Days Before": 7,
-  "15 Days Before": 15,
-  "30 Days Before": 30,
-};
-
-function parseBackupDateValue(value: string): Date | null {
-  if (!value) return null;
-  const trimmed = value.trim();
-  const [datePart, timePart] = trimmed.split(/\s+/);
-  const candidate = timePart ? `${datePart}T${timePart}` : `${datePart}T00:00`;
-  const parsed = new Date(candidate);
-  return Number.isNaN(parsed.getTime()) ? null : parsed;
-}
-
-function formatDateOnly(date: Date): string {
-  return date.toISOString().split("T")[0];
-}
+import {
+  calculateNextDueDate,
+  calculateReminderDate as calculateSharedReminderDate,
+} from "../../shared/utils/recurringWorkflow";
 
 function formatDateDisplay(dateStr: string): string {
   const parsed = new Date(dateStr);
@@ -40,14 +21,10 @@ function formatDateDisplay(dateStr: string): string {
 }
 
 export function calculateReminderDate(
-  nextBackup: string,
+  dueDate: string,
   reminderOption: string | undefined
 ): string | undefined {
-  if (!reminderOption || !nextBackup) return undefined;
-  const days = REMINDER_DAYS_MAP[reminderOption];
-  if (days === undefined) return undefined;
-
-  return calculateSharedReminderDate(nextBackup, reminderOption);
+  return calculateSharedReminderDate(dueDate, reminderOption);
 }
 
 export function calculateNextBackupDate(
@@ -55,28 +32,11 @@ export function calculateNextBackupDate(
   frequency: string,
   backupTime?: string
 ): string {
-  const parsed = parseBackupDateValue(currentNextBackup);
-  if (!parsed) {
-    const fallback = new Date();
-    if (backupTime) {
-      const [hours, minutes] = backupTime.split(":").map((v) => Number(v));
-      if (!Number.isNaN(hours) && !Number.isNaN(minutes)) {
-        fallback.setHours(hours, minutes, 0, 0);
-      }
-    }
-    return `${fallback.toISOString().split("T")[0]} ${backupTime ?? "02:00"}`;
-  }
-
-  const candidateDate = calculateNextDueDate(currentNextBackup.split(" ")[0], frequency);
-  if (!candidateDate) {
-    parsed.setDate(parsed.getDate() + 1);
-    const fallbackDate = parsed.toISOString().split("T")[0];
-    const timePart = backupTime ?? currentNextBackup.split(" ")[1] ?? "02:00";
-    return `${fallbackDate} ${timePart}`;
-  }
-
+  const currentDate = currentNextBackup.split(" ")[0] || currentNextBackup;
+  const nextDue = calculateNextDueDate(currentDate, frequency);
+  if (!nextDue) return "";
   const timePart = backupTime ?? currentNextBackup.split(" ")[1] ?? "02:00";
-  return `${candidateDate} ${timePart}`;
+  return `${nextDue} ${timePart}`;
 }
 
 export function getSeverityFromPriority(priority: string): Notification["severity"] {
@@ -104,7 +64,7 @@ export function generateBackupReminderNotification(job: BackupJob): Notification
   });
 
   const severity = getSeverityFromPriority(job.priority || "Medium");
-  const message = `Backup Activity:\n${job.name}\n\nDue Date:\n${formatDateDisplay(job.nextBackup.split(" ")[0] || job.nextBackup)}\n\nDepartment:\n${job.department}\n\nPriority:\n${job.priority || "Medium"}\n\nBackup Type:\n${job.backupType}\n\nNotification Type:\nBackup Activity`;
+  const message = `Backup Activity:\n${job.name}\n\nIs due on\n${formatDateDisplay(job.nextDueDate || job.dueDate)}.\n\nDepartment:\n${job.department}\n\nPriority:\n${job.priority || "Medium"}\n\nBackup Type:\n${job.backupType}`;
 
   return {
     id: `backup-reminder-${job.id}-${Date.now()}`,
@@ -119,7 +79,7 @@ export function generateBackupReminderNotification(job: BackupJob): Notification
     backupJobName: job.name,
     department: job.department,
     assignedUser: job.user,
-    dueDate: job.nextBackup.split(" ")[0],
+    dueDate: job.nextDueDate || job.dueDate,
     notificationType: "Backup Activity",
     priority: job.priority || "Medium",
     backupType: job.backupType,
@@ -128,7 +88,7 @@ export function generateBackupReminderNotification(job: BackupJob): Notification
 
 export function generateBackupReminderIfDue(job: BackupJob): boolean {
   if (!job.reminder) return false;
-  const reminderDate = job.reminderDate || calculateReminderDate(job.nextBackup, job.reminder);
+  const reminderDate = job.reminderDate || calculateReminderDate(job.nextDueDate || job.dueDate, job.reminder);
   if (!reminderDate) return false;
 
   const today = new Date().toISOString().split("T")[0];
@@ -158,20 +118,27 @@ export function clearRemindersForBackup(backupJobId: string): void {
 export function buildRecurringBackupJob(
   source: BackupJob,
   completedAt: string,
-  nextBackup: string,
-  reminderDate: string | undefined,
+  nextDueDate: string,
+  nextReminderDate: string | undefined,
   id: string
 ): BackupJob {
+  const nextBackup = `${nextDueDate} ${source.backupTime || "02:00"}`;
+
   return {
     ...source,
     id,
     status: "Upcoming",
-    progress: 0,
-    lastBackup: completedAt,
+    lastDueDate: completedAt,
+    dueDate: nextDueDate,
+    nextDueDate,
     nextBackup,
-    reminderDate,
-    lastVerified: source.lastVerified || "Pending",
+    scheduledNextBackup: nextDueDate,
+    reminderDate: nextReminderDate,
+    nextReminderDate,
+    progress: 0,
     history: [],
-    recurringParentId: source.id,
+    recurrenceId: source.recurrenceId || `recur-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    parentId: source.id,
+    lastBackup: "—",
   };
 }

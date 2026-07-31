@@ -105,28 +105,31 @@ export function MachineDrawer({ record, onClose, onEdit, onComplete, onSnooze, o
                   {record.description || "\u2014"}
                 </div>
               </div>
-              {/* Next Due — always calculated from the stored nextDue value */}
+              {/* Display completed-cycle information for completed PMs and future-cycle information for upcoming PMs */}
               {(() => {
-                const days = daysUntil(record.nextDue);
-                const relativeLabel = getRelativeLabel(record.nextDue);
+                const isCompleted = record.status === "Completed";
+                const displayDate = isCompleted ? record.lastMaintenance || record.nextDue : record.nextDue;
+                const scheduledNextDue = record.scheduledNextDue || record.nextDue;
+                const days = displayDate ? daysUntil(displayDate) : 0;
+                const relativeLabel = isCompleted ? "Completed" : getRelativeLabel(record.nextDue);
                 const bgClass = getDueDateBg(days);
                 const labelColorClass = getDueDateLabelColor(days);
                 const valueColorClass = getDueDateValueColor(days);
                 return (
                   <div className="grid grid-cols-2 gap-3">
                     <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-3 text-center">
-                      <div className="text-xs text-emerald-600 font-semibold mb-1">Last Maintenance</div>
-                      <div className="text-sm font-bold text-emerald-800">{formatDate(record.lastMaintenance)}</div>
+                      <div className="text-xs text-emerald-600 font-semibold mb-1">{isCompleted ? "Completed PM Due Date" : "Last Maintenance"}</div>
+                      <div className="text-sm font-bold text-emerald-800">{formatDate(displayDate)}</div>
                     </div>
                     <div className={`rounded-xl p-3 text-center border ${bgClass}`}>
                       <div className={`text-xs font-semibold mb-1 ${labelColorClass}`}>
-                        Next Due
+                        {isCompleted ? "Next Scheduled Due Date" : "Next Due"}
                       </div>
                       <div className={`text-sm font-bold ${valueColorClass}`}>
-                        {formatDate(record.nextDue)}
+                        {formatDate(isCompleted ? scheduledNextDue : record.nextDue)}
                       </div>
                       <div className={`text-[10px] mt-0.5 font-medium ${labelColorClass}`}>
-                        {relativeLabel}
+                        {isCompleted ? "Upcoming Cycle" : relativeLabel}
                       </div>
                     </div>
                   </div>
@@ -197,7 +200,8 @@ export function MachineDrawer({ record, onClose, onEdit, onComplete, onSnooze, o
             <div className="space-y-4">
               <div className="text-xs font-bold text-slate-700 mb-4">Upcoming Schedule</div>
               {[0, 1, 2, 3].map(i => {
-                const dueDate = new Date(record.nextDue);
+                const baseDueDate = record.scheduledNextDue || record.nextDue;
+                const dueDate = new Date(baseDueDate || record.nextDue);
                 const interval = FREQUENCY_INTERVAL_DAYS[record.frequency] || 30;
                 dueDate.setDate(dueDate.getDate() + i * interval);
                 const isFirst = i === 0;

@@ -79,15 +79,21 @@ export function exportPMChecklistPdf(
   pdf.setTextColor(15, 23, 42);
   pdf.text("PM DETAILS", MARGIN, y);
   y += 5;
+  const completedDueDate = record.status === "Completed" ? record.lastMaintenance || record.nextDue : record.nextDue;
+  const scheduledNextDueDate = record.scheduledNextDue || record.nextDue;
   const details = [
-    ["Due Date of Preventive Maintenance", formatDate(record.nextDue)],
-    ["Preventive Maintenance Performed On", formatDate(record.completionDate || "")],
+    [record.status === "Completed" ? "Completed PM Due Date" : "Due Date of Preventive Maintenance", formatDate(completedDueDate)],
+    ["Next Scheduled Due Date", formatDate(scheduledNextDueDate)],
+    ["PM Name", record.machine || record.systemName || record.description || ""],
     ["Department Name", record.department],
+    ["Frequency", record.frequency],
+    ["Priority", record.priority],
+    ["Assigned User", record.user || record.assignedUser],
+    ["Preventive Maintenance Performed On", formatDate(record.completionDate || "")],
+    ["Last PM / Previous Due Date", formatDate(record.lastMaintenance || record.nextDue)],
     ["System Code", record.systemId || record.machineId],
     ["Machine Name", record.machine || record.systemName],
     ["Machine ID", record.machineId],
-    ["Assigned User", record.user || record.assignedUser],
-    ["Frequency", record.frequency],
   ];
   pdf.setFontSize(7);
   details.forEach(([label, value], index) => {
@@ -150,9 +156,9 @@ export function exportPMChecklistPdf(
   });
   if (notes.trim()) {
     pdf.setFont("helvetica", "bold");
-    pdf.text("Engineer Observations / Notes", MARGIN, y + 3);
+    pdf.text("Completion Details / Remarks", MARGIN, y + 3);
     pdf.setFont("helvetica", "normal");
     pdf.text(pdf.splitTextToSize(notes, CONTENT_WIDTH), MARGIN, y + 8);
   }
-  pdf.save(`preventive-maintenance-${record.machineId || record.id}-${record.completionDate || "report"}.pdf`);
+  pdf.save(`preventive-maintenance-${record.machineId || record.id}-${record.completionDate || record.lastMaintenance || record.nextDue || "report"}.pdf`);
 }

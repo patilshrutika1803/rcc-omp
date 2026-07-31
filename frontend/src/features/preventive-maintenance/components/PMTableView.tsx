@@ -124,7 +124,9 @@ export function PMTableView({
             <tbody className="divide-y divide-slate-100 text-slate-700">
               {pagedData.map(record => {
                 const Icon = machineIcon(record.department);
-                const days = daysUntil(record.nextDue);
+                const isCompleted = record.status === "Completed";
+                const displayDate = isCompleted ? record.lastMaintenance || record.nextDue : record.nextDue;
+                const days = displayDate ? daysUntil(displayDate) : 0;
                 return (
                   <tr
                     key={record.id}
@@ -155,11 +157,11 @@ export function PMTableView({
                     </td>
                     <td className="px-4 py-3.5">
                       <div>
-                        <div className={`text-xs font-bold ${getDueDateColor(days)}`}>
-                          {formatDate(record.nextDue)}
+                        <div className={`text-xs font-bold ${isCompleted ? "text-slate-700" : getDueDateColor(days)}`}>
+                          {formatDate(displayDate)}
                         </div>
-                        <div className={`text-[10px] mt-0.5 font-medium ${days < 0 ? "text-red-400" : days === 0 ? "text-blue-400" : "text-slate-400"}`}>
-                          {getRelativeLabel(record.nextDue)}
+                        <div className={`text-[10px] mt-0.5 font-medium ${isCompleted ? "text-slate-400" : days < 0 ? "text-red-400" : days === 0 ? "text-blue-400" : "text-slate-400"}`}>
+                          {isCompleted ? "Completed" : getRelativeLabel(record.nextDue)}
                         </div>
                       </div>
                     </td>

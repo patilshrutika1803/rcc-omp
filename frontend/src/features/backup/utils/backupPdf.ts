@@ -1,6 +1,7 @@
 import { jsPDF } from "jspdf";
 import type { BackupJob } from "../types/backup";
 import { buildBackupFileName } from "./backupStorage";
+import { calculateReminderDate, calculateNextBackupDate } from "./backupReminderUtils";
 
 const RCC_LOGO_PLACEHOLDER = "RCC";
 
@@ -85,6 +86,12 @@ export function exportBackupJobPdf(job: BackupJob): void {
   const backupUnit = execution?.unit || "GB";
 
   const infoRows: Array<[string, string]> = [
+    ["Frequency", job.frequency || "—"],
+    ["Last Due Date", (job.lastDueDate || job.lastBackup || job.lastBackupDate || "").split(" ")[0] || "—"],
+    ["Completed Due Date", job.completionDate || job.originalDueDate || "—"],
+    ["Next Due Date", job.nextDueDate || job.scheduledNextBackup || job.nextBackup.split(" ")[0] || "—"],
+    ["Reminder", job.reminder || "—"],
+    ["Next Reminder Date", job.nextReminderDate || job.reminderDate || calculateReminderDate(job.nextDueDate || job.nextBackup, job.reminder) || "—"],
     ["Backup Activity Name", job.name],
     ["Institution Name", execution?.institutionName || job.description || "—"],
     ["System", execution?.system || job.server || "—"],

@@ -56,12 +56,12 @@ export function BackupCardView({
               <p className="mt-1 font-semibold">{job.frequency}</p>
             </div>
             <div>
-              <p className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">Last Backup</p>
-              <p className="mt-1 font-semibold">{job.lastBackup}</p>
+              <p className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">Last Due Date</p>
+              <p className="mt-1 font-semibold">{job.lastDueDate || job.lastBackup || "—"}</p>
             </div>
             <div>
-              <p className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">Next Backup</p>
-              <p className="mt-1 font-semibold">{job.nextBackup}</p>
+              <p className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">Next Due Date</p>
+              <p className="mt-1 font-semibold">{job.nextDueDate || job.nextBackup || "—"}</p>
             </div>
             <div>
               <p className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">User</p>

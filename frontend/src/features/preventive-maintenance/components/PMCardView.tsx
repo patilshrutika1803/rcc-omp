@@ -23,8 +23,10 @@ export function PMCardView({ data, onViewDetails, onEdit, onDuplicate, onComplet
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
       {data.map(record => {
         const Icon = machineIcon(record.department);
-        const days = daysUntil(record.nextDue);
-        const relativeLabel = getRelativeLabel(record.nextDue);
+        const isCompleted = record.status === "Completed";
+        const displayDate = isCompleted ? record.lastMaintenance || record.nextDue : record.nextDue;
+        const days = displayDate ? daysUntil(displayDate) : 0;
+        const relativeLabel = isCompleted ? "Completed" : getRelativeLabel(record.nextDue);
         return (
           <div
             key={record.id}
@@ -85,12 +87,12 @@ export function PMCardView({ data, onViewDetails, onEdit, onDuplicate, onComplet
                   <div className="text-[10px] font-bold text-slate-400 uppercase mb-0.5">User</div>
                   <div className="font-semibold text-slate-700 text-[11px] truncate">{record.user}</div>
                 </div>
-                <div className={`rounded-lg p-2 ${days < 0 ? "bg-red-50" : days === 0 ? "bg-blue-50" : "bg-amber-50"}`}>
-                  <div className={`text-[10px] font-bold uppercase mb-0.5 ${days < 0 ? "text-red-400" : days === 0 ? "text-blue-400" : "text-amber-400"}`}>Due Date</div>
-                  <div className={`font-bold text-[11px] ${getDueDateColor(days)}`}>
-                    {formatDate(record.nextDue)}
+                <div className={`rounded-lg p-2 ${isCompleted ? "bg-slate-50" : days < 0 ? "bg-red-50" : days === 0 ? "bg-blue-50" : "bg-amber-50"}`}>
+                  <div className={`text-[10px] font-bold uppercase mb-0.5 ${isCompleted ? "text-slate-400" : days < 0 ? "text-red-400" : days === 0 ? "text-blue-400" : "text-amber-400"}`}>{isCompleted ? "Last PM" : "Due Date"}</div>
+                  <div className={`font-bold text-[11px] ${isCompleted ? "text-slate-700" : getDueDateColor(days)}`}>
+                    {formatDate(displayDate)}
                   </div>
-                  <div className={`text-[10px] mt-0.5 font-medium ${days < 0 ? "text-red-400" : days === 0 ? "text-blue-400" : "text-amber-400"}`}>
+                  <div className={`text-[10px] mt-0.5 font-medium ${isCompleted ? "text-slate-400" : days < 0 ? "text-red-400" : days === 0 ? "text-blue-400" : "text-amber-400"}`}>
                     {relativeLabel}
                   </div>
                 </div>

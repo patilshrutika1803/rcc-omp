@@ -43,7 +43,7 @@ export function BackupDashboard({ jobs, onViewJob }: { jobs: BackupJob[]; onView
                       <div className="text-[10px] text-slate-400 font-mono mt-0.5">{job.server}</div>
                     </td>
                     <td className="px-4 py-3.5"><BkpTypeBadge type={job.backupType} /></td>
-                    <td className="px-4 py-3.5 text-xs text-slate-500 font-mono">{job.lastBackup.split(" ")[1] ?? "—"}</td>
+                    <td className="px-4 py-3.5 text-xs text-slate-500 font-mono">{job.lastBackup?.split(" ")[1] ?? "—"}</td>
                     <td className="px-4 py-3.5 text-xs font-semibold text-slate-700">{job.sizeGB > 0 ? `${job.sizeGB} GB` : "—"}</td>
                     <td className="px-4 py-3.5"><BkpStatusBadge status={job.status} /></td>
                     <td className="px-4 py-3.5 text-xs text-slate-500">{job.duration}</td>

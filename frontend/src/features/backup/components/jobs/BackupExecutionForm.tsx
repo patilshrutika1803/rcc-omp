@@ -6,6 +6,7 @@ import {
   type BackupExecutionFormErrors,
   type BackupExecutionFormValues,
 } from "../../utils/backupExecutionValidation";
+import { calculateNextBackupDate, calculateReminderDate } from "../../utils/backupReminderUtils";
 
 const INSTITUTION_OPTIONS = ["SCADA", "System", "Server", "Database", "Other"] as const;
 const INSTRUMENT_OPTIONS = ["IR", "UV", "HPLC", "GC", "PLC", "SCADA", "Server", "Desktop", "Laptop", "Other"] as const;
@@ -91,6 +92,25 @@ export function BackupExecutionForm({
         </div>
 
         <form onSubmit={handleSubmit} className="max-h-[80vh] overflow-y-auto px-6 py-5">
+          {/* Scheduling preview (read-only) */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-4 mb-2">
+            <div>
+              <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-slate-500">Due Date</label>
+              <input value={job.nextDueDate || job.nextBackup.split(" ")[0] || job.originalDueDate || ""} readOnly className="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm text-slate-600" />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-slate-500">Last Due Date</label>
+              <input value={(job.lastDueDate || job.lastBackup || job.lastBackupDate || "").split(" ")[0] || ""} readOnly className="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm text-slate-600" />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-slate-500">Next Due (Preview)</label>
+              <input value={job.frequency && job.frequency !== "One Time" ? calculateNextBackupDate(job.nextBackup || `${job.nextDueDate || job.dueDate} ${job.backupTime}`, job.frequency, values.backupTime) : ""} readOnly className="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm text-slate-600" />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-slate-500">Reminder / Next Reminder</label>
+              <input value={job.reminder ? `${job.reminder} ⇢ ${job.reminderDate ?? (job.nextDueDate || job.nextBackup ? calculateReminderDate(job.nextDueDate || job.nextBackup, job.reminder) : "")}` : ""} readOnly className="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm text-slate-600" />
+            </div>
+          </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-slate-500">Institution Name</label>

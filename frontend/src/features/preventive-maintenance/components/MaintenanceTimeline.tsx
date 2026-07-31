@@ -2,7 +2,7 @@ import React from "react";
 import { CalendarClock, CalendarCheck } from "lucide-react";
 import type { PMRecord } from "../types/pm";
 import { machineIcon } from "../utils/pmHelpers";
-import { daysUntil } from "../utils/pmDateUtils";
+import { getTimelineBucket } from "../utils/pmDateUtils";
 import { PriorityBadge } from "./PriorityBadge";
 
 function TimelineSection({ title, items, accent }: { title: string; items: PMRecord[]; accent: string }) {
@@ -42,23 +42,12 @@ function TimelineSection({ title, items, accent }: { title: string; items: PMRec
 }
 
 export function MaintenanceTimeline({ data }: { data: PMRecord[] }) {
-  // Timeline should display ONLY:
-  // - Upcoming
-  // - Due Today
-  // - Overdue
-  // - In Progress
-  // Completed must disappear immediately.
-  const overdue = data.filter(r => r.status === "Overdue" || daysUntil(r.nextDue) < 0);
-  const dueToday = data.filter(r => r.status === "Due Today" || daysUntil(r.nextDue) === 0);
-  const inProgress = data.filter(r => r.status === "In Progress");
-  const upcoming = data.filter(r => {
-    const d = daysUntil(r.nextDue);
-    if (r.status === "Completed") return false;
-    if (r.status === "Overdue" || d < 0) return false;
-    if (r.status === "Due Today" || d === 0) return false;
-    return true;
-  });
-
+  // Timeline should display ONLY the active PMs grouped by their actual due date.
+  const activeItems = data.filter(r => r.status !== "Completed");
+  const overdue = activeItems.filter(r => getTimelineBucket(r) === "Overdue");
+  const dueToday = activeItems.filter(r => getTimelineBucket(r) === "Due Today");
+  const inProgress = activeItems.filter(r => r.status === "In Progress");
+  const upcoming = activeItems.filter(r => getTimelineBucket(r) === "Upcoming");
 
   return (
     <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-5">

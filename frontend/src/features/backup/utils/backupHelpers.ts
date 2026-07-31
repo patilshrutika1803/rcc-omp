@@ -57,7 +57,10 @@ export function matchesBackupJobSearchAndFilters(
   if (filters?.priority && (job.priority || "Medium") !== filters.priority) return false;
   const latestExecution = job.history[0]?.executionDetails;
   if (filters?.institutionName && !((latestExecution?.institutionName ?? "").toLowerCase().includes(filters.institutionName.toLowerCase()))) return false;
-  if (filters?.dueDate && job.nextBackup.split(" ")[0] !== filters.dueDate) return false;
+  if (filters?.dueDate) {
+    const effectiveNextDue = job.nextDueDate || job.nextBackup.split(" ")[0];
+    if (effectiveNextDue !== filters.dueDate) return false;
+  }
   return true;
 }
 
@@ -92,17 +95,18 @@ export function filterAndSortJobs(
 
 export function getJobsForDay(jobs: BackupJob[], year: number, month: number, day: number): BackupJob[] {
   const prefix = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-  return jobs.filter(j => j.lastBackup.startsWith(prefix) || j.nextBackup.startsWith(prefix));
+  return jobs.filter(j => (j.lastBackup || "").startsWith(prefix) || (j.nextDueDate || j.nextBackup || "").startsWith(prefix));
 }
 
 export function isJobNextOnDay(job: BackupJob, year: number, month: number, day: number): boolean {
-  return job.nextBackup.startsWith(`${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`);
+  const target = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+  return (job.nextDueDate || job.nextBackup || "").startsWith(target);
 }
 
 export function groupJobsForTimeline(jobs: BackupJob[]) {
-  const today = jobs.filter(j => j.nextBackup.startsWith("2026-07-03") || j.status === "Running" || j.status === "Failed");
-  const tomorrow = jobs.filter(j => j.nextBackup.startsWith("2026-07-04"));
-  const later = jobs.filter(j => !j.nextBackup.startsWith("2026-07-03") && !j.nextBackup.startsWith("2026-07-04"));
+  const today = jobs.filter(j => (j.nextDueDate || j.nextBackup || "").startsWith("2026-07-03") || j.status === "Running" || j.status === "Failed");
+  const tomorrow = jobs.filter(j => (j.nextDueDate || j.nextBackup || "").startsWith("2026-07-04"));
+  const later = jobs.filter(j => !(j.nextDueDate || j.nextBackup || "").startsWith("2026-07-03") && !(j.nextDueDate || j.nextBackup || "").startsWith("2026-07-04"));
   return { today, tomorrow, later };
 }
 
