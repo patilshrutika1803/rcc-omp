@@ -23,8 +23,6 @@ export interface QAActivity {
   priority: QAPriority;
   assignedUser: string;
   status: QAStatus;
-  frequency: string;
-  lastDueDate?: string;
   completionDate?: string;
   completionNotes?: string;
   completedBy?: string;
@@ -32,7 +30,6 @@ export interface QAActivity {
   actionNotes?: string;
   createdAt: string;
   updatedAt: string;
-  recurringParentId?: string;
 }
 
 export interface QAActivityFormState {
@@ -45,7 +42,6 @@ export interface QAActivityFormState {
   reminder: string;
   priority: QAPriority;
   assignedUser: string;
-  frequency: string;
   action: string;
 }
 
@@ -61,9 +57,7 @@ export interface QAColumnsState {
   qmsType: boolean;
   department: boolean;
   dueDate: boolean;
-  lastDueDate?: boolean;
   reminder: boolean;
-  frequency: boolean;
   priority: boolean;
   status: boolean;
   action: boolean;

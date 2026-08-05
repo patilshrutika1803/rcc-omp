@@ -22,10 +22,7 @@ export function loadPersistedQAActivities(): QAActivity[] {
     status: activity.status || ((activity as QAActivity & { completed?: string }).completed === "Completed" ? "Completed" : "Upcoming"),
     priority: activity.priority || "Medium",
     assignedUser: activity.assignedUser || "Unassigned",
-    frequency: activity.frequency || "Monthly",
     reminderDate: activity.reminderDate,
-    lastDueDate: activity.lastDueDate,
-    recurringParentId: activity.recurringParentId,
   }));
 }
 

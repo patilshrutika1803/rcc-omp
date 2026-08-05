@@ -61,9 +61,7 @@ export function QAActivityTable({
                   {columns.qmsType && <th className="px-4 py-3">QMS Type</th>}
                   {columns.department && <th className="px-4 py-3">Department</th>}
                   {columns.dueDate && <th className="px-4 py-3">Due Date</th>}
-                  {columns.lastDueDate && <th className="px-4 py-3">Last Due</th>}
                   {columns.reminder && <th className="px-4 py-3">Reminder</th>}
-                  {columns.frequency && <th className="px-4 py-3">Frequency</th>}
                   {columns.priority && <th className="px-4 py-3">Priority</th>}
                   {columns.status && <th className="px-4 py-3">Status</th>}
                   {columns.action && <th className="px-4 py-3">Action</th>}
@@ -77,9 +75,7 @@ export function QAActivityTable({
                     {columns.qmsType && <td className="px-4 py-3.5 text-xs font-semibold text-slate-700">{record.qmsType}</td>}
                     {columns.department && <td className="px-4 py-3.5 text-xs font-semibold text-slate-700">{record.department}</td>}
                     {columns.dueDate && <td className="px-4 py-3.5 text-xs text-slate-500">{displayDate(record.dueDate || record.targetDate)}</td>}
-                    {columns.lastDueDate && <td className="px-4 py-3.5 text-xs text-slate-500">{displayDate(record.lastDueDate)}</td>}
                     {columns.reminder && <td className="px-4 py-3.5 text-xs text-slate-500">{record.reminder}</td>}
-                    {columns.frequency && <td className="px-4 py-3.5 text-xs text-slate-500">{record.frequency || "One Time"}</td>}
                     {columns.priority && <td className="px-4 py-3.5 text-xs text-slate-500">{record.priority}</td>}
                     {columns.status && <td className="px-4 py-3.5"><QACompletedBadge status={record.status} /></td>}
                     {columns.action && <td className="px-4 py-3.5 text-xs text-slate-500 max-w-[220px] truncate">{record.actionHistory[0]?.note || "—"}</td>}

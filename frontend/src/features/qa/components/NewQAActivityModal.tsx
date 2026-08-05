@@ -1,7 +1,7 @@
 import { X } from "lucide-react";
 import { useState, useRef } from "react";
 import type { QAActivityFormState } from "../types/qa";
-import { DEPARTMENTS, FREQUENCY_OPTIONS, PRIORITY_OPTIONS, REMINDER_OPTIONS } from "../constants/qaConstants";
+import { DEPARTMENTS, PRIORITY_OPTIONS, REMINDER_OPTIONS } from "../constants/qaConstants";
 import { getMissingFields } from "../utils/qaValidation";
 import { toast } from "sonner";
 
@@ -106,10 +106,6 @@ export function NewQAActivityModal({ newForm, setNewForm, onClose, onCreate }: N
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1">Assigned User</label>
             <input value={newForm.assignedUser} onChange={(event) => setNewForm({ ...newForm, assignedUser: event.target.value })} className="w-full h-9 px-3 text-sm border rounded-lg" />
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Frequency</label>
-            <select value={newForm.frequency} onChange={(event) => setNewForm({ ...newForm, frequency: event.target.value })} className="w-full h-9 px-3 text-sm border rounded-lg">{FREQUENCY_OPTIONS.map((frequency) => <option key={frequency}>{frequency}</option>)}</select>
           </div>
         </div>
           <div className="p-5 border-t border-slate-100 bg-slate-50 flex gap-3 rounded-b-xl shrink-0">

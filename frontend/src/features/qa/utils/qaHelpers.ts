@@ -5,7 +5,7 @@ import type {
   QATrendPoint,
   QAStatus,
 } from "../types/qa";
-import { calculateNextDueDate as calculateSharedNextDueDate, calculateReminderDate as calculateSharedReminderDate } from "../../shared/utils/recurringWorkflow";
+import { calculateReminderDate as calculateSharedReminderDate } from "../../shared/utils/recurringWorkflow";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // QA MODULE — HELPERS
@@ -32,10 +32,6 @@ function formatDateOnly(date: Date): string {
 
 export function calculateReminderDate(dueDate: string, reminderOption: string | undefined): string | undefined {
   return calculateSharedReminderDate(dueDate, reminderOption);
-}
-
-export function calculateNextDueDate(currentDueDate: string, frequency: string): string {
-  return calculateSharedNextDueDate(currentDueDate, frequency);
 }
 
 export function isOverdue(activity: QAActivity): boolean {
@@ -78,8 +74,7 @@ export function matchesFilters(record: QAActivity, filters: QAFiltersState): boo
   const matchReminder = !filters.reminder || record.reminder === filters.reminder;
   const matchStatus = !filters.status || record.status === filters.status;
   const matchPriority = !filters.priority || record.priority === filters.priority;
-  const matchFrequency = !filters.targetDate || record.frequency === filters.targetDate;
-  return matchDept && matchReminder && matchStatus && matchPriority && matchFrequency;
+  return matchDept && matchReminder && matchStatus && matchPriority;
 }
 
 export function filterActivities(activities: QAActivity[], search: string, filters: QAFiltersState): QAActivity[] {

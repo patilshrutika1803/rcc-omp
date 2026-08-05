@@ -22,7 +22,7 @@ import { QACalendarView } from "./components/QACalendarView";
 import { QAActivityDrawer } from "./components/QAActivityDrawer";
 import { NewQAActivityModal } from "./components/NewQAActivityModal";
 import { EditQAActivityModal } from "./components/EditQAActivityModal";
-import { DEFAULT_FILTERS, DEPARTMENTS, FREQUENCY_OPTIONS, PRIORITY_OPTIONS, REMINDER_OPTIONS } from "./constants/qaConstants";
+import { DEFAULT_FILTERS, DEPARTMENTS, PRIORITY_OPTIONS, REMINDER_OPTIONS } from "./constants/qaConstants";
 
 const viewToggleOptions = [
   { id: "table", icon: Table2, title: "Table View" },
@@ -52,7 +52,7 @@ export default function QAPage() {
             </div>
             <div>
               <h1 className="text-xl font-bold text-slate-900 tracking-tight">QA Activities</h1>
-              <p className="text-xs text-slate-500 font-medium mt-0.5">Manage recurring quality activities and follow-ups</p>
+              <p className="text-xs text-slate-500 font-medium mt-0.5">Manage quality activities and follow-ups</p>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -119,13 +119,6 @@ export default function QAPage() {
                 <select value={filters.department} onChange={(event) => setFilters((current) => ({ ...current, department: event.target.value }))} className="w-full h-8 px-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-700">
                   <option value="">All Departments</option>
                   {DEPARTMENTS.map((department) => <option key={department} value={department}>{department}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 block">Frequency</label>
-                <select value={filters.targetDate} onChange={(event) => setFilters((current) => ({ ...current, targetDate: event.target.value }))} className="w-full h-8 px-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-700">
-                  <option value="">All Frequencies</option>
-                  {FREQUENCY_OPTIONS.map((frequency) => <option key={frequency} value={frequency}>{frequency}</option>)}
                 </select>
               </div>
             </div>

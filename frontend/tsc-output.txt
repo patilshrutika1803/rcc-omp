@@ -1,0 +1,2 @@
+src/features/qa/QAPage.tsx(25,40): error TS2305: Module '"./constants/qaConstants"' has no exported member 'FREQUENCY_OPTIONS'.
+src/features/qa/QAPage.tsx(128,43): error TS7006: Parameter 'frequency' implicitly has an 'any' type.

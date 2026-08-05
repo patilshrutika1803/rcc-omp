@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import type { QAActivity, QAActivityFormState, QAColumnsState, QAFiltersState, QAViewMode } from "../types/qa";
 import { DEFAULT_COLUMNS, DEFAULT_FILTERS, EMPTY_FORM, INITIAL_QA_ACTIVITIES } from "../constants/qaConstants";
-import { calculateNextDueDate, calculateReminderDate, filterActivities, getDashboardMetrics, getDepartmentBreakdown, getTrendData } from "../utils/qaHelpers";
+import { calculateReminderDate, filterActivities, getDashboardMetrics, getDepartmentBreakdown, getTrendData } from "../utils/qaHelpers";
 import { validateNewQAActivity } from "../utils/qaValidation";
 import { loadPersistedQAActivities, persistQAActivities } from "../utils/qaStorage";
 import { addNotification, hasNotificationForQA, removeQANotifications } from "../../notificataions/utils/notificationStorage";
@@ -140,7 +140,6 @@ export function useQA() {
       priority: newForm.priority,
       assignedUser: newForm.assignedUser,
       status: "Upcoming",
-      frequency: newForm.frequency,
       actionHistory: [],
       actionNotes: "",
       createdAt,
@@ -191,32 +190,6 @@ export function useQA() {
 
     const completedAt = new Date().toISOString();
     const dueDate = activity.dueDate || activity.targetDate;
-    const shouldRecur = activity.frequency && activity.frequency !== "One Time";
-    const nextDueDate = shouldRecur ? calculateNextDueDate(dueDate, activity.frequency) : "";
-    const nextReminderDate = nextDueDate ? calculateReminderDate(nextDueDate, activity.reminder) : undefined;
-    const alreadyHasRecurringChild = activities.some((item) => item.id !== activity.id && item.status !== "Completed" && item.recurringParentId === activity.id);
-
-    const recurringActivity: QAActivity | null = shouldRecur && nextDueDate && !alreadyHasRecurringChild ? {
-      id: `QA-${Date.now() + 1}`,
-      qmsNumber: activity.qmsNumber,
-      qmsType: activity.qmsType,
-      qmsDescription: activity.qmsDescription,
-      department: activity.department,
-      targetDate: nextDueDate,
-      dueDate: nextDueDate,
-      reminder: activity.reminder,
-      reminderDate: nextReminderDate,
-      priority: activity.priority,
-      assignedUser: activity.assignedUser,
-      status: "Upcoming",
-      frequency: activity.frequency,
-      lastDueDate: dueDate,
-      actionHistory: [],
-      actionNotes: "",
-      createdAt: completedAt,
-      updatedAt: completedAt,
-      recurringParentId: activity.id,
-    } : null;
 
     removeQANotifications(activity.id);
     setActivities((prev) => {
@@ -226,7 +199,6 @@ export function useQA() {
           ...item,
           status: "Completed" as QAActivity["status"],
           updatedAt: completedAt,
-          lastDueDate: dueDate,
           completionDate: completedAt.split("T")[0],
           completionNotes: actionNote?.trim() || item.actionNotes || "",
           completedBy: completedBy?.trim() || item.completedBy || "Current User",
@@ -234,21 +206,12 @@ export function useQA() {
           actionNotes: actionNote || item.actionNotes || "",
         };
       });
-      if (recurringActivity) {
-        return [recurringActivity, ...updated.filter((item) => item.id !== recurringActivity.id)];
-      }
       return updated;
     });
 
-    if (recurringActivity) generateReminderIfDue(recurringActivity);
     setShowDrawer(false);
     setSelectedRecord(null);
-
-    if (recurringActivity) {
-      toast.success(`"${activity.qmsNumber}" marked as completed and a new recurring QA activity was created.`);
-    } else {
-      toast.success(`"${activity.qmsNumber}" marked as completed.`);
-    }
+    toast.success(`"${activity.qmsNumber}" marked as completed.`);
   };
 
   const handleDuplicate = (record: QAActivity) => {
@@ -264,7 +227,6 @@ export function useQA() {
       actionNotes: "",
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      recurringParentId: undefined,
     };
     setActivities((prev) => [duplicate, ...prev]);
     generateReminderIfDue(duplicate);

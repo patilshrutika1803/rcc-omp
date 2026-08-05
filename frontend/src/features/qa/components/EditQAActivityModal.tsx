@@ -3,7 +3,7 @@ import { useMemo, useRef, useState } from "react";
 import type { RefObject } from "react";
 import { toast } from "sonner";
 import type { QAActivity, QAActivityFormState } from "../types/qa";
-import { DEPARTMENTS, FREQUENCY_OPTIONS, PRIORITY_OPTIONS, REMINDER_OPTIONS } from "../constants/qaConstants";
+import { DEPARTMENTS, PRIORITY_OPTIONS, REMINDER_OPTIONS } from "../constants/qaConstants";
 import { getMissingFields } from "../utils/qaValidation";
 
 interface EditQAActivityModalProps {
@@ -23,7 +23,6 @@ export function EditQAActivityModal({ activity, onClose, onSave }: EditQAActivit
     reminder: activity.reminder,
     priority: activity.priority,
     assignedUser: activity.assignedUser,
-    frequency: activity.frequency || "One Time",
     action: "",
   }), [activity]);
 
@@ -91,7 +90,6 @@ export function EditQAActivityModal({ activity, onClose, onSave }: EditQAActivit
       reminder: form.reminder,
       priority: form.priority,
       assignedUser: form.assignedUser,
-      frequency: form.frequency || "One Time",
       status: activity.status,
     });
   };
@@ -160,14 +158,6 @@ export function EditQAActivityModal({ activity, onClose, onSave }: EditQAActivit
           <div>
             <label className="mb-1 block text-xs font-semibold text-slate-700">Assigned User</label>
             <input value={form.assignedUser} onChange={(event) => setForm({ ...form, assignedUser: event.target.value })} className="h-9 w-full rounded-lg border border-slate-300 px-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20" />
-          </div>
-          <div>
-            <label className="mb-1 block text-xs font-semibold text-slate-700">Frequency</label>
-            <select value={form.frequency} onChange={(event) => setForm({ ...form, frequency: event.target.value })} className="h-9 w-full rounded-lg border border-slate-300 px-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20">
-              {FREQUENCY_OPTIONS.map((frequency) => (
-                <option key={frequency}>{frequency}</option>
-              ))}
-            </select>
           </div>
         </div>
 

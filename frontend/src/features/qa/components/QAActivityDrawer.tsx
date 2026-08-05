@@ -37,7 +37,6 @@ export function QAActivityDrawer({ record, onClose, onUpdate, onEdit, onComplete
     reminder: record.reminder,
     priority: record.priority,
     assignedUser: record.assignedUser,
-    frequency: record.frequency,
     action: "",
   });
   const [showCompleteModal, setShowCompleteModal] = useState(false);
@@ -93,7 +92,6 @@ export function QAActivityDrawer({ record, onClose, onUpdate, onEdit, onComplete
       reminder: editForm.reminder,
       priority: editForm.priority,
       assignedUser: editForm.assignedUser,
-      frequency: editForm.frequency,
       status: record.status,
     });
     setIsEditing(false);
@@ -180,10 +178,6 @@ export function QAActivityDrawer({ record, onClose, onUpdate, onEdit, onComplete
                   <label className="block text-xs font-semibold text-slate-700 mb-1">Assigned User</label>
                   <input value={editForm.assignedUser} onChange={(event) => setEditForm({ ...editForm, assignedUser: event.target.value })} className="w-full h-9 px-3 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none" />
                 </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Frequency</label>
-                  <input value={editForm.frequency} onChange={(event) => setEditForm({ ...editForm, frequency: event.target.value })} className="w-full h-9 px-3 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none" />
-                </div>
               </div>
             </div>
           ) : (
@@ -201,18 +195,6 @@ export function QAActivityDrawer({ record, onClose, onUpdate, onEdit, onComplete
                   {isCompleted ? (
                     <>
                       <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
-                        <div className="text-[10px] font-bold text-slate-400 uppercase mb-1">Last Due Date</div>
-                        <div className="text-sm font-semibold text-slate-900">{record.lastDueDate ? formatDate(record.lastDueDate) : "—"}</div>
-                      </div>
-                      <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
-                        <div className="text-[10px] font-bold text-slate-400 uppercase mb-1">Reminder</div>
-                        <div className="text-sm font-semibold text-slate-900">{record.reminder}</div>
-                      </div>
-                      <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
-                        <div className="text-[10px] font-bold text-slate-400 uppercase mb-1">Frequency</div>
-                        <div className="text-sm font-semibold text-slate-900">{record.frequency || "One Time"}</div>
-                      </div>
-                      <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
                         <div className="text-[10px] font-bold text-slate-400 uppercase mb-1">Completed Date</div>
                         <div className="text-sm font-semibold text-slate-900">{record.completionDate ? formatDate(record.completionDate) : "—"}</div>
                       </div>
@@ -222,10 +204,6 @@ export function QAActivityDrawer({ record, onClose, onUpdate, onEdit, onComplete
                       <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
                         <div className="text-[10px] font-bold text-slate-400 uppercase mb-1">Reminder</div>
                         <div className="text-sm font-semibold text-slate-900">{record.reminder}</div>
-                      </div>
-                      <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
-                        <div className="text-[10px] font-bold text-slate-400 uppercase mb-1">Frequency</div>
-                        <div className="text-sm font-semibold text-slate-900">{record.frequency || "One Time"}</div>
                       </div>
                       <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
                         <div className="text-[10px] font-bold text-slate-400 uppercase mb-1">Assigned User</div>

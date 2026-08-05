@@ -73,10 +73,6 @@ export function QAActivityCardView({ activities, onView, onEdit, onDuplicate, on
                 <span className="font-semibold text-slate-700">{activity.reminder}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-slate-400">Frequency</span>
-                <span className="font-semibold text-slate-700">{activity.frequency || "One Time"}</span>
-              </div>
-              <div className="flex items-center justify-between">
                 <span className="text-slate-400">Priority</span>
                 <span className="font-semibold text-slate-700">{activity.priority}</span>
               </div>

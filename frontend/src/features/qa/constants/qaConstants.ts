@@ -34,7 +34,6 @@ export const REMINDER_OPTIONS = [
 ];
 
 export const PRIORITY_OPTIONS = ["Low", "Medium", "High", "Critical"] as const;
-export const FREQUENCY_OPTIONS = ["Daily", "Weekly", "Monthly", "Quarterly", "Half-Yearly", "Yearly", "One Time"];
 
 export const INITIAL_QA_ACTIVITIES: QAActivity[] = [];
 
@@ -48,7 +47,6 @@ export const EMPTY_FORM: QAActivityFormState = {
   reminder: REMINDER_OPTIONS[0],
   priority: "Medium",
   assignedUser: "",
-  frequency: "Monthly",
   action: "",
 };
 
@@ -64,9 +62,7 @@ export const DEFAULT_COLUMNS: QAColumnsState = {
   qmsType: true,
   department: true,
   dueDate: true,
-  lastDueDate: false,
   reminder: true,
-  frequency: true,
   priority: true,
   status: true,
   action: true,
@@ -83,10 +79,8 @@ export const KPI_CARD_CONFIG = [
 export const TABLE_COLUMNS: { key: keyof QAColumnsState; label: string }[] = [
   { key: "qmsType", label: "QMS Type" },
   { key: "department", label: "Department" },
-  { key: "lastDueDate", label: "Last Due" },
   { key: "dueDate", label: "Due Date" },
   { key: "reminder", label: "Reminder" },
-  { key: "frequency", label: "Frequency" },
   { key: "priority", label: "Priority" },
   { key: "status", label: "Status" },
   { key: "action", label: "Action" },
