@@ -3,9 +3,10 @@
 // Backend-ready — shaped for MongoDB / Express / REST (future Supabase + AWS).
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { SYSTEM_TYPES, STATUS_OPTIONS, PM_FREQUENCIES, PM_PRIORITIES } from "../constants/systemConstants";
+import { SYSTEM_TYPES, SYSTEM_CATEGORIES, STATUS_OPTIONS, PM_FREQUENCIES, PM_PRIORITIES } from "../constants/systemConstants";
 
 export type SystemType = (typeof SYSTEM_TYPES)[number];
+export type SystemCategory = (typeof SYSTEM_CATEGORIES)[number];
 export type SystemStatus = (typeof STATUS_OPTIONS)[number];
 export type PMFrequency = (typeof PM_FREQUENCIES)[number];
 export type PMPriority = (typeof PM_PRIORITIES)[number];
@@ -34,6 +35,7 @@ export interface SystemInventory {
   purchaseDate: string;
   warrantyExpiry: string;
   status: SystemStatus;
+  systemCategory: SystemCategory;
   pmSettings?: SystemPMSettings;
   createdAt: string;
   updatedAt: string;

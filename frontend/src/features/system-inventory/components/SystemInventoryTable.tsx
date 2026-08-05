@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from "react";
-import { Eye, Edit2, Trash2 } from "lucide-react";
+import { Eye, Edit2, Trash2, Download } from "lucide-react";
 import type { SystemInventory } from "../types/system";
 import { SYSTEMS_PER_PAGE } from "../constants/systemConstants";
-import { typeIcon, filterSystems, paginate, totalPagesFor } from "../utils/systemHelpers";
+import { typeIcon, filterSystems, paginate, totalPagesFor, exportSystemsAsCsv } from "../utils/systemHelpers";
 import { daysUntil, formatDate } from "../../../shared/utils/dateHelpers";
 import { SystemStatusBadge } from "./SystemStatusBadge";
 import { EmptyState } from "./EmptyState";
@@ -25,36 +25,49 @@ export function SystemInventoryTable({
   const [search, setSearch] = useState("");
   const [filterDept, setFilterDept] = useState("");
   const [filterType, setFilterType] = useState("");
+  const [filterCategory, setFilterCategory] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [page, setPage] = useState(1);
   const PER = SYSTEMS_PER_PAGE;
 
   const filtered = useMemo(
-    () => filterSystems(systems, { search, department: filterDept, type: filterType, status: filterStatus }),
-    [systems, search, filterDept, filterType, filterStatus]
+    () => filterSystems(systems, { search, department: filterDept, type: filterType, category: filterCategory, status: filterStatus }),
+    [systems, search, filterDept, filterType, filterCategory, filterStatus]
   );
 
   const totalPages = totalPagesFor(filtered.length, PER);
   const paged = paginate(filtered, page, PER);
-  const hasFilters = !!(search || filterDept || filterType || filterStatus);
+  const hasFilters = !!(search || filterDept || filterType || filterCategory || filterStatus);
 
-  const resetFilters = () => { setSearch(""); setFilterDept(""); setFilterType(""); setFilterStatus(""); setPage(1); };
+  const resetFilters = () => { setSearch(""); setFilterDept(""); setFilterType(""); setFilterCategory(""); setFilterStatus(""); setPage(1); };
 
   return (
     <div className="space-y-4">
       {/* Search + Filters toolbar */}
-      <SystemToolbar
-        search={search}
-        onSearchChange={value => { setSearch(value); setPage(1); }}
-        filterDept={filterDept}
-        onFilterDeptChange={value => { setFilterDept(value); setPage(1); }}
-        filterType={filterType}
-        onFilterTypeChange={value => { setFilterType(value); setPage(1); }}
-        filterStatus={filterStatus}
-        onFilterStatusChange={value => { setFilterStatus(value); setPage(1); }}
-        hasFilters={hasFilters}
-        onResetFilters={resetFilters}
-      />
+      <div className="flex flex-col gap-4">
+        <SystemToolbar
+          search={search}
+          onSearchChange={value => { setSearch(value); setPage(1); }}
+          filterDept={filterDept}
+          onFilterDeptChange={value => { setFilterDept(value); setPage(1); }}
+          filterType={filterType}
+          onFilterTypeChange={value => { setFilterType(value); setPage(1); }}
+          filterCategory={filterCategory}
+          onFilterCategoryChange={value => { setFilterCategory(value); setPage(1); }}
+          filterStatus={filterStatus}
+          onFilterStatusChange={value => { setFilterStatus(value); setPage(1); }}
+          hasFilters={hasFilters}
+          onResetFilters={resetFilters}
+        />
+        <div className="flex justify-end">
+          <button
+            onClick={() => exportSystemsAsCsv(filtered)}
+            className="inline-flex items-center gap-2 h-9 px-3 text-xs font-semibold text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+          >
+            <Download size={14} /> Export filtered
+          </button>
+        </div>
+      </div>
 
       {/* Table */}
       <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
@@ -69,6 +82,7 @@ export function SystemInventoryTable({
                     <th className="px-4 py-3">System ID</th>
                     <th className="px-4 py-3">System Name</th>
                     <th className="px-4 py-3">Type</th>
+                    <th className="px-4 py-3">Category</th>
                     <th className="px-4 py-3">Department</th>
                     <th className="px-4 py-3">Location</th>
                     <th className="px-4 py-3">Assigned User</th>
@@ -95,6 +109,9 @@ export function SystemInventoryTable({
                         </td>
                         <td className="px-4 py-3.5">
                           <span className="text-[11px] font-medium bg-slate-50 border border-slate-200 px-2 py-0.5 rounded-md text-slate-600">{system.systemType}</span>
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <span className="text-[11px] uppercase font-semibold tracking-wide px-2 py-0.5 rounded-md border border-slate-200 bg-slate-50 text-slate-700">{system.systemCategory}</span>
                         </td>
                         <td className="px-4 py-3.5 text-xs text-slate-600 font-medium">{system.department}</td>
                         <td className="px-4 py-3.5 text-xs text-slate-500 max-w-[140px]">

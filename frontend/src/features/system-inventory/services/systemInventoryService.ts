@@ -39,7 +39,10 @@ function sanitizeSystems(systems: unknown): SystemInventory[] {
     const systemId = candidate.systemId?.trim() ?? "";
     const systemName = candidate.systemName?.trim() ?? "";
     return !LEGACY_DEMO_SYSTEM_IDS.has(systemId) && !LEGACY_DEMO_SYSTEM_NAMES.has(systemName);
-  });
+  }).map(system => ({
+    ...system,
+    systemCategory: system.systemCategory ?? "Non-GxP",
+  }));
 
   return cleaned;
 }
@@ -98,7 +101,12 @@ export async function getSystemById(systemId: string): Promise<ServiceResult<Sys
 export async function createSystem(payload: SystemInventory): Promise<ServiceResult<SystemInventory>> {
   const now = new Date().toISOString();
   const systems = readStoredSystems();
-  const record: SystemInventory = { ...payload, createdAt: now, updatedAt: now };
+  const record: SystemInventory = {
+    ...payload,
+    systemCategory: payload.systemCategory ?? "Non-GxP",
+    createdAt: now,
+    updatedAt: now,
+  };
   const nextSystems = [record, ...systems];
   writeStoredSystems(nextSystems);
   return { data: record, error: null };
@@ -111,7 +119,11 @@ export async function createSystem(payload: SystemInventory): Promise<ServiceRes
 export async function updateSystem(systemId: string, payload: SystemInventory): Promise<ServiceResult<SystemInventory>> {
   const now = new Date().toISOString();
   const systems = readStoredSystems();
-  const record: SystemInventory = { ...payload, updatedAt: now };
+  const record: SystemInventory = {
+    ...payload,
+    systemCategory: payload.systemCategory ?? "Non-GxP",
+    updatedAt: now,
+  };
   const nextSystems = systems.map(system => (system.systemId === systemId ? record : system));
   writeStoredSystems(nextSystems);
   return { data: record, error: null };

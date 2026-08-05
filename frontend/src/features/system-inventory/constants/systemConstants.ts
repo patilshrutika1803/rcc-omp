@@ -16,6 +16,7 @@ export const DEPARTMENTS = [
 
 // Only these three system types are supported.
 export const SYSTEM_TYPES = ["Laptop", "Desktop PC", "Printer"] as const;
+export const SYSTEM_CATEGORIES = ["GxP", "Non-GxP"] as const;
 
 export const STATUS_OPTIONS = ["Active", "Inactive", "Under Repair", "Disposed"] as const;
 

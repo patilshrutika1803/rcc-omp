@@ -13,6 +13,7 @@ export function SystemDetailsDrawer({ system, onClose, onEdit }: { system: Syste
     ["System ID", system.systemId],
     ["System Name", system.systemName],
     ["Type", system.systemType || "—"],
+    ["Category", system.systemCategory || "—"],
     ["Department", system.department],
     ["Location", system.location],
     ["Assigned User", system.assignedUser],

@@ -29,6 +29,7 @@ export function emptySystem(): SystemInventory {
     systemId: "",
     systemName: "",
     systemType: "",
+    systemCategory: "Non-GxP",
     department: "",
     location: "",
     assignedUser: "",
@@ -50,7 +51,7 @@ export function emptySystem(): SystemInventory {
 
 export function filterSystems(
   systems: SystemInventory[],
-  opts: { search: string; department: string; type: string; status: string }
+  opts: { search: string; department: string; type: string; category: string; status: string }
 ): SystemInventory[] {
   let d = [...systems];
   if (opts.search) {
@@ -64,6 +65,7 @@ export function filterSystems(
   }
   if (opts.department) d = d.filter(s => s.department === opts.department);
   if (opts.type) d = d.filter(s => s.systemType === opts.type);
+  if (opts.category) d = d.filter(s => s.systemCategory === opts.category);
   if (opts.status) d = d.filter(s => s.status === opts.status);
   return d;
 }
@@ -87,10 +89,57 @@ export function totalPagesFor(count: number, perPage: number): number {
 export function validateSystemForm(form: SystemInventory): Record<string, string> {
   const e: Record<string, string> = {};
   if (!form.systemType) e.systemType = "System Type is required";
+  if (!form.systemCategory) e.systemCategory = "Machine Category is required";
   if (!form.department) e.department = "Department is required";
   if (!form.location.trim()) e.location = "Location is required";
   if (!form.systemId.trim()) e.systemId = "System ID is required";
   if (!form.systemName.trim()) e.systemName = "System Name is required";
   if (!form.assignedUser.trim()) e.assignedUser = "Assigned User is required";
   return e;
+}
+
+export function exportSystemsAsCsv(systems: SystemInventory[]) {
+  const format = (value: string) => `"${String(value ?? "").replace(/"/g, '""')}"`;
+  const header = [
+    "System ID",
+    "System Name",
+    "System Type",
+    "Category",
+    "Department",
+    "Location",
+    "Assigned User",
+    "Brand",
+    "Model",
+    "Serial Number",
+    "Purchase Date",
+    "Warranty Expiry",
+    "Status",
+  ];
+
+  const csvRows = systems.map(system => [
+    system.systemId,
+    system.systemName,
+    system.systemType,
+    system.systemCategory,
+    system.department,
+    system.location,
+    system.assignedUser,
+    system.brand,
+    system.model,
+    system.serialNumber,
+    system.purchaseDate,
+    system.warrantyExpiry,
+    system.status,
+  ].map(format).join(","));
+
+  const csv = [header.map(format).join(","), ...csvRows].join("\r\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.setAttribute("download", `system-inventory-${new Date().toISOString().slice(0, 10)}.csv`);
+  document.body.appendChild(anchor);
+  anchor.click();
+  document.body.removeChild(anchor);
+  URL.revokeObjectURL(url);
 }

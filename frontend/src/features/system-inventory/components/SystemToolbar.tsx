@@ -1,6 +1,6 @@
 import React from "react";
 import { Search, Filter } from "lucide-react";
-import { DEPARTMENTS, SYSTEM_TYPES, STATUS_OPTIONS } from "../constants/systemConstants";
+import { DEPARTMENTS, SYSTEM_TYPES, SYSTEM_CATEGORIES, STATUS_OPTIONS } from "../constants/systemConstants";
 
 export function SystemToolbar({
   search,
@@ -9,6 +9,8 @@ export function SystemToolbar({
   onFilterDeptChange,
   filterType,
   onFilterTypeChange,
+  filterCategory,
+  onFilterCategoryChange,
   filterStatus,
   onFilterStatusChange,
   hasFilters,
@@ -20,6 +22,8 @@ export function SystemToolbar({
   onFilterDeptChange: (value: string) => void;
   filterType: string;
   onFilterTypeChange: (value: string) => void;
+  filterCategory: string;
+  onFilterCategoryChange: (value: string) => void;
   filterStatus: string;
   onFilterStatusChange: (value: string) => void;
   hasFilters: boolean;
@@ -48,6 +52,11 @@ export function SystemToolbar({
           className="h-9 px-2.5 text-xs font-medium bg-slate-50 border border-slate-200 rounded-lg text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20">
           <option value="">All Types</option>
           {SYSTEM_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+        </select>
+        <select value={filterCategory} onChange={e => onFilterCategoryChange(e.target.value)}
+          className="h-9 px-2.5 text-xs font-medium bg-slate-50 border border-slate-200 rounded-lg text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20">
+          <option value="">All Categories</option>
+          {SYSTEM_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
         </select>
         <select value={filterStatus} onChange={e => onFilterStatusChange(e.target.value)}
           className="h-9 px-2.5 text-xs font-medium bg-slate-50 border border-slate-200 rounded-lg text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20">

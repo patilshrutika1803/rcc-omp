@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Server, X, CalendarClock, Info, RefreshCw, Plus } from "lucide-react";
 import type { SystemInventory, SystemPMSettings, SystemType } from "../types/system";
-import { DEPARTMENTS, SYSTEM_TYPES, STATUS_OPTIONS, PM_FREQUENCIES, PM_PRIORITIES, PM_REMINDERS } from "../constants/systemConstants";
+import { DEPARTMENTS, SYSTEM_TYPES, SYSTEM_CATEGORIES, STATUS_OPTIONS, PM_FREQUENCIES, PM_PRIORITIES, PM_REMINDERS } from "../constants/systemConstants";
 import { emptySystem, validateSystemForm } from "../utils/systemHelpers";
 import { calculateNextDue } from "../../preventive-maintenance/utils/pmDateUtils";
 
@@ -138,6 +138,16 @@ export function AddSystemModal({
               </select>
               {errors.systemType && <p className="text-[11px] text-red-500 mt-1">{errors.systemType}</p>}
             </div>
+            <div>
+              <label className="text-xs font-semibold text-slate-700 mb-1.5 block">Category <span className="text-red-500">*</span></label>
+              <select value={form.systemCategory} onChange={e => updateField("systemCategory", e.target.value)} className={fieldClass("systemCategory")}>
+                <option value="">Select category</option>
+                {SYSTEM_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+              {errors.systemCategory && <p className="text-[11px] text-red-500 mt-1">{errors.systemCategory}</p>}
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-xs font-semibold text-slate-700 mb-1.5 block">Department <span className="text-red-500">*</span></label>
               <select value={form.department} onChange={e => updateField("department", e.target.value)} className={fieldClass("department")}>

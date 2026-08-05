@@ -15,7 +15,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import React from "react";
-import { LayoutDashboard, Server, ChevronRight, Plus, Download } from "lucide-react";
+import { LayoutDashboard, Server, ChevronRight, Plus } from "lucide-react";
 
 import { useSystemInventory } from "./hooks/useSystemInventory";
 import { DEPARTMENTS } from "./constants/systemConstants";
@@ -66,9 +66,6 @@ export default function SystemInventoryPage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <button className="flex items-center gap-1.5 h-9 px-3 text-xs font-semibold text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors shadow-sm">
-              <Download size={13} /> Export
-            </button>
             <button onClick={openAddModal}
               className="flex items-center gap-1.5 h-9 px-4 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
               <Plus size={14} /> Add System
