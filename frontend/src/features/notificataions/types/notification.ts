@@ -26,6 +26,8 @@ export interface Notification {
   pmId?: string;
   machineId?: string;
   machineName?: string;
+  systemId?: string;
+  systemName?: string;
   department?: string;
   assignedUser?: string;
   dueDate?: string;
@@ -36,6 +38,7 @@ export interface Notification {
   backupType?: string;
   qaActivityId?: string;
   qaActivityNumber?: string;
+  systemInspectionId?: string;
 }
 
 export type NotificationFilterId =

@@ -20,14 +20,20 @@ import { LayoutDashboard, Server, ChevronRight, Plus } from "lucide-react";
 import { useSystemInventory } from "./hooks/useSystemInventory";
 import { DEPARTMENTS } from "./constants/systemConstants";
 
+import { InspectionKPISection } from "./components/InspectionKPISection";
+import { InspectionHistoryPanel } from "./components/InspectionHistoryPanel";
 import { SystemInventoryTable } from "./components/SystemInventoryTable";
 import { AddSystemModal } from "./components/AddSystemModal";
 import { SystemDetailsDrawer } from "./components/SystemDetailsDrawer";
+import CompleteInspectionDialog from "./components/CompleteInspectionDialog";
 import { DeleteConfirmDialog } from "./components/DeleteConfirmDialog";
 
 export default function SystemInventoryPage() {
   const {
     systems,
+    isLoading,
+    inspectionKpis,
+    completedInspections,
     showAddModal,
     editingSystem,
     openAddModal,
@@ -42,6 +48,10 @@ export default function SystemInventoryPage() {
     closeDeleteDialog,
     handleSave,
     handleDelete,
+    showCompleteDialog,
+    openCompleteDialog,
+    closeCompleteDialog,
+    handleCompleteInspection,
   } = useSystemInventory();
 
   return (
@@ -74,6 +84,8 @@ export default function SystemInventoryPage() {
         </div>
       </div>
 
+      {!isLoading && <InspectionKPISection kpis={inspectionKpis} />}
+
       <SystemInventoryTable
         systems={systems}
         onView={openDrawer}
@@ -81,6 +93,8 @@ export default function SystemInventoryPage() {
         onDelete={openDeleteDialog}
         onAdd={openAddModal}
       />
+
+      {!isLoading && <InspectionHistoryPanel inspections={completedInspections} />}
 
       {/* ── MODALS & OVERLAYS ── */}
       {showAddModal && (
@@ -96,6 +110,14 @@ export default function SystemInventoryPage() {
           system={viewingSystem}
           onClose={closeDrawer}
           onEdit={editFromDrawer}
+          onOpenComplete={openCompleteDialog}
+        />
+      )}
+      {showCompleteDialog && viewingSystem && (
+        <CompleteInspectionDialog
+          systemName={viewingSystem.systemName}
+          onClose={() => closeCompleteDialog && closeCompleteDialog()}
+          onConfirm={(values) => { handleCompleteInspection(values as any); }}
         />
       )}
       {deletingSystem && (

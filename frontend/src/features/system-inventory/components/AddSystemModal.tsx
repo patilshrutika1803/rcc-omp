@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { Server, X, CalendarClock, Info, RefreshCw, Plus } from "lucide-react";
 import type { SystemInventory, SystemPMSettings, SystemType } from "../types/system";
-import { DEPARTMENTS, SYSTEM_TYPES, SYSTEM_CATEGORIES, STATUS_OPTIONS, PM_FREQUENCIES, PM_PRIORITIES, PM_REMINDERS } from "../constants/systemConstants";
+import { DEPARTMENTS, SYSTEM_TYPES, SYSTEM_CATEGORIES, STATUS_OPTIONS, PM_FREQUENCIES, PM_PRIORITIES, PM_REMINDERS, INSPECTION_FREQUENCIES, INSPECTION_REMINDERS } from "../constants/systemConstants";
 import { emptySystem, validateSystemForm } from "../utils/systemHelpers";
 import { calculateNextDue } from "../../preventive-maintenance/utils/pmDateUtils";
+import { calculateReminderDate } from "../../shared/utils/recurringWorkflow";
 
 export function AddSystemModal({
   onClose,
@@ -58,6 +59,37 @@ export function AddSystemModal({
     });
   };
 
+  // Track if user manually edited inspection next date
+  const [manuallyEditedInspectionDue, setManuallyEditedInspectionDue] = useState(false);
+
+  const updateInspection = (key: string, value: string) => {
+    setForm(prev => {
+      const current = prev.inspectionSettings ?? {
+        frequency: getDefaultInspectionFrequency(prev.systemCategory),
+        lastInspection: "",
+        nextInspection: "",
+        priority: "Medium",
+        reminder: "1 Day Before",
+        description: "",
+        assignedUser: "",
+      } as any;
+
+      const next = { ...current, [key]: value };
+
+      if (key === "frequency" || key === "lastInspection") {
+        const frequency = key === "frequency" ? value : next.frequency;
+        const last = key === "lastInspection" ? value : next.lastInspection;
+        next.nextInspection = frequency && last ? calculateNextDue(last, frequency) : next.nextInspection;
+      }
+
+      return { ...prev, inspectionSettings: next };
+    });
+  };
+
+  function getDefaultInspectionFrequency(category: string) {
+    return category === "GxP" ? "Monthly" : "Quarterly";
+  }
+
   const handleTypeChange = (value: string) => {
     const nextType = value as SystemType | "";
     setForm(prev => ({
@@ -67,6 +99,17 @@ export function AddSystemModal({
       pmSettings: nextType === "Laptop" || nextType === "Desktop PC" ? prev.pmSettings : undefined,
     }));
     setErrors(prev => ({ ...prev, systemType: "" }));
+  };
+
+  // If systemCategory changes, ensure inspection frequency defaults accordingly
+  const handleCategoryChange = (value: string) => {
+    updateField("systemCategory", value);
+    setForm(prev => {
+      const insp = prev.inspectionSettings ?? undefined;
+      if (!insp) return prev;
+      const nextFreq = value === "GxP" ? "Monthly" : "Quarterly";
+      return { ...prev, inspectionSettings: { ...insp, frequency: nextFreq } };
+    });
   };
 
   const validate = () => validateSystemForm(form);
@@ -129,7 +172,7 @@ export function AddSystemModal({
 
         {/* Modal Body */}
         <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-xs font-semibold text-slate-700 mb-1.5 block">System Type <span className="text-red-500">*</span></label>
               <select value={form.systemType} onChange={e => handleTypeChange(e.target.value)} className={fieldClass("systemType")}>
@@ -140,7 +183,7 @@ export function AddSystemModal({
             </div>
             <div>
               <label className="text-xs font-semibold text-slate-700 mb-1.5 block">Category <span className="text-red-500">*</span></label>
-              <select value={form.systemCategory} onChange={e => updateField("systemCategory", e.target.value)} className={fieldClass("systemCategory")}>
+              <select value={form.systemCategory} onChange={e => handleCategoryChange(e.target.value)} className={fieldClass("systemCategory")}>
                 <option value="">Select category</option>
                 {SYSTEM_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
@@ -293,6 +336,65 @@ export function AddSystemModal({
               </p>
             </div>
           )}
+
+          {/* ── Inspection Settings ── */}
+          <div className="border border-blue-100 bg-blue-50/40 rounded-xl p-4 space-y-4">
+            <div className="flex items-center gap-2">
+              <CalendarClock size={15} className="text-blue-600" />
+              <h3 className="text-xs font-bold text-slate-900">Inspection Settings</h3>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-xs font-semibold text-slate-700 mb-1.5 block">Inspection Frequency</label>
+                <select value={form.inspectionSettings?.frequency ?? getDefaultInspectionFrequency(form.systemCategory)} onChange={e => { setManuallyEditedInspectionDue(false); updateInspection("frequency", e.target.value); }}
+                  className="w-full h-9 px-3 text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-700">
+                  {INSPECTION_FREQUENCIES.map(f => <option key={f} value={f}>{f}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-slate-700 mb-1.5 block">Reminder</label>
+                <select value={form.inspectionSettings?.reminder ?? "1 Day Before"} onChange={e => updateInspection("reminder", e.target.value)}
+                  className="w-full h-9 px-3 text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-700">
+                  {INSPECTION_REMINDERS.map(r => <option key={r} value={r}>{r}</option>)}
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-xs font-semibold text-slate-700 mb-1.5 block">Priority</label>
+                <select value={form.inspectionSettings?.priority ?? "Medium"} onChange={e => updateInspection("priority", e.target.value)}
+                  className="w-full h-9 px-3 text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-700">
+                  {PM_PRIORITIES.map(p => <option key={p} value={p}>{p}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-slate-700 mb-1.5 block">Last Inspection Date</label>
+                <input type="date" value={form.inspectionSettings?.lastInspection ?? ""} onChange={e => { setManuallyEditedInspectionDue(false); updateInspection("lastInspection", e.target.value); }}
+                  className="w-full h-9 px-3 text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-700" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-xs font-semibold text-slate-700 mb-1.5 block">Next Inspection Due Date <span className="text-red-500">*</span></label>
+                <input type="date" value={form.inspectionSettings?.nextInspection ?? ""} onChange={e => { setManuallyEditedInspectionDue(true); updateInspection("nextInspection", e.target.value); }}
+                  className="w-full h-9 px-3 text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-700" />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold text-slate-700 mb-1.5 block">Inspection Description</label>
+              <textarea placeholder="Describe inspection items or scope..." value={form.inspectionSettings?.description ?? ""} onChange={e => updateInspection("description", e.target.value)} rows={3}
+                className="w-full px-3 py-2.5 text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder-slate-400 resize-none" />
+            </div>
+
+            <p className="text-[11px] text-slate-500 flex items-center gap-1.5">
+              <Info size={12} className="shrink-0" />
+              These inspection settings are saved on the system record and used to generate the recurring inspection schedule.
+            </p>
+          </div>
         </div>
 
         {/* Modal Footer */}

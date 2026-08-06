@@ -21,6 +21,16 @@ export interface SystemPMSettings {
   reminder: string;
 }
 
+export interface SystemInspectionSettings {
+  frequency: "Monthly" | "Quarterly";
+  lastInspection?: string;
+  nextInspection?: string;
+  priority: PMPriority;
+  reminder?: "Same Day" | "1 Day Before" | "3 Days Before" | "7 Days Before";
+  description?: string;
+  assignedUser?: string;
+}
+
 export interface SystemInventory {
   _id?: string; // MongoDB document id (populated by backend on save)
   systemId: string;
@@ -37,6 +47,7 @@ export interface SystemInventory {
   status: SystemStatus;
   systemCategory: SystemCategory;
   pmSettings?: SystemPMSettings;
+  inspectionSettings?: SystemInspectionSettings;
   createdAt: string;
   updatedAt: string;
 }

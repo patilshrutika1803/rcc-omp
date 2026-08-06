@@ -28,5 +28,8 @@ export const PM_FREQUENCIES = ["Daily", "Weekly", "Monthly", "Quarterly", "Half-
 export const PM_PRIORITIES = ["Critical", "High", "Medium", "Low"] as const;
 export const PM_REMINDERS = ["Same Day", "1 Day Before", "3 Days Before", "1 Week Before"] as const;
 
+export const INSPECTION_FREQUENCIES = ["Monthly", "Quarterly"] as const;
+export const INSPECTION_REMINDERS = ["Same Day", "1 Day Before", "3 Days Before", "7 Days Before"] as const;
+
 // Table pagination page size (unchanged from original inline value).
 export const SYSTEMS_PER_PAGE = 8;

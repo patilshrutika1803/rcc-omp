@@ -9,6 +9,10 @@
 export function daysUntil(dateStr: string): number {
   const due = new Date(dateStr);
   const now = new Date();
+
+  due.setHours(0, 0, 0, 0);
+  now.setHours(0, 0, 0, 0);
+
   return Math.round((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 }
 

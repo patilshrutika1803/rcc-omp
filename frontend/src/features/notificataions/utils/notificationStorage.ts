@@ -110,6 +110,21 @@ export function hasNotificationForQA(qaActivityId: string): boolean {
   return notifications.some((n) => n.qaActivityId === qaActivityId && !n.read);
 }
 
+export function removeSystemInspectionNotifications(systemInspectionId: string): void {
+  const notifications = loadNotifications().filter(
+    (n) => !(n.systemInspectionId === systemInspectionId && !n.read)
+  );
+  saveNotifications(notifications);
+  emitNotificationChange();
+}
+
+export function hasNotificationForSystemInspection(systemInspectionId: string): boolean {
+  const notifications = loadNotifications();
+  return notifications.some(
+    (n) => n.systemInspectionId === systemInspectionId && !n.read
+  );
+}
+
 /**
  * Get the count of unread notifications.
  */
