@@ -65,6 +65,7 @@ export default function App() {
           <Route path="/dashboard" element={<ProtectedRoute><AppShell /></ProtectedRoute>} />
           <Route path="/preventive-maintenance" element={<ProtectedRoute><AppShell /></ProtectedRoute>} />
           <Route path="/backup-activities" element={<ProtectedRoute><AppShell /></ProtectedRoute>} />
+          <Route path="/monthly-hard-disk-tracker" element={<ProtectedRoute><AppShell /></ProtectedRoute>} />
           <Route path="/qa-activities" element={<ProtectedRoute><AppShell /></ProtectedRoute>} />
           <Route path="/system-inventory" element={<ProtectedRoute><AppShell /></ProtectedRoute>} />
           <Route path="/departments" element={<ProtectedRoute><AppShell /></ProtectedRoute>} />
