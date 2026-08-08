@@ -34,6 +34,8 @@ export interface Notification {
   notificationType?: string;
   backupJobId?: string;
   backupJobName?: string;
+  hardDiskCycleId?: string;
+  hardDiskReminderType?: string;
   priority?: string;
   backupType?: string;
   qaActivityId?: string;

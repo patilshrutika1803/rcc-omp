@@ -10,6 +10,7 @@ import React from "react";
 import DashboardPage from "../features/dashboard/DashboardPage";
 import PreventiveMaintenancePage from "../features/preventive-maintenance/PreventiveMaintenancePage";
 import BackupActivitiesPage from "../features/backup/BackupActivitiesPage";
+import MonthlyHardDiskTrackerPage from "../features/monthly-hard-disk-tracker/MonthlyHardDiskTrackerPage";
 import QAPage from "../features/qa/QAPage";
 import SystemInventoryPage from "../features/system-inventory/SystemInventoryPage";
 import DepartmentPage from "../features/departments/DepartmentPage";
@@ -22,12 +23,13 @@ import { UserProfileContent } from "../modules/profile/UserProfileContent";
 import { RoleManagementContent } from "../modules/admin/RoleManagementContent";
 import { HelpCenterContent } from "../modules/help/HelpCenterContent";
 
-export const KNOWN_NAV_IDS = ["dashboard","maintenance","backup","qa","machines","departments","notifications","notes","settings","profile","admin","help"];
+export const KNOWN_NAV_IDS = ["dashboard","maintenance","backup","monthly-hard-disk","qa","machines","departments","notifications","notes","settings","profile","admin","help"];
 
 export const NAV_TO_ROUTE: Record<string, string> = {
   dashboard: "/dashboard",
   maintenance: "/preventive-maintenance",
   backup: "/backup-activities",
+  "monthly-hard-disk": "/monthly-hard-disk-tracker",
   qa: "/qa-activities",
   machines: "/system-inventory",
   departments: "/departments",
@@ -60,6 +62,7 @@ export function AppRoutes({ activeNav }: { activeNav: string }) {
       {activeNav === "dashboard" && <DashboardPage />}
       {activeNav === "maintenance" && <PreventiveMaintenancePage />}
       {activeNav === "backup" && <BackupActivitiesPage />}
+      {activeNav === "monthly-hard-disk" && <MonthlyHardDiskTrackerPage />}
       {activeNav === "qa" && <QAPage />}
       {activeNav === "machines" && <SystemInventoryPage />}
       {activeNav === "departments" && <DepartmentPage />}
