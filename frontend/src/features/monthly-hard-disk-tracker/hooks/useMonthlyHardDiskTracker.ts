@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import type { HardDiskCycle, HardDiskCycleFormValues, HardDiskFilters, HardDiskHistoryRecord, HardDiskReminderStatus } from "../types/hardDisk";
+import type { HardDiskCycle, HardDiskCycleFormValues, HardDiskFilters, HardDiskHistoryRecord, HardDiskReminderStatus, HardDiskReturnDetails } from "../types/hardDisk";
 import { HDD_DEFAULT_FORM_VALUES } from "../constants/hardDiskConstants";
 import { loadPersistedHardDiskCycles, persistHardDiskCycles } from "../utils/hardDiskStorage";
 import { addHardDiskNotification, buildCycleReminders, calculateHardDiskReminderDate, closePendingReminders, generateInitialHardDiskNotifications, generateLifecycleNotification } from "../utils/hardDiskReminderUtils";
@@ -104,6 +104,9 @@ export function useMonthlyHardDiskTracker() {
         remarks: "Initial monthly hard disk tracker cycle",
         reminderBeforeReturn: "5 Days Before",
         reminderStatus: "Pending",
+        accountabilityStatus: "Pending",
+        accountability: null,
+        returnDetails: null,
         history: [buildTimelineEntry("Cycle Created", "Created", "Operations Team", "Monthly hard disk cycle created")],
         reminders: buildCycleReminders({
           id: makeId("cycle"),
@@ -119,6 +122,9 @@ export function useMonthlyHardDiskTracker() {
           remarks: "Initial monthly hard disk tracker cycle",
           reminderBeforeReturn: "5 Days Before",
           reminderStatus: "Pending",
+          accountabilityStatus: "Pending",
+          accountability: null,
+          returnDetails: null,
           history: [],
           reminders: [],
           createdAt: new Date().toISOString(),
@@ -173,6 +179,9 @@ export function useMonthlyHardDiskTracker() {
       remarks: values.remarks,
       reminderBeforeReturn: values.reminderBeforeReturn,
       reminderStatus: "Pending",
+      accountabilityStatus: "Pending",
+      accountability: null,
+      returnDetails: null,
       history: [buildTimelineEntry("Cycle Created", "Created", values.preparedBy, values.remarks || "Cycle created")],
       reminders: buildCycleReminders({
         id: makeId("cycle"),
@@ -187,7 +196,10 @@ export function useMonthlyHardDiskTracker() {
         responsiblePerson: values.responsiblePerson,
         remarks: values.remarks,
         reminderBeforeReturn: values.reminderBeforeReturn,
-        reminderStatus: "Pending",
+          reminderStatus: "Pending",
+          accountabilityStatus: "Pending",
+          accountability: null,
+          returnDetails: null,
         history: [],
         reminders: [],
         createdAt: now.toISOString(),
@@ -217,6 +229,38 @@ export function useMonthlyHardDiskTracker() {
     setCycles((prev) => prev.map((item) => (item.id === cycle.id ? updatedCycle : item)));
     generateLifecycleNotification(updatedCycle, nextStatus);
     toast.success(`Cycle moved to ${nextStatus}.`);
+  };
+
+  const markAccountabilityCompleted = (cycle: HardDiskCycle, completedBy: string, completedAt: string, notes: string) => {
+    const updated: HardDiskCycle = {
+      ...cycle,
+      accountabilityStatus: "Completed",
+      accountability: { completedBy, completedAt, notes },
+      reminders: cycle.reminders.map((r) => (r.type === "Accountability Reminder" && r.status === "Pending" ? { ...r, status: "Completed" } : r)),
+      history: [...cycle.history, buildTimelineEntry("Accountability Completed", cycle.status, completedBy, notes)],
+      updatedAt: new Date().toISOString(),
+    };
+
+    setCycles((prev) => prev.map((item) => (item.id === cycle.id ? updated : item)));
+    addHardDiskNotification(cycle, "Accountability Completed", "Accountability Completed", `Accountability completed for ${cycle.month} by ${completedBy}.`);
+    toast.success(`Accountability marked completed for ${cycle.cycleId}.`);
+  };
+
+  const recordReturn = (cycle: HardDiskCycle, details: HardDiskReturnDetails, user: string) => {
+    const updated: HardDiskCycle = {
+      ...cycle,
+      actualReturnDate: details.returnDate,
+      returnDetails: details,
+      status: "Returned from RSB",
+      currentHolder: "RCC",
+      reminders: closePendingReminders(cycle),
+      history: [...cycle.history, buildTimelineEntry("Returned from RSB", "Returned from RSB", user, details.returnNotes || "Returned")],
+      updatedAt: new Date().toISOString(),
+    };
+
+    setCycles((prev) => prev.map((item) => (item.id === cycle.id ? updated : item)));
+    generateLifecycleNotification(updated, "Returned from RSB");
+    toast.success(`Return recorded for ${cycle.cycleId}.`);
   };
 
   const completeCycle = (cycle: HardDiskCycle, details: HardDiskCycle["completionDetails"], user: string) => {
@@ -395,6 +439,8 @@ export function useMonthlyHardDiskTracker() {
     completeCycle,
     removeCycle,
     updateCycle,
+    markAccountabilityCompleted,
+    recordReturn,
     exportFilteredCycles,
     setSelectedCycle,
   };

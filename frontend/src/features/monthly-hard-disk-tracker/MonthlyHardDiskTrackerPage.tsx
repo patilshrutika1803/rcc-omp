@@ -51,6 +51,8 @@ export default function MonthlyHardDiskTrackerPage() {
     submitCycle,
     updateCycleStatus,
     completeCycle,
+    markAccountabilityCompleted,
+    recordReturn,
     removeCycle,
     updateCycle,
   } = useMonthlyHardDiskTracker();
@@ -126,6 +128,44 @@ export default function MonthlyHardDiskTrackerPage() {
         completionNotes: completionForm.completionNotes,
       }, completionForm.receivedBy);
     }
+  };
+
+  const [showAccountabilityModal, setShowAccountabilityModal] = useState(false);
+  const [accountabilityForm, setAccountabilityForm] = useState({ completedBy: "", completedAt: "", notes: "" });
+  const [showReturnModal, setShowReturnModal] = useState(false);
+  const [returnForm, setReturnForm] = useState({ returnDate: "", returnedBy: "", receivedBy: "", returnNotes: "" });
+
+  const openAccountability = (cycle: HardDiskCycle) => {
+    setEditingCycle(cycle);
+    setAccountabilityForm({ completedBy: cycle.responsiblePerson || "", completedAt: new Date().toISOString().split("T")[0], notes: "" });
+    setShowAccountabilityModal(true);
+  };
+
+  const handleAccountabilitySubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!editingCycle) return;
+    markAccountabilityCompleted(editingCycle, accountabilityForm.completedBy, accountabilityForm.completedAt, accountabilityForm.notes);
+    setShowAccountabilityModal(false);
+    setEditingCycle(null);
+  };
+
+  const openReturn = (cycle: HardDiskCycle) => {
+    setEditingCycle(cycle);
+    setReturnForm({ returnDate: new Date().toISOString().split("T")[0], returnedBy: cycle.responsiblePerson || "", receivedBy: cycle.preparedBy || "", returnNotes: "" });
+    setShowReturnModal(true);
+  };
+
+  const handleReturnSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!editingCycle) return;
+    recordReturn(editingCycle, {
+      returnDate: returnForm.returnDate,
+      returnedBy: returnForm.returnedBy,
+      receivedBy: returnForm.receivedBy,
+      returnNotes: returnForm.returnNotes,
+    }, returnForm.receivedBy);
+    setShowReturnModal(false);
+    setEditingCycle(null);
   };
 
   const nextStatusMap: Record<string, string[]> = {
@@ -241,6 +281,8 @@ export default function MonthlyHardDiskTrackerPage() {
                   <th className="px-4 py-3">Current Status</th>
                   <th className="px-4 py-3">Dispatch Date</th>
                   <th className="px-4 py-3">Expected Return Date</th>
+                  <th className="px-4 py-3">Accountability Date</th>
+                  <th className="px-4 py-3">Accountability Status</th>
                   <th className="px-4 py-3">Actual Return Date</th>
                   <th className="px-4 py-3">Current Holder</th>
                   <th className="px-4 py-3">Reminder Status</th>
@@ -256,6 +298,13 @@ export default function MonthlyHardDiskTrackerPage() {
                     <td className="px-4 py-3.5 text-xs text-slate-600">{cycle.status}</td>
                     <td className="px-4 py-3.5 text-xs text-slate-500">{cycle.dispatchDate}</td>
                     <td className="px-4 py-3.5 text-xs text-slate-500">{cycle.expectedReturnDate}</td>
+                    <td className="px-4 py-3.5 text-xs text-slate-500">{(() => {
+                      const date = new Date(cycle.expectedReturnDate);
+                      const offset = 5; // default is 5 days before unless option changed
+                      date.setDate(date.getDate() - offset);
+                      return date.toISOString().split("T")[0];
+                    })()}</td>
+                    <td className="px-4 py-3.5 text-xs text-slate-500">{cycle.accountabilityStatus || "Pending"}</td>
                     <td className="px-4 py-3.5 text-xs text-slate-500">{cycle.actualReturnDate || "—"}</td>
                     <td className="px-4 py-3.5 text-xs text-slate-500">{cycle.currentHolder}</td>
                     <td className="px-4 py-3.5 text-xs text-slate-500">{cycle.reminderStatus}</td>
@@ -266,6 +315,8 @@ export default function MonthlyHardDiskTrackerPage() {
                         <button title="Edit" onClick={() => openEditModal(cycle)} className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-md"><Edit3 size={14} /></button>
                         <button title="Dispatch" onClick={() => updateCycleStatus(cycle, "Dispatched from RCC", "Hard disk dispatched", cycle.responsiblePerson)} className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-md"><Truck size={14} /></button>
                         <button title="Receive at RSB" onClick={() => updateCycleStatus(cycle, "Received at RSB", "Hard disk received at RSB", cycle.responsiblePerson)} className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md"><PackageCheck size={14} /></button>
+                        <button title="Accountability" onClick={() => openAccountability(cycle)} className="p-1.5 text-slate-400 hover:text-yellow-600 hover:bg-yellow-50 rounded-md"><RotateCcw size={14} /></button>
+                        <button title="Mark Returned" onClick={() => openReturn(cycle)} className="p-1.5 text-slate-400 hover:text-emerald-700 hover:bg-emerald-50 rounded-md"><RotateCcw size={14} /></button>
                         <button title="Complete" onClick={() => openCompletion(cycle)} className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-md"><CheckCircle2 size={14} /></button>
                         <button title="Export PDF" onClick={() => exportHardDiskCyclePdf(cycle)} className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md"><Download size={14} /></button>
                         <button title="Delete" onClick={() => removeCycle(cycle)} className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md"><Trash2 size={14} /></button>
@@ -425,6 +476,74 @@ export default function MonthlyHardDiskTrackerPage() {
               <div className="md:col-span-2 flex justify-end gap-2 mt-2">
                 <button type="button" onClick={() => { setShowCompletionModal(false); setEditingCycle(null); }} className="h-9 px-4 text-sm font-semibold text-slate-600 bg-slate-100 rounded-lg">Cancel</button>
                 <button type="submit" className="h-9 px-4 text-sm font-semibold text-white bg-slate-800 rounded-lg">Save Completion</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showAccountabilityModal && editingCycle && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl p-6">
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">Capture Accountability</h3>
+                <p className="text-xs text-slate-500 mt-1">Record accountability confirmation before month-end</p>
+              </div>
+              <button onClick={() => { setShowAccountabilityModal(false); setEditingCycle(null); }} className="text-slate-400 hover:text-slate-700">✕</button>
+            </div>
+            <form onSubmit={handleAccountabilitySubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 block">Completed By *</label>
+                <input required value={accountabilityForm.completedBy} onChange={(e) => setAccountabilityForm((c) => ({ ...c, completedBy: e.target.value }))} className="w-full h-9 px-3 text-sm border border-slate-300 rounded-lg" />
+              </div>
+              <div>
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 block">Completed At *</label>
+                <input type="date" required value={accountabilityForm.completedAt} onChange={(e) => setAccountabilityForm((c) => ({ ...c, completedAt: e.target.value }))} className="w-full h-9 px-3 text-sm border border-slate-300 rounded-lg" />
+              </div>
+              <div className="md:col-span-2">
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 block">Notes</label>
+                <textarea value={accountabilityForm.notes} onChange={(e) => setAccountabilityForm((c) => ({ ...c, notes: e.target.value }))} rows={3} className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg" />
+              </div>
+              <div className="md:col-span-2 flex justify-end gap-2 mt-2">
+                <button type="button" onClick={() => { setShowAccountabilityModal(false); setEditingCycle(null); }} className="h-9 px-4 text-sm font-semibold text-slate-600 bg-slate-100 rounded-lg">Cancel</button>
+                <button type="submit" className="h-9 px-4 text-sm font-semibold text-white bg-slate-800 rounded-lg">Save Accountability</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showReturnModal && editingCycle && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl p-6">
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">Record Return</h3>
+                <p className="text-xs text-slate-500 mt-1">Capture return details when RSB returns the hard disk</p>
+              </div>
+              <button onClick={() => { setShowReturnModal(false); setEditingCycle(null); }} className="text-slate-400 hover:text-slate-700">✕</button>
+            </div>
+            <form onSubmit={handleReturnSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 block">Return Date *</label>
+                <input type="date" required value={returnForm.returnDate} onChange={(e) => setReturnForm((c) => ({ ...c, returnDate: e.target.value }))} className="w-full h-9 px-3 text-sm border border-slate-300 rounded-lg" />
+              </div>
+              <div>
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 block">Returned By</label>
+                <input value={returnForm.returnedBy} onChange={(e) => setReturnForm((c) => ({ ...c, returnedBy: e.target.value }))} className="w-full h-9 px-3 text-sm border border-slate-300 rounded-lg" />
+              </div>
+              <div>
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 block">Received By</label>
+                <input value={returnForm.receivedBy} onChange={(e) => setReturnForm((c) => ({ ...c, receivedBy: e.target.value }))} className="w-full h-9 px-3 text-sm border border-slate-300 rounded-lg" />
+              </div>
+              <div className="md:col-span-2">
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 block">Return Notes</label>
+                <textarea value={returnForm.returnNotes} onChange={(e) => setReturnForm((c) => ({ ...c, returnNotes: e.target.value }))} rows={3} className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg" />
+              </div>
+              <div className="md:col-span-2 flex justify-end gap-2 mt-2">
+                <button type="button" onClick={() => { setShowReturnModal(false); setEditingCycle(null); }} className="h-9 px-4 text-sm font-semibold text-slate-600 bg-slate-100 rounded-lg">Cancel</button>
+                <button type="submit" className="h-9 px-4 text-sm font-semibold text-white bg-slate-800 rounded-lg">Save Return</button>
               </div>
             </form>
           </div>

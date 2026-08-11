@@ -41,6 +41,19 @@ export interface HardDiskCompletionDetails {
   attachment?: string;
 }
 
+export interface HardDiskAccountabilityRecord {
+  completedBy: string;
+  completedAt: string;
+  notes: string;
+}
+
+export interface HardDiskReturnDetails {
+  returnDate: string;
+  returnedBy: string;
+  receivedBy: string;
+  returnNotes?: string;
+}
+
 export interface HardDiskHistoryRecord {
   id: string;
   month: string;
@@ -62,6 +75,9 @@ export interface HardDiskCycle {
   dispatchDate: string;
   expectedReturnDate: string;
   actualReturnDate?: string;
+  accountabilityStatus?: "Pending" | "Completed";
+  accountability?: HardDiskAccountabilityRecord | null;
+  returnDetails?: HardDiskReturnDetails | null;
   currentHolder: string;
   status: HardDiskCycleStatus;
   priority: "Low" | "Medium" | "High" | "Critical";

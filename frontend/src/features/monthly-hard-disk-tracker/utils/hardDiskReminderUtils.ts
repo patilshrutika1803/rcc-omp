@@ -67,7 +67,7 @@ export function buildCycleReminders(cycle: HardDiskCycle): HardDiskReminderEntry
     {
       id: makeId("reminder"),
       cycleId: cycle.id,
-      type: "Return Reminder",
+      type: "Accountability Reminder",
       dueDate: calculateHardDiskReminderDate(cycle.expectedReturnDate, cycle.reminderBeforeReturn) || cycle.expectedReturnDate,
       status: "Pending",
     },
@@ -153,7 +153,7 @@ export function generateLifecycleNotification(cycle: HardDiskCycle, status: stri
     "Dispatched from RCC": "Hard Disk Dispatched",
     "Received at RSB": "Hard Disk Received at RSB",
     "Monthly Backup Completed": "Monthly Backup Completed",
-    "Return Pending": "Return Reminder",
+    "Return Pending": "Accountability Reminder",
     "Returned from RSB": "Hard Disk Returned",
     "Received at RCC": "Hard Disk Received at RCC",
     "Cycle Completed": "Cycle Completed",
