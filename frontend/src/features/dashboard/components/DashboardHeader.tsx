@@ -9,9 +9,10 @@ import { Archive, Wrench, CheckSquare, FileText, Upload } from "lucide-react";
 interface DashboardHeaderProps {
   greetingName: string;
   dateTimeText: string;
+  onAddNote?: () => void;
 }
 
-export default function DashboardHeader({ greetingName, dateTimeText }: DashboardHeaderProps) {
+export default function DashboardHeader({ greetingName, dateTimeText, onAddNote }: DashboardHeaderProps) {
   return (
     <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 mb-6">
       <div>
@@ -28,7 +29,11 @@ export default function DashboardHeader({ greetingName, dateTimeText }: Dashboar
         <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 shadow-sm transition-all">
           <CheckSquare size={14} className="text-slate-400" /> Add QA
         </button>
-        <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 shadow-sm transition-all">
+        <button
+          type="button"
+          onClick={onAddNote}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 shadow-sm transition-all"
+        >
           <FileText size={14} className="text-slate-400" /> Add Note
         </button>
         <div className="w-px h-5 bg-slate-300 mx-1 hidden sm:block" />

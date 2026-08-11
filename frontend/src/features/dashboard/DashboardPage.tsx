@@ -6,7 +6,9 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import React, { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router";
 import { useAuth } from "../../auth/AuthProvider";
+import * as noteService from "../notes/services/noteService";
 
 import DashboardHeader from "./components/DashboardHeader";
 import DashboardKPICards from "./components/DashboardKPICards";
@@ -43,6 +45,7 @@ export default function DashboardPage() {
     timeZone: "Asia/Kolkata",
   });
 
+  const navigate = useNavigate();
   const { user } = useAuth();
   const greetingName = user?.name?.split(" ")?.[0] ?? "Team";
   const dateTimeText = `${weekday}, ${day} ${month} ${year} · ${timeIST} IST`;
@@ -57,6 +60,18 @@ export default function DashboardPage() {
     notes,
     upcomingDeadlines,
   } = useDashboard();
+
+  async function handleDashboardAddNote() {
+    await noteService.createNote({
+      title: "Untitled",
+      content: "",
+      folder: "My Notes",
+      tags: [],
+      pinned: false,
+      shared: false,
+    });
+    navigate("/notes");
+  }
 
   // Map service-provided KPI label/value pairs onto their icon/color visual config.
   const kpisWithVisuals = useMemo(() => {
@@ -80,7 +95,7 @@ export default function DashboardPage() {
 
   return (
     <div className="w-full max-w-[1600px] mx-auto animate-in fade-in duration-300">
-      <DashboardHeader greetingName={greetingName} dateTimeText={dateTimeText} />
+<DashboardHeader greetingName={greetingName} dateTimeText={dateTimeText} onAddNote={handleDashboardAddNote} />
 
       <DashboardKPICards kpis={kpisWithVisuals} />
 

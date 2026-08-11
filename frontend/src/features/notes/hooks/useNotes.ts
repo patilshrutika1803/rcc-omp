@@ -70,7 +70,7 @@ export function useNotes() {
     });
   }
 
-  function buildBlankNote(): Omit<Note, "id"> {
+  function buildBlankNote(): Partial<Note> {
     const now = new Date();
     return {
       title: "Untitled",

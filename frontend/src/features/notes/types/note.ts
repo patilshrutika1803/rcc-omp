@@ -14,6 +14,7 @@ export type NoteTag = string;
 
 export interface Note {
   id: string;
+  userId: string;
   title: string;
   content: string;
   folder: string;
