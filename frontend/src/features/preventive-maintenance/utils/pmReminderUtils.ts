@@ -106,13 +106,16 @@ export function generateReminderNotification(pm: PMRecord): Notification {
 
   return {
     id: `pm-reminder-${pm.id}-${Date.now()}`,
+    notificationKey: `pm-reminder-${pm.id}-${pm.reminderDate || pm.nextDue}`,
     title: "Preventive Maintenance Reminder",
     message,
     category: "maintenance",
     severity,
     time: timeStr,
+    createdAt: new Date().toISOString(),
     read: false,
     archived: false,
+    route: "/preventive-maintenance",
     pmId: pm.id,
     machineId: pm.machineId,
     machineName: pm.machine,

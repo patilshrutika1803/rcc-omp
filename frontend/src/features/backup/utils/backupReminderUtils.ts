@@ -68,13 +68,16 @@ export function generateBackupReminderNotification(job: BackupJob): Notification
 
   return {
     id: `backup-reminder-${job.id}-${Date.now()}`,
+    notificationKey: `backup-reminder-${job.id}-${job.reminderDate || job.nextDueDate || job.dueDate}`,
     title: "Backup Activity Reminder",
     message,
     category: "backup",
     severity,
     time: timeStr,
+    createdAt: new Date().toISOString(),
     read: false,
     archived: false,
+    route: "/backup-activities",
     backupJobId: job.id,
     backupJobName: job.name,
     department: job.department,

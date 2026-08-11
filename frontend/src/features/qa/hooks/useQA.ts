@@ -79,13 +79,16 @@ export function useQA() {
 
     return {
       id: `qa-reminder-${activity.id}-${Date.now()}`,
+      notificationKey: `qa-reminder-${activity.id}-${activity.reminderDate || dueDate}`,
       title: "QA Activity Reminder",
       message: `QMS Number:\n${activity.qmsNumber}\n\nQMS Type:\n${activity.qmsType}\n\nDepartment:\n${activity.department}\n\nDue Date:\n${dueDate}\n\nPriority:\n${activity.priority}\n\nReminder:\n${activity.reminder}\n\nNotification Type:\nQA Activity`,
       category: "qa",
       severity,
       time: timeStr,
+      createdAt: new Date().toISOString(),
       read: false,
       archived: false,
+      route: "/qa-activities",
       department: activity.department,
       assignedUser: activity.assignedUser,
       dueDate,

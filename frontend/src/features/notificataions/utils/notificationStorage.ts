@@ -40,6 +40,15 @@ function emitNotificationChange(): void {
 }
 
 export function addNotification(notification: Notification): void {
+  if (notification.notificationKey) {
+    const notifications = loadNotifications();
+    if (notifications.some((n) => n.notificationKey === notification.notificationKey)) return;
+    notifications.unshift(notification);
+    saveNotifications(notifications);
+    emitNotificationChange();
+    return;
+  }
+
   const notifications = loadNotifications();
   notifications.unshift(notification);
   saveNotifications(notifications);
@@ -69,7 +78,7 @@ export function updateNotification(
  */
 export function removePMNotifications(pmId: string): void {
   const notifications = loadNotifications().filter(
-    (n) => !(n.pmId === pmId && !n.read)
+    (n) => n.pmId !== pmId
   );
   saveNotifications(notifications);
   emitNotificationChange();
@@ -77,7 +86,7 @@ export function removePMNotifications(pmId: string): void {
 
 export function removeBackupNotifications(backupJobId: string): void {
   const notifications = loadNotifications().filter(
-    (n) => !(n.backupJobId === backupJobId && !n.read)
+    (n) => n.backupJobId !== backupJobId
   );
   saveNotifications(notifications);
   emitNotificationChange();
@@ -85,7 +94,7 @@ export function removeBackupNotifications(backupJobId: string): void {
 
 export function removeQANotifications(qaActivityId: string): void {
   const notifications = loadNotifications().filter(
-    (n) => !(n.qaActivityId === qaActivityId && !n.read)
+    (n) => n.qaActivityId !== qaActivityId
   );
   saveNotifications(notifications);
   emitNotificationChange();
@@ -120,9 +129,7 @@ export function removeSystemInspectionNotifications(systemInspectionId: string):
 
 export function hasNotificationForSystemInspection(systemInspectionId: string): boolean {
   const notifications = loadNotifications();
-  return notifications.some(
-    (n) => n.systemInspectionId === systemInspectionId && !n.read
-  );
+  return notifications.some((n) => n.systemInspectionId === systemInspectionId);
 }
 
 export function removeInspectionNotifications(inspectionScheduleId: string): void {

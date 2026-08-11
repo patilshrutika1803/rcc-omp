@@ -1,3 +1,4 @@
+import type { MouseEvent } from "react";
 import { Archive, Trash2 } from "lucide-react";
 import type { Notification } from "../types/notification";
 import { getSeverityBadgeClasses, getSeverityBorderColor } from "../utils/notificationHelpers";
@@ -11,15 +12,17 @@ interface NotificationCardProps {
   onPmClick?: (id: string, pmId?: string) => void;
   onBackupClick?: (id: string, backupJobId?: string) => void;
   onQaClick?: (id: string, qaActivityId?: string) => void;
+  onNotificationClick?: (id: string, route?: string) => void;
 }
 
-export function NotificationCard({ n, onRead, onDelete, onArchive, onPmClick, onBackupClick, onQaClick }: NotificationCardProps) {
+export function NotificationCard({ n, onRead, onDelete, onArchive, onPmClick, onBackupClick, onQaClick, onNotificationClick }: NotificationCardProps) {
   const borderColor = getSeverityBorderColor(n.severity);
   const badgeClasses = getSeverityBadgeClasses(n.severity);
 
   const isPMReminder = n.notificationType === "Preventive Maintenance" && !!n.pmId;
   const isBackupReminder = n.notificationType === "Backup Activity" && !!n.backupJobId;
   const isQAReminder = n.notificationType === "QA Activity" && !!n.qaActivityId;
+  const hasRoute = !!n.route;
 
   const handleCardClick = () => {
     if (isPMReminder && onPmClick) {
@@ -28,6 +31,8 @@ export function NotificationCard({ n, onRead, onDelete, onArchive, onPmClick, on
       onBackupClick(n.id, n.backupJobId);
     } else if (isQAReminder && onQaClick) {
       onQaClick(n.id, n.qaActivityId);
+    } else if (hasRoute && onNotificationClick) {
+      onNotificationClick(n.id, n.route);
     } else if (!n.read) {
       onRead();
     }
@@ -42,7 +47,7 @@ export function NotificationCard({ n, onRead, onDelete, onArchive, onPmClick, on
     <div
       className={`bg-white border border-slate-200 border-l-4 ${borderColor} rounded-xl shadow-sm p-4 hover:shadow-md transition-all ${
         !n.read ? "bg-blue-50/20" : ""
-      } ${isPMReminder || isBackupReminder || isQAReminder ? "cursor-pointer" : ""}`}
+      } ${(isPMReminder || isBackupReminder || isQAReminder || hasRoute) ? "cursor-pointer" : ""}`}
       onClick={handleCardClick}
     >
       <div className="flex items-start gap-3">
@@ -61,6 +66,11 @@ export function NotificationCard({ n, onRead, onDelete, onArchive, onPmClick, on
               {n.severity}
             </span>
             <span className="text-[10px] text-slate-400 capitalize">{n.category}</span>
+            {hasRoute && !(isPMReminder || isBackupReminder || isQAReminder) && (
+              <span className="text-[10px] font-semibold text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded">
+                Click to view
+              </span>
+            )}
             {isPMReminder && (
               <span className="text-[10px] font-semibold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">
                 Click to view PM

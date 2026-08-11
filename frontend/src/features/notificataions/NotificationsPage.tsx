@@ -31,6 +31,7 @@ export default function NotificationsPage() {
     handlePMNotificationClick,
     handleBackupNotificationClick,
     handleQANotificationClick,
+    handleNotificationClick,
   } = useNotifications();
 
   return (
@@ -57,6 +58,7 @@ export default function NotificationsPage() {
                   onPmClick={handlePMNotificationClick}
                   onBackupClick={handleBackupNotificationClick}
                   onQaClick={handleQANotificationClick}
+                  onNotificationClick={handleNotificationClick}
                 />
               ))}
             </div>

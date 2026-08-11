@@ -58,6 +58,12 @@ export function useNotifications() {
     await notificationService.archiveNotification(id);
   }, []);
 
+  const handleNotificationClick = useCallback(async (id: string, route?: string) => {
+    if (!route) return;
+    await markRead(id);
+    navigate(route);
+  }, [navigate, markRead]);
+
   /**
    * Handle clicking on a PM reminder notification.
    * Navigates to Preventive Maintenance page and auto-opens the PM drawer.
@@ -119,5 +125,6 @@ export function useNotifications() {
     handlePMNotificationClick,
     handleBackupNotificationClick,
     handleQANotificationClick,
+    handleNotificationClick,
   };
 }

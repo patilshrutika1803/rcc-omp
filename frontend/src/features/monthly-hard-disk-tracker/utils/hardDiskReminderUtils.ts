@@ -113,13 +113,16 @@ export function addHardDiskNotification(cycle: HardDiskCycle, notificationType: 
 
   const notification: Notification = {
     id: makeId("hdd-notification"),
+    notificationKey: `hdd-${cycle.id}-${notificationType}`,
     title,
     message,
-    category: "system",
+    category: "monthly-hard-disk",
     severity: getNotificationSeverity(cycle.priority),
     time,
+    createdAt: new Date().toISOString(),
     read: false,
     archived: false,
+    route: "/monthly-hard-disk-tracker",
     hardDiskCycleId: cycle.id,
     hardDiskReminderType: notificationType,
     department: cycle.responsiblePerson,

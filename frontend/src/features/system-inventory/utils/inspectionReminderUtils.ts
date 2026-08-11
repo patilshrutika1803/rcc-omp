@@ -56,13 +56,16 @@ export function generateInspectionReminderNotification(inspection: SystemInspect
 
   return {
     id: `inspection-reminder-${inspection.id}-${Date.now()}`,
+    notificationKey: `inspection-reminder-${inspection.id}-${inspection.reminderDate || inspection.nextDueDate}`,
     title,
     message,
-    category: "system",
+    category: "inspection",
     severity,
     time: timeStr,
+    createdAt: new Date().toISOString(),
     read: false,
     archived: false,
+    route: "/inspection-schedule",
     systemInspectionId: inspection.id,
     systemId: inspection.systemId,
     systemName: inspection.systemName,

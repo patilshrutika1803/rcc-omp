@@ -3,9 +3,11 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 export type NotificationCategory =
+  | "inspection"
   | "maintenance"
   | "qa"
   | "backup"
+  | "monthly-hard-disk"
   | "machine"
   | "department"
   | "system";
@@ -19,6 +21,9 @@ export interface Notification {
   category: NotificationCategory;
   severity: NotificationSeverity;
   time: string;
+  createdAt?: string;
+  route?: string;
+  notificationKey?: string;
   read: boolean;
   archived: boolean;
 
