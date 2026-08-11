@@ -69,7 +69,6 @@ export default function App() {
           <Route path="/qa-activities" element={<ProtectedRoute><AppShell /></ProtectedRoute>} />
           <Route path="/system-inventory" element={<ProtectedRoute><AppShell /></ProtectedRoute>} />
           <Route path="/inspection-schedule" element={<ProtectedRoute><AppShell /></ProtectedRoute>} />
-          <Route path="/departments" element={<ProtectedRoute><AppShell /></ProtectedRoute>} />
           <Route path="/notifications" element={<ProtectedRoute><AppShell /></ProtectedRoute>} />
           <Route path="/notes" element={<ProtectedRoute><AppShell /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><AppShell /></ProtectedRoute>} />

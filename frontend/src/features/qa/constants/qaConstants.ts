@@ -6,23 +6,13 @@ import {
   CalendarClock,
 } from "lucide-react";
 import type { QAActivity, QAActivityFormState, QAColumnsState, QAFiltersState } from "../types/qa";
+import { DEPARTMENT_OPTIONS } from "../../../constants/departments";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // QA MODULE — CONSTANTS
 // ─────────────────────────────────────────────────────────────────────────────
 
-export const DEPARTMENTS = [
-  "Quality Assurance",
-  "Quality Control",
-  "Production",
-  "Warehouse",
-  "Engineering",
-  "Purchase and Accounts",
-  "HR Admin",
-  "Environment Health and Safety",
-  "IT",
-  "Microbiology",
-];
+export const DEPARTMENTS = [...DEPARTMENT_OPTIONS];
 
 export const REMINDER_OPTIONS = [
   "Same Day",

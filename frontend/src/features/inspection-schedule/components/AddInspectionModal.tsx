@@ -15,6 +15,7 @@ import {
   INSPECTION_TARGET_TYPES,
 } from "../constants/inspectionScheduleConstants";
 import { getFrequencyForCategory } from "../utils/inspectionScheduleUtils";
+import { DEPARTMENT_OPTIONS } from "../../../constants/departments";
 
 interface AddInspectionModalProps {
   onClose: () => void;
@@ -30,7 +31,7 @@ export function AddInspectionModal({ onClose, onSave, systems, editRecord }: Add
   const [machineName, setMachineName] = useState(editRecord?.machineName ?? "");
   const [machineType, setMachineType] = useState(editRecord?.machineType ?? "");
   const [location, setLocation] = useState(editRecord?.location ?? "");
-  const [department, setDepartment] = useState(editRecord?.department ?? "");
+  const [department, setDepartment] = useState(editRecord?.department ?? DEPARTMENT_OPTIONS[0]);
   const [assignedUser, setAssignedUser] = useState(editRecord?.assignedUser ?? "");
   const [description, setDescription] = useState(editRecord?.description ?? "");
   const [frequency, setFrequency] = useState<InspectionFrequency>(editRecord?.frequency ?? "Monthly");
@@ -177,7 +178,11 @@ export function AddInspectionModal({ onClose, onSave, systems, editRecord }: Add
               </div>
               <div>
                 <label className="block text-[11px] font-semibold text-slate-500 mb-2 uppercase tracking-[0.2em]">Department</label>
-                <input type="text" value={department} onChange={(e) => setDepartment(e.target.value)} className="w-full h-11 px-3 border border-slate-300 rounded-xl text-sm focus:border-blue-500 focus:ring-blue-500/20" />
+                <select value={department} onChange={(e) => setDepartment(e.target.value)} className="w-full h-11 px-3 border border-slate-300 rounded-xl text-sm focus:border-blue-500 focus:ring-blue-500/20">
+                  {DEPARTMENT_OPTIONS.map((option: string) => (
+                    <option key={option} value={option}>{option}</option>
+                  ))}
+                </select>
               </div>
             </div>
           )}

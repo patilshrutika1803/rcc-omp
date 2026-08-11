@@ -50,7 +50,7 @@ export function GlobalSearchOverlay({
     Employee: User,
     Note: FileText,
   };
-  const typeNav: Record<string, string> = { Machine: "machines", Department: "departments", Employee: "departments", Note: "notes", PM: "maintenance" };
+  const typeNav: Record<string, string> = { Machine: "machines", Department: "machines", Employee: "admin", Note: "notes", PM: "maintenance" };
 
   const grouped = results.reduce((acc, item) => { (acc[item.type] = acc[item.type] || []).push(item); return acc; }, {} as Record<string, typeof results>);
 
@@ -80,7 +80,7 @@ export function GlobalSearchOverlay({
               ))}
               <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 mt-4">Quick Navigate</div>
               <div className="grid grid-cols-3 gap-2">
-                {[["Machines","machines",Server],["Notes","notes",BookOpen],["Departments","departments",Layers],["Notifications","notifications",Bell],["Settings","settings",Settings]].map(([label, nav, Icon]: any) => ( 
+                {[["Machines","machines",Server],["Notes","notes",BookOpen],["Notifications","notifications",Bell],["Settings","settings",Settings]].map(([label, nav, Icon]: any) => ( 
                   <button
                     key={label}
                     onClick={() => {

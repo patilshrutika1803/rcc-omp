@@ -16,9 +16,30 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-import DepartmentPage from "../../features/departments/DepartmentPage";
-
-const EMPLOYEES: any[] = (DepartmentPage as any)?.EMPLOYEES ?? [];
+const EMPLOYEES: any[] = [
+  {
+    id: "emp-001",
+    name: "Nikhil Sakat",
+    email: "nikhil.sakat@rcc.com",
+    role: "IT Head",
+    department: "IT Department",
+    employeeId: "EMP-001",
+    status: "Active",
+    initials: "NS",
+    avatarColor: "bg-blue-500 text-white",
+  },
+  {
+    id: "emp-002",
+    name: "Megha Jadhav",
+    email: "megha.jadhav@rcc.com",
+    role: "IT Executive",
+    department: "Engineering",
+    employeeId: "EMP-002",
+    status: "Active",
+    initials: "MJ",
+    avatarColor: "bg-emerald-500 text-white",
+  },
+];
 import { StatusChip } from "../../shared/components/EnterpriseUI";
 
 export function RoleManagementContent() {
@@ -32,7 +53,7 @@ export function RoleManagementContent() {
     e.employeeId.toLowerCase().includes(search.toLowerCase())
   );
 
-  const MODULES = ["Dashboard","Machines","Preventive Maintenance","QA","Backup","Departments","Reports","Notifications","Notes","Settings","Admin"];
+  const MODULES = ["Dashboard","Machines","Preventive Maintenance","QA","Backup","Reports","Notifications","Notes","Settings","Admin"];
 
   const ROLE_PERMS: Record<string, string[]> = {
     "IT Head": [
@@ -41,7 +62,6 @@ export function RoleManagementContent() {
       "Preventive Maintenance",
       "QA",
       "Backup",
-      "Departments",
       "Reports",
       "Notifications",
       "Notes",
@@ -60,7 +80,6 @@ export function RoleManagementContent() {
       "Preventive Maintenance",
       "QA",
       "Backup",
-      "Departments",
       "Reports",
       "Notifications",
       "Notes",
@@ -75,7 +94,6 @@ export function RoleManagementContent() {
       "Preventive Maintenance",
       "QA",
       "Backup",
-      "Departments",
       "Reports",
       "Notifications",
       "Notes",

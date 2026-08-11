@@ -2,17 +2,9 @@
 // System Inventory — Constants
 // ─────────────────────────────────────────────────────────────────────────────
 
-export const DEPARTMENTS = [
-  "Quality Assurance",
-  "Quality Control",
-  "Production",
-  "Warehouse",
-  "Engineering",
-  "Purchase & Accounts",
-  "HR & Admin",
-  "Environmental Health & Safety",
-  "IT Department",
-];
+import { DEPARTMENT_OPTIONS } from "../../../constants/departments";
+
+export const DEPARTMENTS = [...DEPARTMENT_OPTIONS];
 
 // Only these three system types are supported.
 export const SYSTEM_TYPES = ["Laptop", "Desktop PC", "Printer"] as const;

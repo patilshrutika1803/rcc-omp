@@ -19,6 +19,7 @@ import { useAuth } from "../../auth/AuthProvider";
 import { SettingsToggle, SettingsInput } from "../../features/settings/pages/SettingsPage";
 import { StatusChip } from "../../shared/components/EnterpriseUI";
 import { formatDate } from "../../shared/utils/dateHelpers";
+import { DEPARTMENT_OPTIONS } from "../../constants/departments";
 
 export function UserProfileContent() {
   const { user, updateUser } = useAuth();
@@ -107,7 +108,15 @@ export function UserProfileContent() {
             {isEditing ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <SettingsInput label="Full Name" value={form.name} onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))} />
-                <SettingsInput label="Department" value={form.department} onChange={(e) => setForm((prev) => ({ ...prev, department: e.target.value }))} />
+                <div>
+                  <label className="text-xs font-semibold text-slate-600 block mb-1">Department</label>
+                  <select value={form.department} onChange={(e) => setForm((prev) => ({ ...prev, department: e.target.value }))} className="w-full h-9 px-3 text-sm border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-blue-500/20 bg-white">
+                    <option value="">Select Department</option>
+                    {DEPARTMENT_OPTIONS.map((option) => (
+                      <option key={option} value={option}>{option}</option>
+                    ))}
+                  </select>
+                </div>
                 <SettingsInput label="Phone" value={form.phone} onChange={(e) => setForm((prev) => ({ ...prev, phone: e.target.value }))} />
                 <SettingsInput label="Role" value={user?.role ?? "Portal User"} readOnly />
                 <SettingsInput label="Employee ID" value={user?.employeeId ?? "EMP-001"} readOnly />

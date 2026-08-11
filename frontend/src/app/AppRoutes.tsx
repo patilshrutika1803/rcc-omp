@@ -13,7 +13,6 @@ import BackupActivitiesPage from "../features/backup/BackupActivitiesPage";
 import MonthlyHardDiskTrackerPage from "../features/monthly-hard-disk-tracker/MonthlyHardDiskTrackerPage";
 import QAPage from "../features/qa/QAPage";
 import SystemInventoryPage from "../features/system-inventory/SystemInventoryPage";
-import DepartmentPage from "../features/departments/DepartmentPage";
 
 import NotificationsPage from "../features/notificataions/pages/NotificationsPage";
 import NotesPage from "../features/notes/pages/NotesPage";
@@ -24,7 +23,7 @@ import { UserProfileContent } from "../modules/profile/UserProfileContent";
 import { RoleManagementContent } from "../modules/admin/RoleManagementContent";
 import { HelpCenterContent } from "../modules/help/HelpCenterContent";
 
-export const KNOWN_NAV_IDS = ["dashboard","maintenance","backup","monthly-hard-disk","qa","machines","inspection-schedule","departments","notifications","notes","settings","profile","admin","help"];
+export const KNOWN_NAV_IDS = ["dashboard","maintenance","backup","monthly-hard-disk","qa","machines","inspection-schedule","notifications","notes","settings","profile","admin","help"];
 
 export const NAV_TO_ROUTE: Record<string, string> = {
   dashboard: "/dashboard",
@@ -34,7 +33,6 @@ export const NAV_TO_ROUTE: Record<string, string> = {
   qa: "/qa-activities",
   machines: "/system-inventory",
   "inspection-schedule": "/inspection-schedule",
-  departments: "/departments",
   notifications: "/notifications",
   notes: "/notes",
   settings: "/settings",
@@ -68,7 +66,6 @@ export function AppRoutes({ activeNav }: { activeNav: string }) {
       {activeNav === "qa" && <QAPage />}
       {activeNav === "machines" && <SystemInventoryPage />}
       {activeNav === "inspection-schedule" && <InspectionSchedulePage />}
-      {activeNav === "departments" && <DepartmentPage />}
       {activeNav === "notifications" && <NotificationsPage />}
       {activeNav === "notes" && <NotesPage />}
       {activeNav === "settings" && <SettingsPage />}
