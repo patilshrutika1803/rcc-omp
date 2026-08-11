@@ -32,6 +32,7 @@ export interface Notification {
   assignedUser?: string;
   dueDate?: string;
   notificationType?: string;
+  inspectionScheduleId?: string;
   backupJobId?: string;
   backupJobName?: string;
   hardDiskCycleId?: string;

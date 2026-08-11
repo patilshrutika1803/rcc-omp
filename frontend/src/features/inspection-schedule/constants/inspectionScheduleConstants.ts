@@ -1,0 +1,10 @@
+export const INSPECTION_TARGET_TYPES = ["System", "Machine"] as const;
+export const INSPECTION_CATEGORIES = ["GxP", "Non-GxP", "Machine"] as const;
+export const INSPECTION_FREQUENCIES = ["Weekly", "Monthly", "Every 3 Months", "Every 6 Months", "Yearly"] as const;
+export const INSPECTION_PRIORITIES = ["Low", "Medium", "High", "Critical"] as const;
+export const INSPECTION_REMINDERS = ["Same Day", "1 Day Before", "2 Days Before", "3 Days Before", "7 Days Before"] as const;
+export const INSPECTION_STATUS = ["Upcoming", "Due Today", "Overdue", "Completed"] as const;
+export const FILTER_TARGET_OPTIONS = ["All", ...INSPECTION_TARGET_TYPES] as const;
+export const FILTER_CATEGORY_OPTIONS = ["All", ...INSPECTION_CATEGORIES] as const;
+export const FILTER_STATUS_OPTIONS = ["All", ...INSPECTION_STATUS] as const;
+export const FILTER_PRIORITY_OPTIONS = ["All", ...INSPECTION_PRIORITIES] as const;

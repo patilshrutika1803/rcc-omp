@@ -125,6 +125,21 @@ export function hasNotificationForSystemInspection(systemInspectionId: string): 
   );
 }
 
+export function removeInspectionNotifications(inspectionScheduleId: string): void {
+  const notifications = loadNotifications().filter(
+    (n) => !(n.inspectionScheduleId === inspectionScheduleId && !n.read)
+  );
+  saveNotifications(notifications);
+  emitNotificationChange();
+}
+
+export function hasNotificationForInspection(inspectionScheduleId: string): boolean {
+  const notifications = loadNotifications();
+  return notifications.some(
+    (n) => n.inspectionScheduleId === inspectionScheduleId && !n.read
+  );
+}
+
 /**
  * Get the count of unread notifications.
  */

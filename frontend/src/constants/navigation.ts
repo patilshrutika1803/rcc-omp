@@ -10,6 +10,7 @@ import {
   FileText,
   Settings,
   HardDrive,
+  ClipboardList,
 } from "lucide-react";
 
 export type NavItem = {
@@ -26,6 +27,7 @@ export const NAV_ITEMS: NavItem[] = [
   { id: "monthly-hard-disk", icon: HardDrive, label: "Monthly Hard Disk Tracker" },
   { id: "qa", icon: CheckSquare, label: "QA Activities" },
   { id: "machines", icon: Server, label: "System Inventory" },
+  { id: "inspection-schedule", icon: ClipboardList, label: "Inspection Schedule" },
   { id: "departments", icon: BarChart2, label: "Departments" },
 
   { id: "notifications", icon: Bell, label: "Notifications" },
