@@ -227,7 +227,7 @@ export default function SettingsPage() {
             <div className="max-w-xl">
               <h2 className="text-sm font-bold text-slate-900 mb-3">Roles & Permissions</h2>
               <p className="text-sm text-slate-600 mb-4">Manage roles, permissions and assignments from the User & Role Management page.</p>
-              <button onClick={() => (window.location.href = '/admin')} className="flex items-center gap-2 h-9 px-4 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"><ShieldCheck size={13} /> Open User & Role Management</button>
+              <button onClick={() => (window.location.href = '/user-management')} className="flex items-center gap-2 h-9 px-4 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"><ShieldCheck size={13} /> Open User & Role Management</button>
             </div>
           )}
 
