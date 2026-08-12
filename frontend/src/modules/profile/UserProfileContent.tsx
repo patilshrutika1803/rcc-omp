@@ -18,7 +18,6 @@ import { normalizeDepartment } from "../../auth/auth";
 
 import { SettingsInput } from "../../features/settings/pages/SettingsPage";
 import { StatusChip } from "../../shared/components/EnterpriseUI";
-import { formatDate } from "../../shared/utils/dateHelpers";
 import { DEPARTMENT_OPTIONS } from "../../constants/departments";
 
 export function UserProfileContent() {
@@ -32,7 +31,7 @@ export function UserProfileContent() {
     .slice(0, 2)
     .toUpperCase();
 
-  const [tab, setTab] = useState<"overview" | "security" | "tasks">("overview");
+  const [tab, setTab] = useState<"overview" | "security">("overview");
   const [isEditing, setIsEditing] = useState(false);
   const [form, setForm] = useState({
     name: user?.name ?? "",
@@ -48,9 +47,7 @@ export function UserProfileContent() {
     });
   }, [user?.name, user?.department, user?.phone]);
 
-  const TABS = [{ id: "overview" as const, label: "Overview" }, { id: "security" as const, label: "Security" }, { id: "tasks" as const, label: "My Tasks" }];
-
-  const myTasks: { machine: string; frequency: string; nextDue: string; status: string }[] = [];
+  const TABS = [{ id: "overview" as const, label: "Overview" }, { id: "security" as const, label: "Security" }];
 
   const handleSave = () => {
     const nextName = form.name.trim();
@@ -160,30 +157,7 @@ export function UserProfileContent() {
         </div>
       )}
 
-      {tab === "tasks" && (
-        <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-          <div className="px-5 py-4 border-b border-slate-100"><h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Assigned to {displayName} · {myTasks.length} tasks</h3></div>
-          {myTasks.length === 0 ? (
-            <div className="py-12 text-center text-xs text-slate-400">No tasks assigned</div>
-          ) : (
-            <table className="w-full text-left">
-              <thead className="bg-slate-50 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-100">
-                <tr><th className="px-5 py-3">Machine</th><th className="px-4 py-3">Type</th><th className="px-4 py-3">Due</th><th className="px-4 py-3">Status</th></tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {myTasks.map((t, i) => (
-                  <tr key={i} className="hover:bg-slate-50">
-                    <td className="px-5 py-3.5 text-xs font-bold text-slate-900">{t.machine}</td>
-                    <td className="px-4 py-3.5 text-xs text-slate-600">{t.frequency}</td>
-                    <td className="px-4 py-3.5 text-xs text-slate-600">{formatDate(t.nextDue)}</td>
-                    <td className="px-4 py-3.5 text-xs text-slate-600">{t.status}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-      )}
+      {/* "My Tasks" tab removed per project decision - no assigned-task UI remains */}
 
     </div>
   );

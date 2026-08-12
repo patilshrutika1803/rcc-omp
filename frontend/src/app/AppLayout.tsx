@@ -6,7 +6,7 @@
 // sidebar collapse, mobile drawer, profile menu, search overlay).
 // ─────────────────────────────────────────────────────────────────────────────
 
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router";
 
 import { loadPMState } from "../features/preventive-maintenance/utils/pmStorage";
@@ -24,6 +24,7 @@ import { useGlobalSearch } from "../hooks/useGlobalSearch";
 
 import { AppRoutes, getNavIdFromPath, getRouteFromNavId } from "./AppRoutes";
 import NotFoundPage from "../pages/NotFoundPage";
+import { GENERAL_SETTINGS_EVENT, syncGlobalGeneralSettings } from "../features/settings/utils/generalSettings";
 
 export function AppLayout({ onLogout }: { onLogout: () => void }) {
   const location = useLocation();
@@ -33,6 +34,17 @@ export function AppLayout({ onLogout }: { onLogout: () => void }) {
   const { isSearchOpen, setIsSearchOpen } = useGlobalSearch();
 
   const activeNav = getNavIdFromPath(location.pathname);
+
+  useEffect(() => {
+    syncGlobalGeneralSettings();
+
+    const syncSettings = () => {
+      syncGlobalGeneralSettings();
+    };
+
+    window.addEventListener(GENERAL_SETTINGS_EVENT, syncSettings);
+    return () => window.removeEventListener(GENERAL_SETTINGS_EVENT, syncSettings);
+  }, []);
 
   // PM records are persisted locally; global search should index them.
   // This is computed once per app-load.

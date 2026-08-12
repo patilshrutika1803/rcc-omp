@@ -4,9 +4,19 @@
 // Behavior, styling and Tailwind classes are unchanged from the original.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { LayoutDashboard, Settings, Bell, Shield, ChevronRight, Check, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
+import {
+  loadGeneralSettings,
+  saveGeneralSettings,
+  type GeneralSettings,
+  DEFAULT_DATE_FORMAT,
+  DEFAULT_LANGUAGE,
+  DEFAULT_ORGANIZATION,
+  DEFAULT_PORTAL_NAME,
+  DEFAULT_TIMEZONE,
+} from "../utils/generalSettings";
 
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -41,8 +51,23 @@ export function SettingsInput({ label, value, type = "text", placeholder, onChan
 
 export default function SettingsPage() {
   const [section, setSection] = useState<SettingsSection>("general");
+  const [generalSettings, setGeneralSettings] = useState<GeneralSettings>(() => loadGeneralSettings());
   const [toggles, setToggles] = useState({ emailNotifs: true, pushNotifs: true, smsAlerts: false, maintenanceAlerts: true, backupAlerts: true, qaAlerts: true, criticalOnly: false, darkMode: false, compactView: false, autoRefresh: true, sessionTimeout: true });
   const toggle = (key: keyof typeof toggles) => setToggles(t => ({ ...t, [key]: !t[key] }));
+
+  useEffect(() => {
+    setGeneralSettings(loadGeneralSettings());
+  }, []);
+
+  const handleGeneralChange = <K extends keyof GeneralSettings>(key: K, value: GeneralSettings[K]) => {
+    setGeneralSettings((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleSaveGeneralSettings = () => {
+    const next = saveGeneralSettings(generalSettings);
+    setGeneralSettings(next);
+    toast.success("Settings saved");
+  };
 
   const sidebar: { id: SettingsSection; label: string; icon: React.ComponentType<{ size?: number; className?: string }>; group?: string }[] = [
     { id: "general", label: "General", icon: Settings, group: "PORTAL" },
@@ -84,24 +109,62 @@ export default function SettingsPage() {
           {section === "general" && (
             <div className="max-w-xl">
               <h2 className="text-sm font-bold text-slate-900 mb-5">General Settings</h2>
-              <SettingsInput label="Portal Name" value="RCC OMP – Operations Management Portal" />
-              <SettingsInput label="Organization" value="Rajaram Consumer Care Pvt. Ltd." />
-              <SettingsInput label="Default Language" value="English (India)" />
+              <SettingsInput
+                label="Portal Name"
+                value={generalSettings.portalName || DEFAULT_PORTAL_NAME}
+                onChange={(event) => handleGeneralChange("portalName", event.target.value)}
+              />
+              <SettingsInput
+                label="Organization"
+                value={generalSettings.organization || DEFAULT_ORGANIZATION}
+                onChange={(event) => handleGeneralChange("organization", event.target.value)}
+              />
+              <div className="mb-4">
+                <label className="text-xs font-semibold text-slate-700 mb-1.5 block">Default Language</label>
+                <select
+                  value={generalSettings.language || DEFAULT_LANGUAGE}
+                  onChange={(event) => handleGeneralChange("language", event.target.value)}
+                  className="w-full h-9 px-3 text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500 text-slate-700"
+                >
+                  <option value="English (India)">English (India)</option>
+                </select>
+              </div>
               <div className="mb-4">
                 <label className="text-xs font-semibold text-slate-700 mb-1.5 block">Date Format</label>
-                <select className="w-full h-9 px-3 text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500 text-slate-700">
-                  <option>DD/MM/YYYY</option><option>MM/DD/YYYY</option><option>YYYY-MM-DD</option>
+                <select
+                  value={generalSettings.dateFormat || DEFAULT_DATE_FORMAT}
+                  onChange={(event) => handleGeneralChange("dateFormat", event.target.value)}
+                  className="w-full h-9 px-3 text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500 text-slate-700"
+                >
+                  <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+                  <option value="MM/DD/YYYY">MM/DD/YYYY</option>
+                  <option value="YYYY-MM-DD">YYYY-MM-DD</option>
                 </select>
               </div>
               <div className="mb-4">
                 <label className="text-xs font-semibold text-slate-700 mb-1.5 block">Timezone</label>
-                <select className="w-full h-9 px-3 text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500 text-slate-700">
-                  <option>Asia/Kolkata (IST, UTC+5:30)</option><option>UTC</option>
+                <select
+                  value={generalSettings.timezone || DEFAULT_TIMEZONE}
+                  onChange={(event) => handleGeneralChange("timezone", event.target.value)}
+                  className="w-full h-9 px-3 text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500 text-slate-700"
+                >
+                  <option value="Asia/Kolkata">Asia/Kolkata (IST, UTC+5:30)</option>
+                  <option value="UTC">UTC</option>
                 </select>
               </div>
-              <SettingsToggle label="Auto-refresh dashboards" desc="Refresh data every 60 seconds" value={toggles.autoRefresh} onChange={() => toggle("autoRefresh")} />
-              <SettingsToggle label="Compact view" desc="Reduce card and table padding" value={toggles.compactView} onChange={() => toggle("compactView")} />
-              <button onClick={() => toast.success("Settings saved!")} className="mt-4 flex items-center gap-2 h-9 px-5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"><Check size={13} /> Save Changes</button>
+              <SettingsToggle
+                label="Auto-refresh dashboards"
+                desc="Refresh data every 60 seconds"
+                value={generalSettings.autoRefresh}
+                onChange={() => handleGeneralChange("autoRefresh", !generalSettings.autoRefresh)}
+              />
+              <SettingsToggle
+                label="Compact view"
+                desc="Reduce card and table padding"
+                value={generalSettings.compactView}
+                onChange={() => handleGeneralChange("compactView", !generalSettings.compactView)}
+              />
+              <button onClick={handleSaveGeneralSettings} className="mt-4 flex items-center gap-2 h-9 px-5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"><Check size={13} /> Save Changes</button>
             </div>
           )}
 

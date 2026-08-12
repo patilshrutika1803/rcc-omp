@@ -15,6 +15,7 @@ import {
   getWorkQueue,
   getNotes,
 } from "../services/dashboardService";
+import { GENERAL_SETTINGS_EVENT, loadGeneralSettings } from "../../settings/utils/generalSettings";
 import type {
   DashboardStats,
   WeeklyOverviewPoint,
@@ -52,8 +53,28 @@ export function useDashboard(): UseDashboardResult {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<unknown>(null);
   const [reloadToken, setReloadToken] = useState(0);
+  const [autoRefreshEnabled, setAutoRefreshEnabled] = useState<boolean>(() => loadGeneralSettings().autoRefresh);
 
   const refetch = useCallback(() => setReloadToken((t) => t + 1), []);
+
+  useEffect(() => {
+    const syncAutoRefresh = () => {
+      setAutoRefreshEnabled(loadGeneralSettings().autoRefresh);
+    };
+
+    window.addEventListener(GENERAL_SETTINGS_EVENT, syncAutoRefresh);
+    return () => window.removeEventListener(GENERAL_SETTINGS_EVENT, syncAutoRefresh);
+  }, []);
+
+  useEffect(() => {
+    if (!autoRefreshEnabled) return;
+
+    const intervalId = window.setInterval(() => {
+      setReloadToken((t) => t + 1);
+    }, 60000);
+
+    return () => window.clearInterval(intervalId);
+  }, [autoRefreshEnabled]);
 
   useEffect(() => {
     let cancelled = false;
