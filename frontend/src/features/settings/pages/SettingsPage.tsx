@@ -5,7 +5,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import React, { useState } from "react";
-import { LayoutDashboard, Settings, Bell, Shield, ChevronRight, Lock, Check, ShieldCheck } from "lucide-react";
+import { LayoutDashboard, Settings, Bell, Shield, ChevronRight, Check, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 
 
@@ -41,7 +41,7 @@ export function SettingsInput({ label, value, type = "text", placeholder, onChan
 
 export default function SettingsPage() {
   const [section, setSection] = useState<SettingsSection>("general");
-  const [toggles, setToggles] = useState({ emailNotifs: true, pushNotifs: true, smsAlerts: false, maintenanceAlerts: true, backupAlerts: true, qaAlerts: true, criticalOnly: false, darkMode: false, compactView: false, autoRefresh: true, twoFactor: false, sessionTimeout: true });
+  const [toggles, setToggles] = useState({ emailNotifs: true, pushNotifs: true, smsAlerts: false, maintenanceAlerts: true, backupAlerts: true, qaAlerts: true, criticalOnly: false, darkMode: false, compactView: false, autoRefresh: true, sessionTimeout: true });
   const toggle = (key: keyof typeof toggles) => setToggles(t => ({ ...t, [key]: !t[key] }));
 
   const sidebar: { id: SettingsSection; label: string; icon: React.ComponentType<{ size?: number; className?: string }>; group?: string }[] = [
@@ -123,36 +123,15 @@ export default function SettingsPage() {
 
           {section === "security" && (
             <div className="max-w-xl">
-              <h2 className="text-sm font-bold text-slate-900 mb-5">Security Settings</h2>
-              <div className="mb-5">
-                <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">Change Password</h3>
-                <SettingsInput label="Current Password" value="" type="password" placeholder="••••••••" />
-                <SettingsInput label="New Password" value="" type="password" placeholder="••••••••" />
-                <SettingsInput label="Confirm New Password" value="" type="password" placeholder="••••••••" />
-                <button onClick={() => toast.success("Password updated!")} className="flex items-center gap-2 h-9 px-5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"><Lock size={13} /> Update Password</button>
+              <h2 className="text-sm font-bold text-slate-900 mb-5">Security</h2>
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Password</div>
+                <p className="text-sm text-slate-600 leading-6">
+                  Password management will be handled through the secure authentication system when Supabase authentication is connected.
+                </p>
               </div>
-              <div className="border-t border-slate-100 pt-5">
-                <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">Authentication</h3>
-                <SettingsToggle label="Two-Factor Authentication" desc="Require OTP on login (TOTP app)" value={toggles.twoFactor} onChange={() => toggle("twoFactor")} />
-                <SettingsToggle label="Session Timeout (30 min)" desc="Auto-logout after inactivity" value={toggles.sessionTimeout} onChange={() => toggle("sessionTimeout")} />
-              </div>
-              <div className="border-t border-slate-100 pt-5 mt-5">
-                <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">Active Sessions</h3>
-                {activeSessions.length > 0 ? (
-                  activeSessions.map((s, i) => (
-                    <div key={i} className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-xl mb-2">
-                      <div>
-                        <div className="text-xs font-semibold text-slate-900 flex items-center gap-2">{s.device}{s.current && <span className="text-[9px] font-bold bg-emerald-100 text-emerald-700 px-1.5 rounded">Current</span>}</div>
-                        <div className="text-[11px] text-slate-400 mt-0.5">{s.ip} · {s.time}</div>
-                      </div>
-                      {!s.current && <button onClick={() => toast.error("Session terminated.")} className="text-[11px] font-semibold text-red-600 hover:text-red-800 transition-colors">Revoke</button>}
-                    </div>
-                  ))
-                ) : (
-                  <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-sm text-slate-500">
-                    No active sessions are currently recorded. Session activity will appear here once users sign in.
-                  </div>
-                )}
+              <div className="mt-5 rounded-xl border border-dashed border-slate-300 bg-white p-4 text-sm text-slate-600">
+                Two-factor authentication and password changes are intentionally not implemented in this frontend-only phase.
               </div>
             </div>
           )}

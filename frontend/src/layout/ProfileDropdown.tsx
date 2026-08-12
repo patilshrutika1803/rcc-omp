@@ -5,7 +5,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import React from "react";
-import { ChevronDown, User, Settings, HelpCircle, ShieldCheck, LogOut } from "lucide-react";
+import { ChevronDown, User, HelpCircle, ShieldCheck, LogOut } from "lucide-react";
 import { useAuth } from "../auth/AuthProvider";
 
 export function ProfileDropdown({
@@ -51,7 +51,6 @@ export function ProfileDropdown({
             </div>
             <div className="py-1">
               <button onClick={() => { setActiveNav("profile"); onClose(); }} className="w-full px-4 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-slate-900 flex items-center gap-2"><User size={14} /> My Profile</button>
-              <button onClick={() => { setActiveNav("settings"); onClose(); }} className="w-full px-4 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-slate-900 flex items-center gap-2"><Settings size={14} /> Preferences</button>
               <button onClick={() => { setActiveNav("help"); onClose(); }} className="w-full px-4 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-slate-900 flex items-center gap-2"><HelpCircle size={14} /> Help Center</button>
               <button onClick={() => { setActiveNav("admin"); onClose(); }} className="w-full px-4 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-slate-900 flex items-center gap-2"><ShieldCheck size={14} /> User Management</button>
             </div>

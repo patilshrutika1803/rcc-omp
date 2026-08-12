@@ -12,13 +12,9 @@ import * as noteService from "../notes/services/noteService";
 
 import DashboardHeader from "./components/DashboardHeader";
 import DashboardKPICards from "./components/DashboardKPICards";
-import WeeklyOverviewChart from "./components/WeeklyOverviewChart";
-import TaskDistributionChart from "./components/TaskDistributionChart";
-import MachineHealthAndProgress from "./components/MachineHealthAndProgress";
 import WorkQueueTable from "./components/WorkQueueTable";
 import CalendarCard from "./components/CalendarCard";
 import UpcomingDeadlinesCard from "./components/UpcomingDeadlinesCard";
-import RecentActivityCard from "./components/RecentActivityCard";
 import PersonalNotesCard from "./components/PersonalNotesCard";
 
 import { useDashboard } from "./hooks/useDashboard";
@@ -52,11 +48,8 @@ export default function DashboardPage() {
 
   const {
     stats,
-    weeklyOverview,
-    distribution,
     workQueue,
     calendarEvents,
-    activities,
     notes,
     upcomingDeadlines,
   } = useDashboard();
@@ -82,11 +75,6 @@ export default function DashboardPage() {
     }));
   }, [stats]);
 
-  const distributionTotal = useMemo(
-    () => distribution.reduce((sum, d) => sum + d.value, 0),
-    [distribution]
-  );
-
   // Calendar display values derived from the live clock (not sample data).
   const monthLabel = now.toLocaleDateString("en-IN", { month: "long", year: "numeric", timeZone: "Asia/Kolkata" });
   const todayDate = Number(now.toLocaleDateString("en-IN", { day: "2-digit", timeZone: "Asia/Kolkata" }));
@@ -99,18 +87,8 @@ export default function DashboardPage() {
 
       <DashboardKPICards kpis={kpisWithVisuals} />
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <div className="xl:col-span-2 space-y-6 flex flex-col">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <WeeklyOverviewChart data={weeklyOverview} />
-            <TaskDistributionChart data={distribution} total={distributionTotal} />
-          </div>
-
-          <MachineHealthAndProgress
-            machineHealth={stats?.machineHealth ?? { healthy: 0, warning: 0, critical: 0, alertTitle: "", alertDesc: "" }}
-            departmentProgress={stats?.departmentProgress ?? []}
-          />
-
+      <div className="grid grid-cols-1 xl:grid-cols-[1.5fr_0.9fr] gap-6">
+        <div className="space-y-6 flex flex-col">
           <WorkQueueTable tasks={workQueue} />
         </div>
 
@@ -123,9 +101,7 @@ export default function DashboardPage() {
             events={calendarEvents}
           />
 
-          <UpcomingDeadlinesCard deadlines={upcomingDeadlines} />
-
-          <RecentActivityCard activities={activities} />
+          {upcomingDeadlines.length > 0 && <UpcomingDeadlinesCard deadlines={upcomingDeadlines} />}
 
           <PersonalNotesCard content={notes?.content ?? ""} />
         </div>

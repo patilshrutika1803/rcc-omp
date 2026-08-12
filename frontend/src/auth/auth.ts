@@ -1,3 +1,5 @@
+import { DEPARTMENT_OPTIONS } from "../constants/departments";
+
 export type AuthUser = {
   email: string;
   name?: string;
@@ -7,6 +9,17 @@ export type AuthUser = {
   phone?: string;
   profileImageUrl?: string;
 };
+
+export function normalizeDepartment(value?: string | null): string {
+  const candidate = value?.trim();
+  if (!candidate) return DEPARTMENT_OPTIONS[0];
+
+  const match = DEPARTMENT_OPTIONS.find(
+    (option) => option.toLowerCase() === candidate.toLowerCase()
+  );
+
+  return match ?? DEPARTMENT_OPTIONS[0];
+}
 
 export type AuthState = {
   user: AuthUser;
@@ -53,7 +66,7 @@ export async function loginWithPassword(email: string, _password: string): Promi
       email: normalizedEmail,
       name: user.name,
       role: user.role ?? "Portal User",
-      department: user.department ?? "IT",
+      department: normalizeDepartment(user.department),
       employeeId: user.employeeId ?? "EMP-001",
       phone: user.phone ?? "+91 00000 00000",
       profileImageUrl: user.profileImageUrl,

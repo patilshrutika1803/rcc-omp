@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import type { AuthState, AuthUser } from "./auth";
-import { getAuthState, loginWithPassword, logout as logoutStorage, setAuthState } from "./auth";
+import { getAuthState, loginWithPassword, logout as logoutStorage, setAuthState, normalizeDepartment } from "./auth";
 
 type AuthContextValue = {
   user: AuthUser | null;
@@ -50,6 +50,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           user: {
             ...auth.user,
             ...updates,
+            department: normalizeDepartment(updates.department ?? auth.user.department),
           },
         };
         setAuthState(nextState);
