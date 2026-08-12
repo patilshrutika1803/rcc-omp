@@ -17,6 +17,12 @@ import {
   DEFAULT_PORTAL_NAME,
   DEFAULT_TIMEZONE,
 } from "../utils/generalSettings";
+import {
+  loadNotificationSettings,
+  saveNotificationSettings,
+  type NotificationSettings,
+  NOTIFICATION_SETTINGS_DEFAULTS,
+} from "../utils/notificationSettings";
 
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -52,11 +58,18 @@ export function SettingsInput({ label, value, type = "text", placeholder, onChan
 export default function SettingsPage() {
   const [section, setSection] = useState<SettingsSection>("general");
   const [generalSettings, setGeneralSettings] = useState<GeneralSettings>(() => loadGeneralSettings());
-  const [toggles, setToggles] = useState({ emailNotifs: true, pushNotifs: true, smsAlerts: false, maintenanceAlerts: true, backupAlerts: true, qaAlerts: true, criticalOnly: false, darkMode: false, compactView: false, autoRefresh: true, sessionTimeout: true });
-  const toggle = (key: keyof typeof toggles) => setToggles(t => ({ ...t, [key]: !t[key] }));
+  const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>(() => loadNotificationSettings());
+
+  const handleNotificationToggle = <K extends keyof NotificationSettings>(key: K) => {
+    setNotificationSettings((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  };
 
   useEffect(() => {
     setGeneralSettings(loadGeneralSettings());
+    setNotificationSettings(loadNotificationSettings());
   }, []);
 
   const handleGeneralChange = <K extends keyof GeneralSettings>(key: K, value: GeneralSettings[K]) => {
@@ -67,6 +80,17 @@ export default function SettingsPage() {
     const next = saveGeneralSettings(generalSettings);
     setGeneralSettings(next);
     toast.success("Settings saved");
+  };
+
+  const handleSaveNotificationSettings = () => {
+    const next = saveNotificationSettings(notificationSettings);
+    if (!next) {
+      toast.error("Unable to save notification preferences.");
+      return;
+    }
+
+    setNotificationSettings(next);
+    toast.success("Notification preferences saved");
   };
 
   const sidebar: { id: SettingsSection; label: string; icon: React.ComponentType<{ size?: number; className?: string }>; group?: string }[] = [
@@ -172,15 +196,15 @@ export default function SettingsPage() {
             <div className="max-w-xl">
               <h2 className="text-sm font-bold text-slate-900 mb-5">Notification Preferences</h2>
               <div className="space-y-0">
-                <SettingsToggle label="Email Notifications" desc="Receive important alerts via email" value={toggles.emailNotifs} onChange={() => toggle("emailNotifs")} />
-                <SettingsToggle label="In-app Push Notifications" desc="Browser push notifications" value={toggles.pushNotifs} onChange={() => toggle("pushNotifs")} />
-                <SettingsToggle label="SMS Alerts" desc="Critical alerts via SMS" value={toggles.smsAlerts} onChange={() => toggle("smsAlerts")} />
-                <SettingsToggle label="Maintenance Alerts" desc="PM due, overdue, completed" value={toggles.maintenanceAlerts} onChange={() => toggle("maintenanceAlerts")} />
-                <SettingsToggle label="Backup Alerts" desc="Backup success and failure" value={toggles.backupAlerts} onChange={() => toggle("backupAlerts")} />
-                <SettingsToggle label="QA Alerts" desc="Inspection results and audits" value={toggles.qaAlerts} onChange={() => toggle("qaAlerts")} />
-                <SettingsToggle label="Critical Only Mode" desc="Only receive critical severity alerts" value={toggles.criticalOnly} onChange={() => toggle("criticalOnly")} />
+                <SettingsToggle label="Email Notifications" desc="Receive important alerts via email" value={notificationSettings.emailNotifications} onChange={() => handleNotificationToggle("emailNotifications")} />
+                <SettingsToggle label="In-app Push Notifications" desc="Surface existing in-app notification behavior" value={notificationSettings.inAppPushNotifications} onChange={() => handleNotificationToggle("inAppPushNotifications")} />
+                <SettingsToggle label="SMS Alerts" desc="Critical alerts via SMS" value={notificationSettings.smsAlerts} onChange={() => handleNotificationToggle("smsAlerts")} />
+                <SettingsToggle label="Maintenance Alerts" desc="PM due, overdue, completed" value={notificationSettings.maintenanceAlerts} onChange={() => handleNotificationToggle("maintenanceAlerts")} />
+                <SettingsToggle label="Backup Alerts" desc="Backup success and failure" value={notificationSettings.backupAlerts} onChange={() => handleNotificationToggle("backupAlerts")} />
+                <SettingsToggle label="QA Alerts" desc="Inspection results and audits" value={notificationSettings.qaAlerts} onChange={() => handleNotificationToggle("qaAlerts")} />
+                <SettingsToggle label="Critical Only Mode" desc="Only receive critical severity alerts" value={notificationSettings.criticalOnlyMode} onChange={() => handleNotificationToggle("criticalOnlyMode")} />
               </div>
-              <button onClick={() => toast.success("Preferences saved!")} className="mt-4 flex items-center gap-2 h-9 px-5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"><Check size={13} /> Save</button>
+              <button onClick={handleSaveNotificationSettings} className="mt-4 flex items-center gap-2 h-9 px-5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"><Check size={13} /> Save</button>
             </div>
           )}
 
