@@ -61,6 +61,16 @@ export function usePreventiveMaintenance() {
 
 
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      const shouldOpen = window.sessionStorage.getItem("rcc_omp_pm_open_add");
+      if (shouldOpen === "1") {
+        setShowAddModal(true);
+        window.sessionStorage.removeItem("rcc_omp_pm_open_add");
+      }
+    }
+  }, []);
+
+  useEffect(() => {
     let cancelled = false;
 
     async function loadPMData() {

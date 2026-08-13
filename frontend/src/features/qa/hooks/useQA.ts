@@ -34,6 +34,16 @@ export function useQA() {
   }, [activities]);
 
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      const shouldOpen = window.sessionStorage.getItem("rcc_omp_qa_open_add");
+      if (shouldOpen === "1") {
+        setShowNew(true);
+        window.sessionStorage.removeItem("rcc_omp_qa_open_add");
+      }
+    }
+  }, []);
+
+  useEffect(() => {
     if (!isHydrated) return;
     const requestedId = window.sessionStorage.getItem("rcc_omp_qa_selected_id");
     if (requestedId) {

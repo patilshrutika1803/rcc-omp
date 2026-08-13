@@ -55,6 +55,16 @@ export function useBackupActivities() {
   }, [jobs, completedJobs]);
 
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      const shouldOpen = window.sessionStorage.getItem("rcc_omp_backup_open_add");
+      if (shouldOpen === "1") {
+        setShowAddModal(true);
+        window.sessionStorage.removeItem("rcc_omp_backup_open_add");
+      }
+    }
+  }, []);
+
+  useEffect(() => {
     if (!isHydrated) return;
     const requestedId = window.sessionStorage.getItem("rcc_omp_backup_selected_id");
     if (requestedId) {

@@ -12,14 +12,19 @@ interface WorkQueueTableProps {
 }
 
 export default function WorkQueueTable({ tasks }: WorkQueueTableProps) {
+  if (!tasks.length) {
+    return (
+      <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-5">
+        <h3 className="text-sm font-bold text-slate-900 mb-3">Today's Work Queue</h3>
+        <p className="text-sm text-slate-500">No activities for today.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
       <div className="flex justify-between items-center p-5 border-b border-slate-100">
         <h3 className="text-sm font-bold text-slate-900">Today's Work Queue</h3>
-        <div className="flex gap-2">
-          <button className="text-xs font-semibold text-slate-500 bg-slate-50 border border-slate-200 px-2 py-1 rounded hover:bg-slate-100">Filter</button>
-          <button className="text-xs font-semibold text-slate-500 bg-slate-50 border border-slate-200 px-2 py-1 rounded hover:bg-slate-100">View All</button>
-        </div>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-left text-sm whitespace-nowrap">

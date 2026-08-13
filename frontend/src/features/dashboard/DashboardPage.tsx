@@ -5,20 +5,18 @@
 // Behavior, styling and Tailwind classes are unchanged from the original.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { useAuth } from "../../auth/AuthProvider";
 import * as noteService from "../notes/services/noteService";
 
 import DashboardHeader from "./components/DashboardHeader";
-import DashboardKPICards from "./components/DashboardKPICards";
 import WorkQueueTable from "./components/WorkQueueTable";
 import CalendarCard from "./components/CalendarCard";
 import UpcomingDeadlinesCard from "./components/UpcomingDeadlinesCard";
 import PersonalNotesCard from "./components/PersonalNotesCard";
 
 import { useDashboard } from "./hooks/useDashboard";
-import { KPI_VISUAL_CONFIG } from "./constants/dashboardConfig";
 
 export default function DashboardPage() {
   const [now, setNow] = useState(() => new Date());
@@ -44,18 +42,29 @@ export default function DashboardPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const greetingName = user?.name?.split(" ")?.[0] ?? "Team";
+  const hour = now.getHours();
+  const greetingText = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
   const dateTimeText = `${weekday}, ${day} ${month} ${year} · ${timeIST} IST`;
 
-  const {
-    stats,
-    workQueue,
-    calendarEvents,
-    notes,
-    upcomingDeadlines,
-  } = useDashboard();
+  const { workQueue, calendarEvents, notes, upcomingDeadlines } = useDashboard();
+
+  function handleAddBackup() {
+    window.sessionStorage.setItem("rcc_omp_backup_open_add", "1");
+    navigate("/backup-activities");
+  }
+
+  function handleAddPM() {
+    window.sessionStorage.setItem("rcc_omp_pm_open_add", "1");
+    navigate("/preventive-maintenance");
+  }
+
+  function handleAddQA() {
+    window.sessionStorage.setItem("rcc_omp_qa_open_add", "1");
+    navigate("/qa-activities");
+  }
 
   async function handleDashboardAddNote() {
-    await noteService.createNote({
+    const created = await noteService.createNote({
       title: "Untitled",
       content: "",
       folder: "My Notes",
@@ -63,19 +72,21 @@ export default function DashboardPage() {
       pinned: false,
       shared: false,
     });
+
+    if (created) {
+      navigate("/notes");
+      return;
+    }
+
     navigate("/notes");
   }
 
-  // Map service-provided KPI label/value pairs onto their icon/color visual config.
-  const kpisWithVisuals = useMemo(() => {
-    const kpis = stats?.kpis ?? [];
-    return kpis.map((kpi) => ({
-      ...kpi,
-      ...KPI_VISUAL_CONFIG[kpi.label],
-    }));
-  }, [stats]);
+  function handleExportReport() {
+    if (typeof window !== "undefined") {
+      window.print();
+    }
+  }
 
-  // Calendar display values derived from the live clock (not sample data).
   const monthLabel = now.toLocaleDateString("en-IN", { month: "long", year: "numeric", timeZone: "Asia/Kolkata" });
   const todayDate = Number(now.toLocaleDateString("en-IN", { day: "2-digit", timeZone: "Asia/Kolkata" }));
   const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
@@ -83,9 +94,16 @@ export default function DashboardPage() {
 
   return (
     <div className="w-full max-w-[1600px] mx-auto animate-in fade-in duration-300">
-<DashboardHeader greetingName={greetingName} dateTimeText={dateTimeText} onAddNote={handleDashboardAddNote} />
-
-      <DashboardKPICards kpis={kpisWithVisuals} />
+      <DashboardHeader
+        greetingName={greetingName}
+        greetingText={greetingText}
+        dateTimeText={dateTimeText}
+        onAddBackup={handleAddBackup}
+        onAddPM={handleAddPM}
+        onAddQA={handleAddQA}
+        onAddNote={handleDashboardAddNote}
+        onExportReport={handleExportReport}
+      />
 
       <div className="grid grid-cols-1 xl:grid-cols-[1.5fr_0.9fr] gap-6">
         <div className="space-y-6 flex flex-col">
