@@ -3,7 +3,7 @@
 // Extracted verbatim from App.tsx — behavior, markup and styling unchanged.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   LayoutDashboard,
   ChevronRight,
@@ -15,19 +15,37 @@ import {
   Eye,
   Download,
   CheckCircle2,
+  Search,
+  ArrowLeft,
+  AlertCircle,
+  Lightbulb,
+  CheckSquare,
 } from "lucide-react";
 import { toast } from "sonner";
 
 import { StatusChip } from "../../shared/components/EnterpriseUI";
+import {
+  DOCUMENTATION_ENTRIES,
+  DocumentationEntry,
+  searchDocumentation,
+} from "./documentationData";
 
 export function HelpCenterContent() {
   const [tab, setTab] = useState<"faq" | "docs" | "tickets" | "status" | "releases">("faq");
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [selectedDoc, setSelectedDoc] = useState<DocumentationEntry | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  
+  const filteredDocs = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return DOCUMENTATION_ENTRIES;
+    }
+    return searchDocumentation(searchQuery);
+  }, [searchQuery]);
+
   const TABS = [{ id: "faq" as const, label: "FAQ" }, { id: "docs" as const, label: "Documentation" }, { id: "tickets" as const, label: "Support Tickets" }, { id: "status" as const, label: "System Status" }, { id: "releases" as const, label: "Release Notes" }];
 
   const FAQS: { q: string; a: string }[] = [];
-
-  const DOCS: { title: string; category: string; pages: number; updated: string }[] = [];
 
   const TICKETS: { id: string; subject: string; priority: string; status: string; created: string; assignee: string }[] = [];
 
@@ -80,25 +98,182 @@ export function HelpCenterContent() {
       )}
 
       {tab === "docs" && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {DOCS.length > 0 ? DOCS.map((doc, i) => (
-            <div key={i} className="bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md hover:border-blue-200 transition-all p-4 flex items-center gap-4">
-              <div className="w-10 h-10 bg-blue-50 border border-blue-100 rounded-xl flex items-center justify-center shrink-0"><BookOpen size={18} className="text-blue-600" /></div>
-              <div className="flex-1 min-w-0">
-                <div className="text-xs font-bold text-slate-900 mb-1">{doc.title}</div>
-                <div className="flex items-center gap-2 text-[10px] text-slate-400">
-                  <span className="bg-slate-100 px-1.5 py-0.5 rounded font-medium text-slate-600">{doc.category}</span>
-                  <span>{doc.pages} pages</span><span>·</span><span>Updated {doc.updated}</span>
+        <div>
+          {selectedDoc ? (
+            // Detail View
+            <div className="max-w-4xl">
+              <button
+                onClick={() => {
+                  setSelectedDoc(null);
+                  setSearchQuery("");
+                }}
+                className="flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700 mb-6 transition-colors"
+              >
+                <ArrowLeft size={14} />
+                Back to Documentation
+              </button>
+
+              <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+                {/* Header */}
+                <div className="bg-gradient-to-r from-blue-50 to-blue-100 border-b border-blue-200 px-6 py-5">
+                  <div className="flex items-start gap-3">
+                    <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center shadow-sm">
+                      <BookOpen size={22} className="text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <h2 className="text-xl font-bold text-slate-900">{selectedDoc.title}</h2>
+                      <div className="flex items-center gap-2 mt-2">
+                        <span className="text-xs font-semibold bg-white px-2 py-1 rounded border border-slate-200 text-slate-600">
+                          {selectedDoc.category}
+                        </span>
+                        <span className="text-xs text-slate-500">Updated {selectedDoc.updated}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Content */}
+                <div className="px-6 py-5 space-y-6">
+                  {/* Description */}
+                  <section>
+                    <h3 className="text-sm font-bold text-slate-900 mb-2">Overview</h3>
+                    <p className="text-sm text-slate-600 leading-relaxed">{selectedDoc.shortDescription}</p>
+                  </section>
+
+                  {/* Purpose */}
+                  <section>
+                    <h3 className="text-sm font-bold text-slate-900 mb-2">Purpose</h3>
+                    <p className="text-sm text-slate-600 leading-relaxed">{selectedDoc.purpose}</p>
+                  </section>
+
+                  {/* How to Use */}
+                  <section>
+                    <h3 className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
+                      <CheckSquare size={16} className="text-blue-600" />
+                      How to Use
+                    </h3>
+                    <ol className="space-y-2">
+                      {selectedDoc.howToUse.map((step, idx) => (
+                        <li key={idx} className="flex gap-3 text-sm text-slate-600">
+                          <span className="font-semibold text-blue-600 shrink-0 w-5">{idx + 1}.</span>
+                          <span>{step}</span>
+                        </li>
+                      ))}
+                    </ol>
+                  </section>
+
+                  {/* Important Actions */}
+                  <section>
+                    <h3 className="text-sm font-bold text-slate-900 mb-3">Important Actions & Buttons</h3>
+                    <div className="grid gap-2">
+                      {selectedDoc.importantActions.map((action, idx) => (
+                        <div
+                          key={idx}
+                          className="flex gap-3 p-3 bg-blue-50 border border-blue-100 rounded-lg text-sm text-slate-700"
+                        >
+                          <span className="font-semibold text-blue-600 shrink-0">→</span>
+                          <span>{action}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+
+                  {/* Tips */}
+                  <section>
+                    <h3 className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
+                      <Lightbulb size={16} className="text-amber-500" />
+                      Useful Tips
+                    </h3>
+                    <ul className="space-y-2">
+                      {selectedDoc.tips.map((tip, idx) => (
+                        <li key={idx} className="flex gap-3 text-sm text-slate-600">
+                          <span className="text-amber-500 shrink-0 mt-0.5">◆</span>
+                          <span>{tip}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+
+                  {/* Common Mistakes */}
+                  <section>
+                    <h3 className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
+                      <AlertCircle size={16} className="text-red-500" />
+                      Common Mistakes & Things to Remember
+                    </h3>
+                    <ul className="space-y-2">
+                      {selectedDoc.commonMistakes.map((mistake, idx) => (
+                        <li key={idx} className="flex gap-3 text-sm text-slate-600">
+                          <span className="text-red-500 shrink-0 mt-0.5">✕</span>
+                          <span>{mistake}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
                 </div>
               </div>
-              <div className="flex gap-1.5 shrink-0">
-                <button className="h-7 px-2.5 text-[11px] font-semibold text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"><Eye size={11} /></button>
-                <button onClick={() => toast.success("Downloading...")} className="h-7 px-2.5 text-[11px] font-semibold text-blue-600 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"><Download size={11} /></button>
-              </div>
             </div>
-          )) : (
-            <div className="col-span-1 lg:col-span-2 rounded-xl border border-dashed border-slate-300 bg-slate-50 px-6 py-8 text-sm text-slate-500 text-center">
-              No documentation entries are available yet. Upload or link documentation once available.
+          ) : (
+            // List View
+            <div>
+              {/* Search Bar */}
+              <div className="mb-6 flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-4 py-2.5 shadow-sm focus-within:border-blue-300 focus-within:ring-1 focus-within:ring-blue-200 transition-all">
+                <Search size={16} className="text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Search documentation by module name or topic..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="flex-1 outline-none text-sm text-slate-700 placeholder:text-slate-400"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="text-xs font-semibold text-slate-500 hover:text-slate-700 px-2 py-1 rounded hover:bg-slate-100"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+
+              {/* Documentation Cards */}
+              {filteredDocs.length > 0 ? (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {filteredDocs.map((doc) => (
+                    <div
+                      key={doc.id}
+                      onClick={() => setSelectedDoc(doc)}
+                      className="bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md hover:border-blue-300 hover:bg-blue-50/30 transition-all p-5 cursor-pointer group"
+                    >
+                      <div className="flex items-start gap-4">
+                        <div className="w-11 h-11 bg-blue-50 border border-blue-100 rounded-xl flex items-center justify-center shrink-0 group-hover:bg-blue-100 transition-colors">
+                          <BookOpen size={18} className="text-blue-600" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-bold text-slate-900 mb-1 group-hover:text-blue-600 transition-colors">
+                            {doc.title}
+                          </div>
+                          <p className="text-xs text-slate-600 line-clamp-2 mb-2.5">
+                            {doc.shortDescription}
+                          </p>
+                          <div className="flex items-center gap-2 text-[11px] text-slate-400">
+                            <span className="bg-slate-100 px-1.5 py-0.5 rounded font-medium text-slate-600">
+                              {doc.category}
+                            </span>
+                            <span>·</span>
+                            <span>Updated {doc.updated}</span>
+                          </div>
+                        </div>
+                        <ChevronRight size={16} className="text-slate-300 group-hover:text-blue-600 shrink-0 transition-colors mt-1" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-6 py-8 text-sm text-slate-500 text-center">
+                  <Search size={20} className="mx-auto mb-2 text-slate-400" />
+                  No documentation found matching "{searchQuery}". Try different keywords.
+                </div>
+              )}
             </div>
           )}
         </div>
