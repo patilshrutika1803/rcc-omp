@@ -81,12 +81,6 @@ export default function DashboardPage() {
     navigate("/notes");
   }
 
-  function handleExportReport() {
-    if (typeof window !== "undefined") {
-      window.print();
-    }
-  }
-
   const monthLabel = now.toLocaleDateString("en-IN", { month: "long", year: "numeric", timeZone: "Asia/Kolkata" });
   const todayDate = Number(now.toLocaleDateString("en-IN", { day: "2-digit", timeZone: "Asia/Kolkata" }));
   const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
@@ -102,7 +96,6 @@ export default function DashboardPage() {
         onAddPM={handleAddPM}
         onAddQA={handleAddQA}
         onAddNote={handleDashboardAddNote}
-        onExportReport={handleExportReport}
       />
 
       <div className="grid grid-cols-1 xl:grid-cols-[1.5fr_0.9fr] gap-6">
