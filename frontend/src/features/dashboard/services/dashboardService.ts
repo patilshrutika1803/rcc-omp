@@ -14,10 +14,6 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type {
-  DashboardStats,
-  WeeklyOverviewPoint,
-  TaskDistributionSlice,
-  RecentActivityItem,
   UpcomingDeadline,
   CalendarEvent,
   WorkQueueTask,
@@ -58,32 +54,6 @@ function toMonthKey(date: Date): string {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   return `${year}-${month}`;
-}
-
-export async function getDashboardStats(): Promise<DashboardStats> {
-  return {
-    kpis: [],
-    machineHealth: {
-      healthy: 0,
-      warning: 0,
-      critical: 0,
-      alertTitle: "",
-      alertDesc: "",
-    },
-    departmentProgress: [],
-  };
-}
-
-export async function getWeeklyOverview(): Promise<WeeklyOverviewPoint[]> {
-  return [];
-}
-
-export async function getTaskDistribution(): Promise<TaskDistributionSlice[]> {
-  return [];
-}
-
-export async function getRecentActivity(): Promise<RecentActivityItem[]> {
-  return [];
 }
 
 export async function getUpcomingDeadlines(): Promise<UpcomingDeadline[]> {

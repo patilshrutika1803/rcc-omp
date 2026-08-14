@@ -6,10 +6,6 @@
 
 import { useState, useEffect, useCallback } from "react";
 import {
-  getDashboardStats,
-  getWeeklyOverview,
-  getTaskDistribution,
-  getRecentActivity,
   getUpcomingDeadlines,
   getCalendarEvents,
   getWorkQueue,
@@ -17,10 +13,6 @@ import {
 } from "../services/dashboardService";
 import { GENERAL_SETTINGS_EVENT, loadGeneralSettings } from "../../settings/utils/generalSettings";
 import type {
-  DashboardStats,
-  WeeklyOverviewPoint,
-  TaskDistributionSlice,
-  RecentActivityItem,
   UpcomingDeadline,
   CalendarEvent,
   WorkQueueTask,
@@ -28,12 +20,8 @@ import type {
 } from "../types/dashboard";
 
 interface UseDashboardResult {
-  stats: DashboardStats | null;
-  weeklyOverview: WeeklyOverviewPoint[];
-  distribution: TaskDistributionSlice[];
   workQueue: WorkQueueTask[];
   calendarEvents: CalendarEvent[];
-  activities: RecentActivityItem[];
   notes: PersonalNotes | null;
   upcomingDeadlines: UpcomingDeadline[];
   isLoading: boolean;
@@ -42,12 +30,8 @@ interface UseDashboardResult {
 }
 
 export function useDashboard(): UseDashboardResult {
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [weeklyOverview, setWeeklyOverview] = useState<WeeklyOverviewPoint[]>([]);
-  const [distribution, setDistribution] = useState<TaskDistributionSlice[]>([]);
   const [workQueue, setWorkQueue] = useState<WorkQueueTask[]>([]);
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
-  const [activities, setActivities] = useState<RecentActivityItem[]>([]);
   const [notes, setNotes] = useState<PersonalNotes | null>(null);
   const [upcomingDeadlines, setUpcomingDeadlines] = useState<UpcomingDeadline[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -84,19 +68,11 @@ export function useDashboard(): UseDashboardResult {
       setError(null);
       try {
         const [
-          statsRes,
-          weeklyRes,
-          distributionRes,
-          activityRes,
           deadlinesRes,
           calendarRes,
           workQueueRes,
           notesRes,
         ] = await Promise.all([
-          getDashboardStats(),
-          getWeeklyOverview(),
-          getTaskDistribution(),
-          getRecentActivity(),
           getUpcomingDeadlines(),
           getCalendarEvents(),
           getWorkQueue(),
@@ -105,10 +81,6 @@ export function useDashboard(): UseDashboardResult {
 
         if (cancelled) return;
 
-        setStats(statsRes);
-        setWeeklyOverview(weeklyRes);
-        setDistribution(distributionRes);
-        setActivities(activityRes);
         setUpcomingDeadlines(deadlinesRes);
         setCalendarEvents(calendarRes);
         setWorkQueue(workQueueRes);
@@ -127,12 +99,8 @@ export function useDashboard(): UseDashboardResult {
   }, [reloadToken]);
 
   return {
-    stats,
-    weeklyOverview,
-    distribution,
     workQueue,
     calendarEvents,
-    activities,
     notes,
     upcomingDeadlines,
     isLoading,
