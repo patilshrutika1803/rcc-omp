@@ -56,6 +56,25 @@ function toMonthKey(date: Date): string {
   return `${year}-${month}`;
 }
 
+function isCompletedStatus(status?: string): boolean {
+  return !!status && status.toLowerCase().includes("completed");
+}
+
+function isDateToday(value?: string): boolean {
+  const date = toDateValue(value);
+  if (!date) return false;
+
+  const today = new Date();
+  return date.getFullYear() === today.getFullYear()
+    && date.getMonth() === today.getMonth()
+    && date.getDate() === today.getDate();
+}
+
+function isRelevantTodayTask(status?: string, dateValue?: string): boolean {
+  if (isCompletedStatus(status)) return false;
+  return isDateToday(dateValue);
+}
+
 export async function getUpcomingDeadlines(): Promise<UpcomingDeadline[]> {
   const records: Array<{ date?: string; title: string; type: string }> = [];
 
@@ -124,6 +143,9 @@ export async function getWorkQueue(): Promise<WorkQueueTask[]> {
   const tasks: WorkQueueTask[] = [];
 
   loadPMState().records.forEach((record) => {
+    const dueDate = record.nextDue;
+    if (!isRelevantTodayTask(record.status, dueDate)) return;
+
     tasks.push({
       id: record.id,
       desc: record.machine || record.description || "PM Task",
@@ -135,6 +157,9 @@ export async function getWorkQueue(): Promise<WorkQueueTask[]> {
   });
 
   loadPersistedBackupJobs().activeJobs.forEach((job) => {
+    const dueDate = job.nextDueDate || job.nextBackup?.split(" ")[0];
+    if (!isRelevantTodayTask(job.status, dueDate)) return;
+
     tasks.push({
       id: job.id,
       desc: job.name,
@@ -146,6 +171,9 @@ export async function getWorkQueue(): Promise<WorkQueueTask[]> {
   });
 
   loadPersistedQAActivities().forEach((item) => {
+    const dueDate = item.dueDate || item.targetDate;
+    if (!isRelevantTodayTask(item.status, dueDate)) return;
+
     tasks.push({
       id: item.id,
       desc: item.qmsNumber || item.qmsType,
@@ -157,6 +185,8 @@ export async function getWorkQueue(): Promise<WorkQueueTask[]> {
   });
 
   getActiveInspections().forEach((item) => {
+    if (!isRelevantTodayTask(item.status, item.dueDate)) return;
+
     tasks.push({
       id: item.id,
       desc: item.description || "Inspection",
