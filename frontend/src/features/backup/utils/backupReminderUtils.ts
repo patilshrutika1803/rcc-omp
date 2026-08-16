@@ -126,12 +126,15 @@ export function buildRecurringBackupJob(
   id: string
 ): BackupJob {
   const nextBackup = `${nextDueDate} ${source.backupTime || "02:00"}`;
+  const completedDate = completedAt.split(" ")[0] || nextDueDate;
 
   return {
     ...source,
     id,
     status: "Upcoming",
-    lastDueDate: completedAt,
+    lastDueDate: completedDate,
+    lastBackupDate: completedDate,
+    lastBackup: completedAt,
     dueDate: nextDueDate,
     nextDueDate,
     nextBackup,
@@ -142,6 +145,5 @@ export function buildRecurringBackupJob(
     history: [],
     recurrenceId: source.recurrenceId || `recur-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     parentId: source.id,
-    lastBackup: "—",
   };
 }

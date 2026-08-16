@@ -49,6 +49,7 @@ export interface BackupJob {
   id: string;
   name: string;
   server: string;
+  systemId?: string;
   backupType: BkpType;
   frequency: string;
   department: string;
@@ -95,6 +96,7 @@ export interface BackupJobFormData {
   department: string;
   backupType: BkpType;
   frequency: string;
+  systemId: string;
   initialDueDate: string;
   lastBackupDate?: string;
   destination: string;

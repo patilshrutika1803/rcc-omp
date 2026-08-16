@@ -100,6 +100,7 @@ export function useBackupActivities() {
       id: `BK-${Date.now()}`,
       name: data.name,
       server: "",
+      systemId: data.systemId,
       backupType: data.backupType,
       frequency: data.frequency,
       dueDate: initialDueDate,
@@ -157,6 +158,7 @@ export function useBackupActivities() {
         scheduledNextBackup: updatedDueDate,
         originalDueDate: data.initialDueDate ? data.initialDueDate : j.originalDueDate,
         reminderDate: calculateReminderDate(updatedDueDate, data.reminder),
+        systemId: data.systemId,
         lastDueDate: data.lastBackupDate?.trim() ? data.lastBackupDate : j.lastDueDate,
         lastBackupDate: data.lastBackupDate?.trim() ? data.lastBackupDate : j.lastBackupDate,
       };
@@ -251,6 +253,7 @@ export function useBackupActivities() {
       ...job,
       status: "Completed",
       progress: 100,
+      lastDueDate: values.backupDate,
       lastBackup: completedAt,
       nextBackup: "",
       sizeGB: Number(sizeGB.toFixed(2)),
@@ -262,6 +265,7 @@ export function useBackupActivities() {
       completionRemarks: values.executionNotes,
       completedBy: values.doneBy,
       verifiedBy: values.verifiedBy,
+      systemId: values.systemId || job.systemId || job.id,
     };
 
     setJobs((prev) => prev.filter((jj) => jj.id !== job.id));

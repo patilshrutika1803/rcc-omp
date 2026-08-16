@@ -29,7 +29,7 @@ export function BackupExecutionForm({
     system: mode === "view" ? historyDetails?.system ?? job.server ?? "" : job.server || "",
     department: mode === "view" ? (historyDetails?.department ?? job.department) || "" : job.department || "",
     backupFrequency: mode === "view" ? (historyDetails?.backupFrequency ?? job.frequency) || "" : job.frequency || "",
-    systemId: mode === "view" ? (historyDetails?.systemId ?? job.id) || "" : job.id || "",
+    systemId: mode === "view" ? (historyDetails?.systemId ?? job.systemId ?? job.id) || "" : job.systemId || job.id || "",
     instrumentName: mode === "view" ? historyDetails?.instrumentName ?? "" : "",
     backupDate: mode === "view" ? historyDetails?.backupDate ?? "" : "",
     backupTime: mode === "view" ? historyDetails?.backupTime ?? "" : "",
