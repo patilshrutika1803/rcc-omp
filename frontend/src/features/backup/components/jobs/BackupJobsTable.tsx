@@ -101,7 +101,7 @@ export function BackupJobsTable({
                       <RotateCcw size={10} /> {job.frequency}
                     </span>
                   </td>
-                  <td className="px-4 py-3.5 text-xs text-slate-500 font-mono">{job.lastBackup}</td>
+                  <td className="px-4 py-3.5 text-xs text-slate-500 font-mono">{job.lastBackup || job.lastBackupDate || job.lastDueDate || "—"}</td>
                   <td className="px-4 py-3.5 text-xs text-slate-500 font-mono">{job.nextBackup}</td>
                   <td className="px-4 py-3.5"><BkpStatusBadge status={job.status} /></td>
                   <td className="px-4 py-3.5">
@@ -120,7 +120,12 @@ export function BackupJobsTable({
                         <span className="text-[11px] font-bold text-emerald-600">100%</span>
                       </div>
                     ) : (
-                      <span className="text-[11px] text-slate-400">—</span>
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-full bg-slate-100 rounded-full h-1.5 min-w-[60px]">
+                          <div className="h-1.5 rounded-full bg-slate-300 transition-all" style={{ width: `${job.progress}%` }} />
+                        </div>
+                        <span className="text-[11px] font-bold text-slate-500">{job.progress}%</span>
+                      </div>
                     )}
                   </td>
                   <td className="px-4 py-3.5">
