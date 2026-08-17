@@ -98,7 +98,7 @@ export function exportBackupJobPdf(job: BackupJob): void {
     ["Department", execution?.department || job.department],
     ["Backup Frequency", execution?.backupFrequency || job.frequency],
     ["Priority", job.priority || "Medium"],
-    ["System ID", execution?.systemId || job.id],
+    ["System ID", execution?.systemId || job.systemId || "—"],
     ["Instrument Name", execution?.instrumentName || job.server || "—"],
     ["Backup Date", execution?.backupDate || job.lastBackup || "—"],
     ["Backup Time", execution?.backupTime || job.nextBackup.split(" ")[1] || "—"],

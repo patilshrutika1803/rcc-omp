@@ -44,7 +44,6 @@ export function BackupCardView({
               </div>
               <div>
                 <h3 className="text-sm font-bold text-slate-900">{job.name}</h3>
-                <p className="text-[11px] text-slate-400 font-mono mt-0.5">{job.id}</p>
               </div>
             </div>
             <BkpStatusBadge status={job.status} />

@@ -49,6 +49,7 @@ export interface BackupJob {
   id: string;
   name: string;
   server: string;
+  institutionName?: string;
   systemId?: string;
   backupType: BkpType;
   frequency: string;

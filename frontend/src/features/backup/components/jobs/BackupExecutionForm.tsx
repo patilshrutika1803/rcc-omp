@@ -23,21 +23,39 @@ export function BackupExecutionForm({
   onClose: () => void;
   onSubmit: (values: BackupExecutionFormValues, job: BackupJob) => void;
 }) {
-  const historyDetails = job.history[0]?.executionDetails;
+  const getDisplayText = (value?: string | null) => {
+    const trimmed = value?.trim();
+    return trimmed && trimmed !== "—" ? trimmed : "";
+  };
+
+  const resolveFirstValidValue = (...values: Array<string | undefined | null>) => {
+    return values.map(getDisplayText).find((value) => value !== "");
+  };
+
+  const historyDetails = job.history[0]?.executionDetails ?? job.executionData;
   const initialValues = useMemo<BackupExecutionFormValues>(() => ({
-    institutionName: mode === "view" ? historyDetails?.institutionName ?? "" : "",
-    system: mode === "view" ? historyDetails?.system ?? job.server ?? "" : job.server || "",
-    department: mode === "view" ? (historyDetails?.department ?? job.department) || "" : job.department || "",
-    backupFrequency: mode === "view" ? (historyDetails?.backupFrequency ?? job.frequency) || "" : job.frequency || "",
-    systemId: mode === "view" ? (historyDetails?.systemId ?? job.systemId ?? job.id) || "" : job.systemId || job.id || "",
-    instrumentName: mode === "view" ? historyDetails?.instrumentName ?? "" : "",
-    backupDate: mode === "view" ? historyDetails?.backupDate ?? "" : "",
-    backupTime: mode === "view" ? historyDetails?.backupTime ?? "" : "",
+    institutionName: mode === "view" ? resolveFirstValidValue(
+      job.institutionName,
+      job.executionData?.institutionName,
+      historyDetails?.institutionName,
+    ) ?? "" : "",
+    system: mode === "view" ? getDisplayText(historyDetails?.system) || job.server || "" : job.server || "",
+    department: mode === "view" ? getDisplayText(historyDetails?.department) || job.department || "" : job.department || "",
+    backupFrequency: mode === "view" ? getDisplayText(historyDetails?.backupFrequency) || job.frequency || "" : job.frequency || "",
+    systemId: mode === "view" ? getDisplayText(historyDetails?.systemId) || job.systemId || "" : job.systemId || "",
+    instrumentName: mode === "view" ? getDisplayText(historyDetails?.instrumentName) : "",
+    backupDate: mode === "view" ? getDisplayText(historyDetails?.backupDate) : "",
+    backupTime: mode === "view" ? getDisplayText(historyDetails?.backupTime) : "",
     backupSize: mode === "view" ? String(historyDetails?.backupSize ?? "") : "",
     unit: mode === "view" ? historyDetails?.unit || "GB" : "GB",
-    doneBy: mode === "view" ? historyDetails?.doneBy ?? "" : "",
-    verifiedBy: mode === "view" ? historyDetails?.verifiedBy ?? "" : "",
-    executionNotes: mode === "view" ? historyDetails?.executionNotes ?? "" : "",
+    doneBy: mode === "view" ? getDisplayText(historyDetails?.doneBy) : "",
+    verifiedBy: mode === "view" ? resolveFirstValidValue(
+      historyDetails?.verifiedBy,
+      job.executionData?.verifiedBy,
+      job.verifiedBy,
+      job.lastVerified,
+    ) ?? "" : "",
+    executionNotes: mode === "view" ? getDisplayText(historyDetails?.executionNotes) : "",
   }), [job, mode, historyDetails]);
 
   const [values, setValues] = useState(initialValues);

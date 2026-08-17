@@ -12,8 +12,28 @@ export function BackupJobDrawer({ job, onClose, onEdit, onRunNow, onViewExecutio
   onRunNow: () => void;
   onViewExecution: () => void;
 }) {
+  const getDisplayText = (value?: string | null) => {
+    const trimmed = value?.trim();
+    return trimmed && trimmed !== "—" ? trimmed : undefined;
+  };
+
+  const resolveFirstValidValue = (...values: Array<string | undefined | null>) => {
+    return values.map(getDisplayText).find((value): value is string => !!value);
+  };
+
   const usedPct = computeUsedPct(job.sizeGB, job.quota);
-  const latestExecution = job.history[0]?.executionDetails;
+  const latestExecution = job.history[0]?.executionDetails ?? job.executionData;
+  const institutionValue = resolveFirstValidValue(
+    job.institutionName,
+    job.executionData?.institutionName,
+    latestExecution?.institutionName,
+  ) ?? "—";
+  const verifiedByValue = resolveFirstValidValue(
+    latestExecution?.verifiedBy,
+    job.executionData?.verifiedBy,
+    job.verifiedBy,
+    job.lastVerified,
+  ) ?? "—";
   const isCompleted = job.status === "Completed";
   const reminderLabel = job.reminder || "None";
   const dueDateLabel = job.nextDueDate || job.nextBackup || "—";
@@ -30,7 +50,7 @@ export function BackupJobDrawer({ job, onClose, onEdit, onRunNow, onViewExecutio
               </div>
               <div className="min-w-0">
                 <h2 className="text-sm font-bold text-slate-900 truncate">{job.name}</h2>
-                <p className="text-xs text-slate-400 font-mono mt-0.5 truncate">{job.id} · {job.server || "Backup Job"}</p>
+                <p className="text-xs text-slate-400 font-mono mt-0.5 truncate">{job.server || "Backup Job"}</p>
               </div>
             </div>
             <button onClick={onClose} className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors shrink-0">
@@ -62,15 +82,16 @@ export function BackupJobDrawer({ job, onClose, onEdit, onRunNow, onViewExecutio
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {(isCompleted ? [
+                { label: "Institution", value: institutionValue },
                 { label: "Execution Details", value: `${latestExecution?.backupDate || job.lastBackup} · ${latestExecution?.backupTime || "—"}` },
                 { label: "Backup Size", value: `${latestExecution?.backupSize || job.sizeGB} ${latestExecution?.unit || "GB"}` },
                 { label: "Done By", value: latestExecution?.doneBy || job.user },
-                { label: "Verified By", value: latestExecution?.verifiedBy || job.lastVerified || "—" },
+                { label: "Verified By", value: verifiedByValue },
                 { label: "Backup Date", value: latestExecution?.backupDate || job.lastBackup || "—" },
                 { label: "Backup Time", value: latestExecution?.backupTime || "—" },
               ] : [
                 { label: "Job Information", value: job.name },
-                { label: "Institution", value: latestExecution?.institutionName || "—" },
+                { label: "Institution", value: institutionValue },
                 { label: "Department", value: job.department },
                 { label: "Frequency", value: job.frequency },
                 { label: "Reminder", value: reminderLabel },
@@ -102,6 +123,10 @@ export function BackupJobDrawer({ job, onClose, onEdit, onRunNow, onViewExecutio
               <div className="space-y-3 rounded-xl border border-emerald-100 bg-emerald-50 p-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                   <div>
+                    <div className="text-[10px] uppercase tracking-wider text-emerald-700 font-semibold">Institution</div>
+                    <div className="mt-1 text-slate-700">{institutionValue}</div>
+                  </div>
+                  <div>
                     <div className="text-[10px] uppercase tracking-wider text-emerald-700 font-semibold">Execution Details</div>
                     <div className="mt-1 text-slate-700">{latestExecution?.backupDate || job.lastBackup} · {latestExecution?.backupTime || "—"}</div>
                   </div>
@@ -111,7 +136,7 @@ export function BackupJobDrawer({ job, onClose, onEdit, onRunNow, onViewExecutio
                   </div>
                   <div>
                     <div className="text-[10px] uppercase tracking-wider text-emerald-700 font-semibold">Verified By</div>
-                    <div className="mt-1 text-slate-700">{latestExecution?.verifiedBy || job.lastVerified || "—"}</div>
+                    <div className="mt-1 text-slate-700">{verifiedByValue}</div>
                   </div>
                   <div>
                     <div className="text-[10px] uppercase tracking-wider text-emerald-700 font-semibold">Backup Size</div>
@@ -136,7 +161,7 @@ export function BackupJobDrawer({ job, onClose, onEdit, onRunNow, onViewExecutio
             ) : (
               <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-3 text-center">
                 <div className="text-xs text-emerald-600 font-semibold mb-1">Last Verified</div>
-                <div className="text-sm font-bold text-emerald-800">{job.lastVerified}</div>
+                <div className="text-sm font-bold text-emerald-800">{verifiedByValue}</div>
               </div>
             )}
 

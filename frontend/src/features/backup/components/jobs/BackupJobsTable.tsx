@@ -92,7 +92,6 @@ export function BackupJobsTable({
                       </div>
                       <div>
                         <div className="text-xs font-bold text-slate-900">{job.name}</div>
-                        <div className="text-[10px] text-slate-400 font-mono mt-0.5">{job.id}</div>
                       </div>
                     </div>
                   </td>

@@ -246,7 +246,6 @@ export default function BackupActivitiesPage() {
                     <tr key={job.id} className="hover:bg-slate-50/30 transition-colors">
                       <td className="px-4 py-3.5">
                         <div className="text-xs font-bold text-slate-900">{job.name}</div>
-                        <div className="text-[10px] text-slate-400 font-mono mt-0.5">{job.id}</div>
                       </td>
                       <td className="px-4 py-3.5 text-xs text-slate-500 font-mono">{job.lastBackup}</td>
                       <td className="px-4 py-3.5 text-xs text-slate-500">{job.department}</td>

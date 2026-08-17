@@ -97,7 +97,7 @@ export function useBackupActivities() {
     const nextBackup = `${initialDueDate} ${data.backupTime}`;
     const reminderDate = calculateReminderDate(initialDueDate, data.reminder);
     const newJob: BackupJob = {
-      id: `BK-${Date.now()}`,
+      id: `backup-${Date.now()}`,
       name: data.name,
       server: "",
       systemId: data.systemId,
@@ -211,7 +211,7 @@ export function useBackupActivities() {
     const nextBackup = shouldRecur && nextDueDate ? `${nextDueDate} ${values.backupTime}` : "";
     const nextReminderDate = shouldRecur && nextDueDate && job.reminder ? calculateSharedReminderDate(nextDueDate, job.reminder) : undefined;
 
-    const nextJob = shouldRecur && nextBackup ? buildRecurringBackupJob(job, completedAt, nextBackup, nextReminderDate, `BK-${Date.now() + 1}`) : null;
+    const nextJob = shouldRecur && nextBackup ? buildRecurringBackupJob(job, completedAt, nextBackup, nextReminderDate, `backup-${Date.now() + 1}`) : null;
 
     // Duplicate detection using recurrenceId (stable) or fallback to legacy fields (mirror PM)
     const recurrenceKey = job.recurrenceId;
@@ -253,6 +253,7 @@ export function useBackupActivities() {
       ...job,
       status: "Completed",
       progress: 100,
+      institutionName: values.institutionName || job.institutionName || "",
       lastDueDate: values.backupDate,
       lastBackup: completedAt,
       nextBackup: "",
@@ -265,7 +266,22 @@ export function useBackupActivities() {
       completionRemarks: values.executionNotes,
       completedBy: values.doneBy,
       verifiedBy: values.verifiedBy,
-      systemId: values.systemId || job.systemId || job.id,
+      executionData: {
+        institutionName: values.institutionName,
+        system: values.system,
+        department: values.department,
+        backupFrequency: values.backupFrequency,
+        systemId: values.systemId,
+        instrumentName: values.instrumentName,
+        backupDate: values.backupDate,
+        backupTime: values.backupTime,
+        backupSize: Number(sizeValue.toFixed(2)),
+        unit: values.unit,
+        doneBy: values.doneBy,
+        verifiedBy: values.verifiedBy,
+        executionNotes: values.executionNotes,
+      },
+      systemId: values.systemId || job.systemId || "",
     };
 
     setJobs((prev) => prev.filter((jj) => jj.id !== job.id));
@@ -288,7 +304,7 @@ export function useBackupActivities() {
   };
 
   const handleDuplicate = (j: BackupJob) => {
-    const newJob: BackupJob = { ...j, id: `BK-${Date.now()}`, name: `${j.name} (Copy)`, status: "Upcoming", progress: 0, lastBackup: "—", history: [] };
+    const newJob: BackupJob = { ...j, id: `backup-copy-${Date.now()}`, name: `${j.name} (Copy)`, status: "Upcoming", progress: 0, lastBackup: "—", history: [] };
     setJobs((prev) => [...prev, newJob]);
     toast.success(`Duplicated "${j.name}".`);
   };
