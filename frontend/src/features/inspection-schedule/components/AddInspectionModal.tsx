@@ -51,9 +51,16 @@ export function AddInspectionModal({ onClose, onSave, systems, editRecord }: Add
     }
   }, [targetType, systems, systemId]);
 
+  // Only set default frequency when creating NEW inspections (editRecord is undefined)
+  // When editing, preserve the user-selected frequency
   useEffect(() => {
+    if (editRecord) {
+      // Editing mode: keep existing frequency
+      return;
+    }
+    // Creating new inspection: set default frequency based on target type
     if (targetType === "Machine") {
-      setFrequency(editRecord?.frequency ?? "Monthly");
+      setFrequency("Monthly");
     } else if (targetType === "System" && selectedSystem) {
       setFrequency(getFrequencyForCategory(selectedSystem.systemCategory === "GxP" ? "GxP" : "Non-GxP"));
     }

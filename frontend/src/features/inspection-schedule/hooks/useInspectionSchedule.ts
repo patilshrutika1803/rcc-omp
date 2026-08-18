@@ -183,8 +183,9 @@ export function useInspectionSchedule() {
       if (record.targetType === "System") {
         const system = systems.find((item) => item.systemId === record.systemId);
         if (system) {
+          // Update category based on system, but preserve user-selected frequency
           record.category = system.systemCategory === "GxP" ? "GxP" : "Non-GxP";
-          record.frequency = getFrequencyForCategory(record.category);
+          // DO NOT override frequency - use the user's selected frequency
         }
       }
       record.status = getInspectionStatus(record.dueDate, record.dueTime, record.status === "Completed");
