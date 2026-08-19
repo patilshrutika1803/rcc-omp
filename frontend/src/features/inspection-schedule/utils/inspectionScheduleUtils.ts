@@ -65,6 +65,11 @@ export function combineDateTime(date: string, time: string): Date | null {
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
+export function isCompletionDateValid(completionDate: string, dueDate: string): boolean {
+  if (!completionDate || !dueDate) return false;
+  return completionDate >= dueDate;
+}
+
 export function getInspectionStatus(dueDate: string, dueTime: string, isCompleted = false): InspectionStatus {
   if (isCompleted) return "Completed";
   const deadline = combineDateTime(dueDate, dueTime);

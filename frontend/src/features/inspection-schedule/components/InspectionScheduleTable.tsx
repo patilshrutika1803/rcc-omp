@@ -1,18 +1,20 @@
 import React from "react";
 import { formatDateDisplay } from "../utils/inspectionScheduleUtils";
 import type { InspectionScheduleRecord } from "../types/inspectionSchedule";
-import { Edit2, CheckCircle2, Eye } from "lucide-react";
+import { Edit2, CheckCircle2, Eye, Trash2 } from "lucide-react";
 
 export function InspectionScheduleTable({
   data,
   onView,
   onEdit,
   onComplete,
+  onDelete,
 }: {
   data: InspectionScheduleRecord[];
   onView: (inspection: InspectionScheduleRecord) => void;
   onEdit: (inspection: InspectionScheduleRecord) => void;
   onComplete: (inspection: InspectionScheduleRecord) => void;
+  onDelete: (inspection: InspectionScheduleRecord) => void;
 }) {
   return (
     <div className="overflow-x-auto">
@@ -57,6 +59,7 @@ export function InspectionScheduleTable({
                 {inspection.status !== "Completed" && (
                   <button onClick={() => onComplete(inspection)} className="p-1.5 text-slate-400 hover:text-emerald-700 hover:bg-emerald-50 rounded-md"><CheckCircle2 size={16} /></button>
                 )}
+                <button onClick={() => onDelete(inspection)} aria-label="Delete inspection" title="Delete inspection" className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md"><Trash2 size={16} /></button>
               </td>
             </tr>
           ))}

@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { X, AlertCircle } from "lucide-react";
 import type { InspectionScheduleRecord } from "../types/inspectionSchedule";
+import { isCompletionDateValid as validateCompletionDate } from "../utils/inspectionScheduleUtils";
 
 export function CompleteInspectionDialog({
   inspection,
@@ -20,20 +21,14 @@ export function CompleteInspectionDialog({
   const [completionNotes, setCompletionNotes] = useState("");
   const [validationError, setValidationError] = useState<string | null>(null);
 
-  // Check if completion date/time is before the inspection's due date/time
-  const isCompletionDateValid = useMemo(() => {
-    if (!completionDate || !completionTime) return true;
-    
-    const completionDateTime = new Date(`${completionDate}T${completionTime}:00`);
-    const dueDateTime = new Date(`${inspection.dueDate}T${inspection.dueTime}:00`);
-    
-    return completionDateTime >= dueDateTime;
-  }, [completionDate, completionTime, inspection.dueDate, inspection.dueTime]);
+  const completionDateIsValid = useMemo(() => {
+    return validateCompletionDate(completionDate, inspection.dueDate);
+  }, [completionDate, inspection.dueDate]);
 
   const handleConfirm = () => {
-    if (!isCompletionDateValid) {
+    if (!completionDateIsValid) {
       setValidationError(
-        `Completion date/time cannot be before the inspection's due date (${inspection.dueDate} at ${inspection.dueTime})`
+        `Completion date cannot be before the inspection's due date (${inspection.dueDate})`
       );
       return;
     }
@@ -82,7 +77,7 @@ export function CompleteInspectionDialog({
         </div>
         <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-100">
           <button onClick={onClose} className="px-4 py-2 text-sm font-semibold text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-100">Cancel</button>
-          <button onClick={handleConfirm} className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed" disabled={!isCompletionDateValid}>Confirm</button>
+          <button onClick={handleConfirm} className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed" disabled={!completionDateIsValid}>Confirm</button>
         </div>
       </div>
     </div>

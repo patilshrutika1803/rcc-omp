@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { CalendarClock, Plus, Search, Layers } from "lucide-react";
 import { useInspectionSchedule } from "./hooks/useInspectionSchedule";
 import { InspectionScheduleTable } from "./components/InspectionScheduleTable";
@@ -6,6 +6,8 @@ import { AddInspectionModal } from "./components/AddInspectionModal";
 import { InspectionDetailsDrawer } from "./components/InspectionDetailsDrawer";
 import { CompleteInspectionDialog } from "./components/CompleteInspectionDialog";
 import { InspectionHistoryPanel } from "./components/InspectionHistoryPanel";
+import { DeleteInspectionDialog } from "./components/DeleteInspectionDialog";
+import type { InspectionScheduleRecord } from "./types/inspectionSchedule";
 import {
   FILTER_TARGET_OPTIONS,
   FILTER_CATEGORY_OPTIONS,
@@ -48,8 +50,10 @@ export default function InspectionSchedulePage() {
     closeCompleteDialog,
     handleSaveInspection,
     handleCompleteInspection,
+    handleDeleteInspection,
     setShowHistory: setHistory,
   } = useInspectionSchedule();
+  const [deletingInspection, setDeletingInspection] = useState<InspectionScheduleRecord | null>(null);
 
   return (
     <div className="w-full max-w-[1600px] mx-auto animate-in fade-in duration-300">
@@ -158,6 +162,7 @@ export default function InspectionSchedulePage() {
           onView={openDetails}
           onEdit={openEditModal}
           onComplete={openCompleteDialog}
+          onDelete={setDeletingInspection}
         />
       </div>
 
@@ -191,6 +196,16 @@ export default function InspectionSchedulePage() {
           inspection={selectedInspection}
           onClose={closeCompleteDialog}
           onConfirm={handleCompleteInspection}
+        />
+      )}
+      {deletingInspection && (
+        <DeleteInspectionDialog
+          inspection={deletingInspection}
+          onClose={() => setDeletingInspection(null)}
+          onConfirm={() => {
+            handleDeleteInspection(deletingInspection);
+            setDeletingInspection(null);
+          }}
         />
       )}
     </div>

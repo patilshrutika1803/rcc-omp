@@ -4,8 +4,10 @@ import { getSystems } from "../../system-inventory/services/systemInventoryServi
 import {
   completeInspection,
   createInspection,
+  deleteActiveInspection,
   getActiveInspections,
   getCompletedInspections,
+  isInspectionDeleted,
   updateInspection,
 } from "../services/inspectionScheduleService";
 import type {
@@ -20,10 +22,12 @@ import {
   buildSystemInspectionRecord,
   getFrequencyForCategory,
   getInspectionStatus,
+  isCompletionDateValid,
   syncSystemInspectionWithSystem,
 } from "../utils/inspectionScheduleUtils";
 import { addNotification, removeInspectionNotifications } from "../../notificataions/utils/notificationStorage";
 import type { InspectionHistoryEntry } from "../types/inspectionSchedule";
+import { toast } from "sonner";
 
 export function useInspectionSchedule() {
   const [systems, setSystems] = useState<SystemInventory[]>([]);
@@ -69,7 +73,7 @@ export function useInspectionSchedule() {
           if (JSON.stringify(synced) !== JSON.stringify(existing)) {
             updateInspection(synced);
           }
-        } else {
+        } else if (!isInspectionDeleted(buildSystemInspectionRecord(system))) {
           const newInspection = buildSystemInspectionRecord(system);
           createInspection(newInspection);
           merged.push(newInspection);
@@ -170,6 +174,7 @@ export function useInspectionSchedule() {
       if (existing) {
         updateInspection(record);
         setActiveInspections((prev) => prev.map((item) => (item.id === record.id ? record : item)));
+        setSelectedInspection((current) => (current?.id === record.id ? record : current));
         return;
       }
       const created = createInspection(record);
@@ -200,6 +205,10 @@ export function useInspectionSchedule() {
   const handleCompleteInspection = useCallback(
     (values: { completedBy: string; completionDate: string; completionTime: string; completionNotes?: string }) => {
       if (!selectedInspection) return;
+      if (!isCompletionDateValid(values.completionDate, selectedInspection.dueDate)) {
+        toast.error(`Completion date cannot be before the inspection's due date (${selectedInspection.dueDate}).`);
+        return;
+      }
       const now = new Date().toISOString();
       const historyEntry = buildCompletionHistoryEntry(
         selectedInspection,
@@ -262,6 +271,22 @@ export function useInspectionSchedule() {
     [selectedInspection]
   );
 
+  const handleDeleteInspection = useCallback((inspection: InspectionScheduleRecord) => {
+    try {
+      if (!deleteActiveInspection(inspection)) {
+        toast.error("Inspection could not be found. Please refresh and try again.");
+        return;
+      }
+      removeInspectionNotifications(inspection.id);
+      setActiveInspections((prev) => prev.filter((item) => item.id !== inspection.id));
+      setSelectedInspection((current) => (current?.id === inspection.id ? null : current));
+      setShowCompleteDialog(false);
+      toast.success("Inspection deleted successfully.");
+    } catch {
+      toast.error("Failed to delete inspection. Please try again.");
+    }
+  }, []);
+
   const inspectionTargets = useMemo(() => {
     return systems.map((system) => ({
       label: `${system.systemId} · ${system.systemName} · ${system.systemType} · ${system.systemCategory}`,
@@ -304,6 +329,7 @@ export function useInspectionSchedule() {
     closeCompleteDialog,
     handleSaveInspection,
     handleCompleteInspection,
+    handleDeleteInspection,
     setSelectedInspection,
     inspectionTargets,
   };

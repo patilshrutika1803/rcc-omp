@@ -5,6 +5,7 @@ const STORAGE_KEY = "rcc_omp_inspection_schedule_v1";
 interface PersistedInspectionState {
   activeInspections: InspectionScheduleRecord[];
   completedInspections: InspectionScheduleRecord[];
+  deletedInspectionKeys: string[];
 }
 
 function safeJsonParse<T>(raw: string | null): T | null {
@@ -18,16 +19,17 @@ function safeJsonParse<T>(raw: string | null): T | null {
 
 function loadState(): PersistedInspectionState {
   if (typeof window === "undefined") {
-    return { activeInspections: [], completedInspections: [] };
+    return { activeInspections: [], completedInspections: [], deletedInspectionKeys: [] };
   }
   const raw = window.localStorage.getItem(STORAGE_KEY);
   const parsed = safeJsonParse<PersistedInspectionState>(raw);
   if (!parsed) {
-    return { activeInspections: [], completedInspections: [] };
+    return { activeInspections: [], completedInspections: [], deletedInspectionKeys: [] };
   }
   return {
     activeInspections: Array.isArray(parsed.activeInspections) ? parsed.activeInspections : [],
     completedInspections: Array.isArray(parsed.completedInspections) ? parsed.completedInspections : [],
+    deletedInspectionKeys: Array.isArray(parsed.deletedInspectionKeys) ? parsed.deletedInspectionKeys : [],
   };
 }
 
@@ -63,6 +65,7 @@ export function createInspection(record: InspectionScheduleRecord): InspectionSc
   const next: PersistedInspectionState = {
     ...state,
     activeInspections: [record, ...state.activeInspections],
+    deletedInspectionKeys: state.deletedInspectionKeys.filter((key) => key !== getDeletionKey(record)),
   };
   saveState(next);
   return record;
@@ -85,13 +88,32 @@ export function completeInspection(record: InspectionScheduleRecord): void {
     saveState({ ...state, activeInspections: active });
     return;
   }
-  saveState({ activeInspections: active, completedInspections: [record, ...state.completedInspections] });
+  saveState({ ...state, activeInspections: active, completedInspections: [record, ...state.completedInspections] });
 }
 
-export function deleteActiveInspection(id: string): void {
+function getDeletionKey(record: InspectionScheduleRecord): string {
+  if (record.targetType === "System" && record.systemId) return `system:${record.systemId}`;
+  return `inspection:${record.id}`;
+}
+
+export function isInspectionDeleted(record: InspectionScheduleRecord): boolean {
+  return loadState().deletedInspectionKeys.includes(getDeletionKey(record));
+}
+
+export function deleteActiveInspection(record: InspectionScheduleRecord): boolean {
   const state = loadState();
-  const next = state.activeInspections.filter((item) => item.id !== id);
-  saveState({ ...state, activeInspections: next });
+  const exists = state.activeInspections.some((item) => item.id === record.id);
+  if (!exists) return false;
+  const next = state.activeInspections.filter((item) => item.id !== record.id);
+  const deletionKey = getDeletionKey(record);
+  saveState({
+    ...state,
+    activeInspections: next,
+    deletedInspectionKeys: state.deletedInspectionKeys.includes(deletionKey)
+      ? state.deletedInspectionKeys
+      : [...state.deletedInspectionKeys, deletionKey],
+  });
+  return true;
 }
 
 export function replaceActiveInspections(nextInspections: InspectionScheduleRecord[]): void {
