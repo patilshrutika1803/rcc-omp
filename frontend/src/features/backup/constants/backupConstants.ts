@@ -1,5 +1,5 @@
 import type { BkpStatus, BkpType, WeeklyTrendPoint, StorageTrendPoint, BackupSubTab } from "../types/backup";
-import { Archive, Calendar as CalendarIcon } from "lucide-react";
+import { Archive } from "lucide-react";
 import { DEPARTMENT_OPTIONS } from "../../../constants/departments";
 
 
@@ -38,7 +38,6 @@ export const BKP_PRIORITY_OPTIONS = ["Low", "Medium", "High", "Critical"] as con
 
 export const BKP_SUB_TABS: { id: BackupSubTab; label: string; icon: typeof Archive }[] = [
   { id: "jobs", label: "Backup Jobs", icon: Archive },
-  { id: "calendar", label: "Calendar", icon: CalendarIcon },
 ];
 
 // KPI configuration used by the dashboard's Backup Type Mix donut/legend.
@@ -51,16 +50,6 @@ export const BKP_WEEKLY_SUMMARY: { label: string; value: string; color: string; 
 
 // Failed jobs — populated from real job data at runtime (see FailedJobsTable).
 export const BKP_FAILED_JOBS_SAMPLE: { job: string; server: string; dt: string; err: string; dur: string; eng: string }[] = [];
-
-export const BKP_CALENDAR_LEGEND = [
-  { color: "bg-emerald-500", label: "Completed" },
-  { color: "bg-blue-500", label: "Running" },
-  { color: "bg-red-500", label: "Failed" },
-  { color: "bg-slate-400", label: "Scheduled" },
-  { color: "bg-amber-500", label: "Upcoming" },
-];
-
-export const BKP_CALENDAR_WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 export const BKP_DEFAULT_FORM_TIME = "02:00";
 export const BKP_DEFAULT_FORM_QUOTA = 500;

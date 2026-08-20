@@ -16,7 +16,7 @@ import { loadPersistedBackupJobs, persistBackupJobs } from "../utils/backupStora
 
 export function useBackupActivities() {
   const [subTab, setSubTab] = useState<BackupSubTab>("jobs");
-  const [viewMode, setViewMode] = useState<"table" | "card" | "calendar">("table");
+  const [viewMode, setViewMode] = useState<"table" | "card">("table");
   const [showHistory, setShowHistory] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);

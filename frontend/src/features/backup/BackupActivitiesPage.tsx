@@ -1,13 +1,12 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // BackupActivitiesPage
 // Redesigned to mirror the Preventive Maintenance architecture while keeping
-// the backup module scoped to jobs and calendar views only.
+// the backup module scoped to jobs and history.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import React from "react";
 import {
   Archive,
-  Calendar as CalendarIcon,
   ChevronRight,
   Download,
   Grid3x3,
@@ -22,7 +21,6 @@ import {
 
 import { BackupJobsTable } from "./components/jobs/BackupJobsTable";
 import { BackupCardView } from "./components/jobs/BackupCardView";
-import { BackupCalendarView } from "./components/dashboard/BackupCalendarView";
 import { BackupJobDrawer } from "./components/jobs/BackupJobDrawer";
 import { BackupJobModal } from "./components/jobs/BackupJobModal";
 import { BackupExecutionForm } from "./components/jobs/BackupExecutionForm";
@@ -34,7 +32,6 @@ import { exportBackupJobPdf } from "./utils/backupPdf";
 const viewToggleOptions = [
   { id: "table", icon: Table2, title: "Table View" },
   { id: "card", icon: Grid3x3, title: "Card View" },
-  { id: "calendar", icon: CalendarIcon, title: "Calendar View" },
 ] as const;
 
 export default function BackupActivitiesPage() {
@@ -101,11 +98,7 @@ export default function BackupActivitiesPage() {
                   <button
                     key={view.id}
                     title={view.title}
-                    onClick={() => {
-                      setViewMode(view.id as typeof viewMode);
-                      if (view.id === "calendar") setSubTab("calendar");
-                      if (view.id !== "calendar") setSubTab("jobs");
-                    }}
+                    onClick={() => setViewMode(view.id as typeof viewMode)}
                     className={`p-1.5 rounded-md transition-all ${viewMode === view.id ? "bg-white shadow-sm text-emerald-600" : "text-slate-400 hover:text-slate-700"}`}
                   >
                     <Icon size={15} />
@@ -302,8 +295,6 @@ export default function BackupActivitiesPage() {
           )}
         </>
       )}
-
-      {!showHistory && subTab === "calendar" && <BackupCalendarView jobs={filteredJobs} onSelectJob={openJob} onViewExecution={openExecutionReview} onExportPdf={exportBackupJobPdf} />}
 
       {showDrawer && selectedJob && (
         <BackupJobDrawer

@@ -123,4 +123,4 @@ export interface StorageTrendPoint {
   capacity: number;
 }
 
-export type BackupSubTab = "jobs" | "calendar";
+export type BackupSubTab = "jobs";
