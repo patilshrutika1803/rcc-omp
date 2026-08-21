@@ -42,7 +42,6 @@ export function BackupExecutionForm({
     system: mode === "view" ? getDisplayText(historyDetails?.system) || job.server || "" : job.server || "",
     department: mode === "view" ? getDisplayText(historyDetails?.department) || job.department || "" : job.department || "",
     backupFrequency: mode === "view" ? getDisplayText(historyDetails?.backupFrequency) || job.frequency || "" : job.frequency || "",
-    systemId: mode === "view" ? getDisplayText(historyDetails?.systemId) || job.systemId || "" : job.systemId || "",
     instrumentName: mode === "view" ? getDisplayText(historyDetails?.instrumentName) : "",
     backupDate: mode === "view" ? getDisplayText(historyDetails?.backupDate) : "",
     backupTime: mode === "view" ? getDisplayText(historyDetails?.backupTime) : "",
@@ -170,15 +169,6 @@ export function BackupExecutionForm({
               <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-slate-500">Backup Frequency</label>
               <input
                 value={values.backupFrequency}
-                readOnly
-                className="h-10 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm text-slate-600"
-              />
-            </div>
-
-            <div>
-              <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-slate-500">System ID</label>
-              <input
-                value={values.systemId}
                 readOnly
                 className="h-10 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm text-slate-600"
               />

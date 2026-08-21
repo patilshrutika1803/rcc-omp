@@ -98,9 +98,9 @@ export function useBackupActivities() {
     const reminderDate = calculateReminderDate(initialDueDate, data.reminder);
     const newJob: BackupJob = {
       id: `backup-${Date.now()}`,
+      createdAt: now.toISOString(),
       name: data.name,
       server: "",
-      systemId: data.systemId,
       backupType: data.backupType,
       frequency: data.frequency,
       dueDate: initialDueDate,
@@ -158,7 +158,6 @@ export function useBackupActivities() {
         scheduledNextBackup: updatedDueDate,
         originalDueDate: data.initialDueDate ? data.initialDueDate : j.originalDueDate,
         reminderDate: calculateReminderDate(updatedDueDate, data.reminder),
-        systemId: data.systemId,
         lastDueDate: data.lastBackupDate?.trim() ? data.lastBackupDate : j.lastDueDate,
         lastBackupDate: data.lastBackupDate?.trim() ? data.lastBackupDate : j.lastBackupDate,
       };
@@ -227,6 +226,8 @@ export function useBackupActivities() {
 
     const historyEntry = {
       date: completedAt,
+      previousDueDate: completedCycleDueDate,
+      nextDueDate: nextDueDate || undefined,
       status: "Completed" as const,
       duration: "12m",
       sizeGB: Number(sizeGB.toFixed(2)),
@@ -235,7 +236,6 @@ export function useBackupActivities() {
         system: values.system,
         department: values.department,
         backupFrequency: values.backupFrequency,
-        systemId: values.systemId,
         instrumentName: values.instrumentName,
         backupDate: values.backupDate,
         backupTime: values.backupTime,
@@ -244,6 +244,8 @@ export function useBackupActivities() {
         doneBy: values.doneBy,
         verifiedBy: values.verifiedBy,
         executionNotes: values.executionNotes,
+        completedAt,
+        verifiedAt: completedAt,
       },
     };
 
@@ -271,7 +273,6 @@ export function useBackupActivities() {
         system: values.system,
         department: values.department,
         backupFrequency: values.backupFrequency,
-        systemId: values.systemId,
         instrumentName: values.instrumentName,
         backupDate: values.backupDate,
         backupTime: values.backupTime,
@@ -280,9 +281,18 @@ export function useBackupActivities() {
         doneBy: values.doneBy,
         verifiedBy: values.verifiedBy,
         executionNotes: values.executionNotes,
+        completedAt,
+        verifiedAt: completedAt,
       },
-      systemId: values.systemId || job.systemId || "",
     };
+
+    if (nextJob) {
+      nextJob.institutionName = values.institutionName || job.institutionName;
+      nextJob.lastVerified = values.verifiedBy || job.lastVerified;
+      nextJob.verifiedBy = values.verifiedBy || job.verifiedBy;
+      nextJob.sizeGB = completedBackup.sizeGB;
+      nextJob.executionData = completedBackup.executionData;
+    }
 
     setJobs((prev) => prev.filter((jj) => jj.id !== job.id));
     setCompletedJobs((prev) => [completedBackup, ...prev]);

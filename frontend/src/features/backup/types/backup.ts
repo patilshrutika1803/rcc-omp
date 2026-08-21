@@ -10,7 +10,6 @@ export interface BackupJobExecutionDetails {
   system: string;
   department: string;
   backupFrequency: string;
-  systemId: string;
   instrumentName: string;
   backupDate: string;
   backupTime: string;
@@ -19,10 +18,14 @@ export interface BackupJobExecutionDetails {
   doneBy: string;
   verifiedBy: string;
   executionNotes: string;
+  completedAt?: string;
+  verifiedAt?: string;
 }
 
 export interface BackupJobHistoryEntry {
   date: string;
+  previousDueDate?: string;
+  nextDueDate?: string;
   status: BkpStatus;
   duration: string;
   sizeGB: number;
@@ -34,7 +37,6 @@ export interface BackupJobExecutionData {
   system: string;
   department: string;
   backupFrequency: string;
-  systemId: string;
   instrumentName: string;
   backupDate: string;
   backupTime: string;
@@ -43,6 +45,8 @@ export interface BackupJobExecutionData {
   doneBy: string;
   verifiedBy: string;
   executionNotes: string;
+  completedAt?: string;
+  verifiedAt?: string;
 }
 
 export interface BackupJob {
@@ -90,6 +94,7 @@ export interface BackupJob {
   recurrenceId?: string;
   parentId?: string;
   originalDueDate?: string;
+  createdAt?: string;
 }
 
 export interface BackupJobFormData {
@@ -97,7 +102,6 @@ export interface BackupJobFormData {
   department: string;
   backupType: BkpType;
   frequency: string;
-  systemId: string;
   initialDueDate: string;
   lastBackupDate?: string;
   destination: string;

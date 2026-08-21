@@ -6,7 +6,6 @@ export function isBackupJobFormValid(form: BackupJobFormData): boolean {
     form.name.trim() &&
     form.user.trim() &&
     form.destination.trim() &&
-    form.systemId.trim() &&
     form.initialDueDate && String(form.initialDueDate).trim()
   );
 }

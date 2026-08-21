@@ -3,7 +3,6 @@ export interface BackupExecutionFormValues {
   system: string;
   department: string;
   backupFrequency: string;
-  systemId: string;
   instrumentName: string;
   backupDate: string;
   backupTime: string;

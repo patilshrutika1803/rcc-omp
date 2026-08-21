@@ -1,4 +1,38 @@
-import type { BkpStatus, BkpType, BackupJob } from "../types/backup";
+import type { BkpStatus, BkpType, BackupJob, BackupJobExecutionData, BackupJobExecutionDetails } from "../types/backup";
+
+export type BackupExecutionRecord = BackupJobExecutionDetails | BackupJobExecutionData;
+
+export function getLatestBackupExecution(job: BackupJob): BackupExecutionRecord | undefined {
+  return job.history.find((entry) => entry.status === "Completed" && entry.executionDetails)?.executionDetails ?? job.executionData;
+}
+
+function validBackupValue(value?: string | null): string | undefined {
+  const trimmed = value?.trim();
+  return trimmed && trimmed !== "—" ? trimmed : undefined;
+}
+
+export function resolveBackupInstitution(job: BackupJob, execution = getLatestBackupExecution(job)): string {
+  return validBackupValue(execution?.institutionName) ?? validBackupValue(job.executionData?.institutionName) ?? validBackupValue(job.institutionName) ?? "—";
+}
+
+export function resolveBackupVerifiedBy(job: BackupJob, execution = getLatestBackupExecution(job)): string {
+  return validBackupValue(execution?.verifiedBy) ?? validBackupValue(job.verifiedBy) ?? validBackupValue(job.lastVerified) ?? "—";
+}
+
+export function getBackupStorage(job: BackupJob, execution = getLatestBackupExecution(job)) {
+  const rawUsed = execution?.backupSize ?? job.sizeGB;
+  const unit = execution?.unit || "GB";
+  const usedGB = unit === "TB" ? rawUsed * 1024 : unit === "MB" ? rawUsed / 1024 : unit === "KB" ? rawUsed / (1024 * 1024) : rawUsed;
+  const quotaGB = Number.isFinite(job.quota) ? job.quota : 0;
+  return {
+    used: rawUsed,
+    unit,
+    usedGB: Number(usedGB.toFixed(2)),
+    quotaGB,
+    remainingGB: Number(Math.max(quotaGB - usedGB, 0).toFixed(2)),
+    percentage: quotaGB > 0 ? Math.min(Math.round((usedGB / quotaGB) * 100), 100) : 0,
+  };
+}
 
 export interface BackupJobFilters {
   status: string;
@@ -41,7 +75,7 @@ export function matchesBackupJobSearchAndFilters(
 ): boolean {
   if (search) {
     const q = search.toLowerCase();
-    const latestExecution = job.history[0]?.executionDetails;
+    const latestExecution = getLatestBackupExecution(job);
     const matchesSearch =
       job.name.toLowerCase().includes(q) ||
       job.id.toLowerCase().includes(q) ||
@@ -55,8 +89,8 @@ export function matchesBackupJobSearchAndFilters(
   if (filters?.department && job.department !== filters.department) return false;
   if (filters?.frequency && job.frequency !== filters.frequency) return false;
   if (filters?.priority && (job.priority || "Medium") !== filters.priority) return false;
-  const latestExecution = job.history[0]?.executionDetails;
-  if (filters?.institutionName && !((latestExecution?.institutionName ?? "").toLowerCase().includes(filters.institutionName.toLowerCase()))) return false;
+  const latestExecution = getLatestBackupExecution(job);
+  if (filters?.institutionName && !((resolveBackupInstitution(job, latestExecution) ?? "").toLowerCase().includes(filters.institutionName.toLowerCase()))) return false;
   if (filters?.dueDate) {
     const effectiveNextDue = job.nextDueDate || job.nextBackup.split(" ")[0];
     if (effectiveNextDue !== filters.dueDate) return false;

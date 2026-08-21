@@ -16,7 +16,6 @@ export function BackupJobModal({ mode, initial, onSave, onCancel }: {
     department:  initial?.department  ?? BKP_DEPARTMENTS[0],
     backupType:  initial?.backupType  ?? "Full",
     frequency:   initial?.frequency   ?? "Daily",
-    systemId:    initial?.systemId    ?? "",
     initialDueDate: initial?.nextDueDate ?? initial?.dueDate ?? initial?.nextBackup?.split(" ")[0] ?? "",
     lastBackupDate: initial?.lastBackupDate ?? initial?.lastBackup ?? "",
     destination: initial?.destination ?? "",
@@ -105,10 +104,6 @@ export function BackupJobModal({ mode, initial, onSave, onCancel }: {
               <div className="text-xs font-bold text-slate-700 mb-1">Last Backup Date</div>
               <input type="date" value={form.lastBackupDate} onChange={e => set("lastBackupDate", e.target.value)} className="w-full h-9 px-3 text-sm border border-slate-300 rounded-lg focus:outline-none focus:border-blue-400" />
             </div>
-          </div>
-          <div>
-            <div className="text-xs font-bold text-slate-700 mb-1">System ID <span className="text-red-500">*</span></div>
-            <input value={form.systemId} onChange={e => set("systemId", e.target.value)} placeholder="e.g. SYS-001" className="w-full h-9 px-3 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>

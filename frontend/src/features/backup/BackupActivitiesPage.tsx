@@ -28,6 +28,7 @@ import { BackupExecutionForm } from "./components/jobs/BackupExecutionForm";
 import { useBackupActivities } from "./hooks/useBackupActivities";
 import { BKP_STATUSES, BKP_TYPES, BKP_SUB_TABS, BKP_DEPARTMENTS, BKP_FREQUENCIES, BKP_PRIORITY_OPTIONS } from "./constants/backupConstants";
 import { exportBackupJobPdf } from "./utils/backupPdf";
+import { getBackupStorage, getLatestBackupExecution, resolveBackupInstitution, resolveBackupVerifiedBy } from "./utils/backupHelpers";
 
 const viewToggleOptions = [
   { id: "table", icon: Table2, title: "Table View" },
@@ -227,7 +228,8 @@ export default function BackupActivitiesPage() {
                     <th className="px-4 py-3">Backup Activity</th>
                     <th className="px-4 py-3">Completed Date</th>
                     <th className="px-4 py-3">Department</th>
-                    <th className="px-4 py-3">Backup Size</th>
+                    <th className="px-4 py-3">Institution</th>
+                    <th className="px-4 py-3">Storage</th>
                     <th className="px-4 py-3">Done By</th>
                     <th className="px-4 py-3">Verified By</th>
                     <th className="px-4 py-3">Status</th>
@@ -236,15 +238,19 @@ export default function BackupActivitiesPage() {
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-slate-700">
                   {filteredCompletedJobs.map(job => (
-                    <tr key={job.id} className="hover:bg-slate-50/30 transition-colors">
+                    (() => {
+                      const execution = getLatestBackupExecution(job);
+                      const storage = getBackupStorage(job, execution);
+                      return <tr key={job.id} className="hover:bg-slate-50/30 transition-colors">
                       <td className="px-4 py-3.5">
                         <div className="text-xs font-bold text-slate-900">{job.name}</div>
                       </td>
                       <td className="px-4 py-3.5 text-xs text-slate-500 font-mono">{job.lastBackup}</td>
                       <td className="px-4 py-3.5 text-xs text-slate-500">{job.department}</td>
-                      <td className="px-4 py-3.5 text-xs text-slate-500">{job.sizeGB} GB</td>
-                      <td className="px-4 py-3.5 text-xs text-slate-500">{job.user}</td>
-                      <td className="px-4 py-3.5 text-xs text-slate-500">{job.lastVerified || "—"}</td>
+                      <td className="px-4 py-3.5 text-xs text-slate-500">{resolveBackupInstitution(job, execution)}</td>
+                      <td className="px-4 py-3.5 text-xs text-slate-500">{storage.used} {storage.unit} / {storage.quotaGB} GB</td>
+                      <td className="px-4 py-3.5 text-xs text-slate-500">{execution?.doneBy || job.completedBy || job.user}</td>
+                      <td className="px-4 py-3.5 text-xs text-slate-500">{resolveBackupVerifiedBy(job, execution)}</td>
                       <td className="px-4 py-3.5 text-xs text-emerald-600 font-semibold">Completed</td>
                       <td className="px-4 py-3.5">
                         <div className="flex items-center justify-end gap-1.5">
@@ -254,7 +260,8 @@ export default function BackupActivitiesPage() {
                           <button title="Delete" onClick={() => handleDelete(job)} className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md">✕</button>
                         </div>
                       </td>
-                    </tr>
+                      </tr>;
+                    })()
                   ))}
                 </tbody>
               </table>

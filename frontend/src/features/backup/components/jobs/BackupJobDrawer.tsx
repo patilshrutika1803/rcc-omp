@@ -1,6 +1,7 @@
 import { X, RotateCcw, Edit2, CheckCircle2, Archive, FileDown, ClipboardList } from "lucide-react";
 import type { BackupJob } from "../../types/backup";
 import { computeUsedPct } from "../../utils/backupCalculations";
+import { getBackupStorage, getLatestBackupExecution, resolveBackupInstitution, resolveBackupVerifiedBy } from "../../utils/backupHelpers";
 import { BkpStatusBadge } from "./BackupStatusBadge";
 import { BkpTypeBadge } from "./BackupTypeBadge";
 import { exportBackupJobPdf } from "../../utils/backupPdf";
@@ -17,23 +18,11 @@ export function BackupJobDrawer({ job, onClose, onEdit, onRunNow, onViewExecutio
     return trimmed && trimmed !== "—" ? trimmed : undefined;
   };
 
-  const resolveFirstValidValue = (...values: Array<string | undefined | null>) => {
-    return values.map(getDisplayText).find((value): value is string => !!value);
-  };
-
-  const usedPct = computeUsedPct(job.sizeGB, job.quota);
-  const latestExecution = job.history[0]?.executionDetails ?? job.executionData;
-  const institutionValue = resolveFirstValidValue(
-    job.institutionName,
-    job.executionData?.institutionName,
-    latestExecution?.institutionName,
-  ) ?? "—";
-  const verifiedByValue = resolveFirstValidValue(
-    latestExecution?.verifiedBy,
-    job.executionData?.verifiedBy,
-    job.verifiedBy,
-    job.lastVerified,
-  ) ?? "—";
+  const latestExecution = getLatestBackupExecution(job);
+  const institutionValue = resolveBackupInstitution(job, latestExecution);
+  const verifiedByValue = resolveBackupVerifiedBy(job, latestExecution);
+  const storage = getBackupStorage(job, latestExecution);
+  const usedPct = computeUsedPct(storage.usedGB, storage.quotaGB);
   const isCompleted = job.status === "Completed";
   const reminderLabel = job.reminder || "None";
   const dueDateLabel = job.nextDueDate || job.nextBackup || "—";
@@ -81,23 +70,21 @@ export function BackupJobDrawer({ job, onClose, onEdit, onRunNow, onViewExecutio
             )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {(isCompleted ? [
-                { label: "Institution", value: institutionValue },
-                { label: "Execution Details", value: `${latestExecution?.backupDate || job.lastBackup} · ${latestExecution?.backupTime || "—"}` },
-                { label: "Backup Size", value: `${latestExecution?.backupSize || job.sizeGB} ${latestExecution?.unit || "GB"}` },
-                { label: "Done By", value: latestExecution?.doneBy || job.user },
-                { label: "Verified By", value: verifiedByValue },
-                { label: "Backup Date", value: latestExecution?.backupDate || job.lastBackup || "—" },
-                { label: "Backup Time", value: latestExecution?.backupTime || "—" },
-              ] : [
-                { label: "Job Information", value: job.name },
-                { label: "Institution", value: institutionValue },
+              {[
+                { label: "Job Name", value: job.name },
                 { label: "Department", value: job.department },
+                { label: "Institution", value: institutionValue },
                 { label: "Frequency", value: job.frequency },
                 { label: "Reminder", value: reminderLabel },
                 { label: "Priority", value: job.priority || "Medium" },
                 { label: "Due Date", value: dueDateLabel },
-              ]).map((item) => (
+                { label: "Last Verified", value: verifiedByValue },
+                { label: "Current Status", value: job.status },
+                ...(isCompleted ? [
+                  { label: "Completed By", value: latestExecution?.doneBy || job.completedBy || job.user },
+                  { label: "Completed On", value: job.completionDate || latestExecution?.backupDate || job.lastBackup || "—" },
+                ] : []),
+              ].map((item) => (
                 <div key={item.label} className="bg-slate-50 border border-slate-100 rounded-xl p-3">
                   <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">{item.label}</div>
                   <div className="text-xs font-semibold text-slate-900 break-words">{item.value}</div>
@@ -108,14 +95,14 @@ export function BackupJobDrawer({ job, onClose, onEdit, onRunNow, onViewExecutio
             <div className="bg-white border border-slate-200 rounded-xl p-4">
               <div className="flex justify-between items-center mb-3 gap-2">
                 <span className="text-xs font-bold text-slate-700">Storage Used</span>
-                <span className="text-sm font-bold text-slate-900">{job.sizeGB} GB / {job.quota} GB</span>
+                <span className="text-sm font-bold text-slate-900">{storage.used} {storage.unit} / {storage.quotaGB} GB</span>
               </div>
               <div className="w-full bg-slate-100 rounded-full h-2.5 mb-2">
                 <div className={`h-2.5 rounded-full ${usedPct > 80 ? "bg-red-500" : usedPct > 60 ? "bg-amber-500" : "bg-emerald-500"}`} style={{ width: `${Math.min(usedPct, 100)}%` }} />
               </div>
               <div className="flex justify-between text-[11px] text-slate-500">
-                <span>Used: {job.sizeGB} GB</span>
-                <span>Quota: {job.quota} GB</span>
+                <span>Used: {storage.used} {storage.unit}</span>
+                <span>Quota: {storage.quotaGB} GB</span>
               </div>
             </div>
 
