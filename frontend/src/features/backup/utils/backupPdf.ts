@@ -3,7 +3,7 @@ import type { BackupJob } from "../types/backup";
 import { buildBackupFileName } from "./backupStorage";
 import { getBackupStorage, getLatestBackupExecution, resolveBackupInstitution, resolveBackupVerifiedBy } from "./backupHelpers";
 
-const PAGE = { width: 210, height: 297, margin: 7, contentBottom: 274 };
+const PAGE = { width: 210, height: 297, margin: 7, right: 203, bottom: 290, contentBottom: 258 };
 const COLORS = {
   border: [85, 85, 85] as [number, number, number],
   light: [235, 235, 235] as [number, number, number],
@@ -32,30 +32,88 @@ function formatDateTime(value?: string): string {
   return `${formatDate(value)}${time ? ` ${time}` : ""}`;
 }
 
-function drawHeader(pdf: jsPDF): number {
-  const center = PAGE.width / 2;
+function drawLine(pdf: jsPDF, x1: number, y1: number, x2: number, y2: number, width = 0.25): void {
+  pdf.setDrawColor(...COLORS.border);
+  pdf.setLineWidth(width);
+  pdf.line(x1, y1, x2, y2);
+}
+
+function drawRect(pdf: jsPDF, x: number, y: number, width: number, height: number, lineWidth = 0.25): void {
+  pdf.setDrawColor(...COLORS.border);
+  pdf.setLineWidth(lineWidth);
+  pdf.rect(x, y, width, height);
+}
+
+function drawHeader(pdf: jsPDF, page: number): number {
+  const x = PAGE.margin;
+  const y = PAGE.margin;
+  const w = PAGE.right - PAGE.margin;
+  const stampH = 10;
+  const headerY = y + stampH;
+  const headerH = 42;
+  const logoW = 37;
+  const middleW = 102;
+  const rightW = w - logoW - middleW;
+  drawRect(pdf, x, y, w, PAGE.bottom - y, 0.4);
+  pdf.setTextColor(180, 180, 180);
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(6.5);
+  pdf.text("Space for Controlled/ Uncontrolled Stamp", x + 36, y + 6.5, { align: "center" });
+  pdf.text("Space for Master Stamp", x + w - 36, y + 6.5, { align: "center" });
+  drawRect(pdf, x, y, w, stampH, 0.3);
+  drawLine(pdf, x + w / 2, y, x + w / 2, y + stampH, 0.25);
+  drawRect(pdf, x, headerY, w, headerH, 0.3);
+  drawLine(pdf, x + logoW, headerY, x + logoW, headerY + headerH, 0.25);
+  drawLine(pdf, x + logoW + middleW, headerY, x + logoW + middleW, headerY + headerH, 0.25);
+  drawLine(pdf, x, headerY + 19, x + logoW, headerY + 19, 0.25);
+  drawLine(pdf, x + logoW, headerY + 19, x + logoW + middleW, headerY + 19, 0.25);
+  drawLine(pdf, x + logoW + middleW, headerY + 19, x + w, headerY + 19, 0.25);
+  const logoPath = new URL("../../../imports/1675064281326.jpeg", import.meta.url).href;
+  try {
+    pdf.addImage(logoPath, "JPEG", x + 3, headerY + 4, 30, 12);
+  } catch {
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(7);
+    pdf.text("RAJARAM", x + 3, headerY + 11);
+    pdf.text("CONSUMER CARE PVT. LTD.", x + 3, headerY + 15);
+  }
   pdf.setTextColor(...COLORS.text);
   pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(13);
-  pdf.text("RAJARAM CONSUMER CARE PVT. LTD.", center, 15, { align: "center" });
+  pdf.setFontSize(10.5);
+  pdf.text("RAJARAM CONSUMER CARE PVT. LTD.", x + logoW + middleW / 2, headerY + 7, { align: "center" });
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(6.4);
+  pdf.text("Plot No.: A-20/2/1A, MIDC, Islampur, Tal - Walwa,", x + logoW + middleW / 2, headerY + 12, { align: "center" });
+  pdf.text("Dist.- Sangli, Maharashtra-415414, India", x + logoW + middleW / 2, headerY + 16, { align: "center" });
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(7.5);
+  pdf.text(`Page ${page}`, x + logoW + middleW + rightW / 2, headerY + 7, { align: "center" });
+  pdf.text("RCC-OMP", x + logoW + middleW + rightW / 2, headerY + 14, { align: "center" });
+  pdf.setFontSize(8);
+  pdf.text("TITLE:", x + 4, headerY + 27);
   pdf.setFontSize(9);
-  pdf.text("RCC OPERATIONAL MANAGEMENT PORTAL", center, 21, { align: "center" });
-  pdf.setFontSize(12);
-  pdf.text("BACKUP ACTIVITY REPORT", center, 30, { align: "center" });
-  pdf.setDrawColor(...COLORS.border);
-  pdf.setLineWidth(0.3);
-  pdf.line(PAGE.margin, 35, PAGE.width - PAGE.margin, 35);
-  return 43;
+  pdf.text("BACKUP ACTIVITY REPORT", x + logoW + middleW / 2, headerY + 27, { align: "center" });
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(7);
+  pdf.text("Report Type:", x + logoW + middleW + 3, headerY + 26);
+  drawLine(pdf, x + logoW + middleW + 3, headerY + 29, x + w - 3, headerY + 29, 0.2);
+  pdf.setFont("helvetica", "normal");
+  pdf.text("Backup", x + logoW + middleW + 3, headerY + 28);
+  pdf.setFontSize(7);
+  pdf.text("Annexure No.: RCC-OMP-BKP", x + 2, headerY + headerH + 5);
+  drawLine(pdf, x, headerY + headerH + 7, x + w, headerY + headerH + 7, 0.25);
+  return headerY + headerH + 14;
 }
 
 function drawSectionTitle(pdf: jsPDF, title: string, y: number): number {
   pdf.setFillColor(...COLORS.light);
   pdf.rect(PAGE.margin, y - 5, PAGE.width - PAGE.margin * 2, 7, "F");
+  drawRect(pdf, PAGE.margin, y - 5, PAGE.width - PAGE.margin * 2, 7, 0.25);
   pdf.setTextColor(...COLORS.text);
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(9);
   pdf.text(title.toUpperCase(), PAGE.margin + 2, y);
-  return y + 8;
+  return y + 9;
 }
 
 function drawInfoRows(pdf: jsPDF, rows: Array<[string, string]>, y: number): number {
@@ -80,15 +138,22 @@ function drawInfoRows(pdf: jsPDF, rows: Array<[string, string]>, y: number): num
 }
 
 function drawFooter(pdf: jsPDF, page: number, totalPages: number): void {
-  pdf.setDrawColor(...COLORS.border);
-  pdf.setLineWidth(0.3);
-  pdf.line(PAGE.margin, 279, PAGE.width - PAGE.margin, 279);
+  const x = PAGE.margin;
+  const w = PAGE.right - PAGE.margin;
+  const footerTop = PAGE.bottom - 28;
+  drawLine(pdf, x, footerTop, x + w, footerTop, 0.3);
   pdf.setTextColor(...COLORS.muted);
   pdf.setFont("helvetica", "normal");
-  pdf.setFontSize(7.5);
-  pdf.text("RCC-OMP / Rajaram Consumer Care Pvt. Ltd.", PAGE.margin, 285);
-  pdf.text("Internal Use Only", PAGE.width / 2, 285, { align: "center" });
-  pdf.text(`Page ${page} of ${totalPages}`, PAGE.width - PAGE.margin, 285, { align: "right" });
+  pdf.setFontSize(6.7);
+  pdf.text("Department: Backup Operations", x + 2, footerTop + 5);
+  pdf.text("Issued by: RCC-OMP", x + w / 2 - 27, footerTop + 5);
+  pdf.text("Internal Use Only", x + 2, footerTop + 11);
+  pdf.text(`Page ${page} of ${totalPages}`, x + w - 2, footerTop + 11, { align: "right" });
+  drawLine(pdf, x, footerTop + 16, x + w, footerTop + 16, 0.25);
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(7);
+  pdf.text("RCC-OMP / Rajaram Consumer Care Pvt. Ltd.", x + 2, footerTop + 23);
+  pdf.text("Annexure No.: RCC-OMP-BKP", x + w - 2, footerTop + 23, { align: "right" });
 }
 
 export function exportBackupJobPdf(job: BackupJob): void {
@@ -97,15 +162,15 @@ export function exportBackupJobPdf(job: BackupJob): void {
   const storage = getBackupStorage(job, execution);
   const institution = resolveBackupInstitution(job, execution);
   const verifiedBy = resolveBackupVerifiedBy(job, execution);
-  const completedAt = execution?.completedAt || (job.completionDate && `${job.completionDate} ${execution?.backupTime || ""}`.trim());
-  const verifiedAt = execution?.verifiedAt || completedAt;
+  const completedDate = execution?.completedAt || (job.completionDate && `${job.completionDate} ${execution?.backupTime || ""}`.trim()) || execution?.backupDate;
+  const verifiedDate = execution?.verifiedAt || job.completionDate || execution?.backupDate;
   const history = job.history.filter((entry) => entry.status === "Completed");
-  let y = drawHeader(pdf);
+  let y = drawHeader(pdf, 1);
 
   const nextPage = (required = 20) => {
     if (y + required <= PAGE.contentBottom) return;
     pdf.addPage();
-    y = drawHeader(pdf);
+    y = drawHeader(pdf, pdf.getNumberOfPages());
   };
   const section = (title: string, rows: Array<[string, string]>) => {
     nextPage(16 + rows.length * 7);
@@ -126,9 +191,9 @@ export function exportBackupJobPdf(job: BackupJob): void {
 
   section("Backup Execution Details", [
     ["Last Verified", verifiedBy],
-    ["Verified On", formatDateTime(verifiedAt)],
+    ["Verified On", formatDateTime(verifiedDate)],
     ["Completed By", execution?.doneBy || job.completedBy || job.user],
-    ["Completed On", formatDateTime(completedAt || execution?.backupDate)],
+    ["Completed On", formatDateTime(completedDate)],
   ]);
 
   nextPage(35);
@@ -159,13 +224,16 @@ export function exportBackupJobPdf(job: BackupJob): void {
   }, []);
   pdf.setFillColor(...COLORS.light);
   pdf.rect(PAGE.margin, y - 5, PAGE.width - PAGE.margin * 2, 7, "F");
+  drawRect(pdf, PAGE.margin, y - 5, PAGE.width - PAGE.margin * 2, 7, 0.25);
+  xPositions.slice(1).forEach((x) => drawLine(pdf, x, y - 5, x, y + 2, 0.25));
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(7);
   columns.forEach((column, index) => pdf.text(column, xPositions[index] + 1, y));
   y += 7;
   for (const entry of history) {
     const details = entry.executionDetails;
-    const values = [formatDateTime(entry.date), details?.doneBy || job.completedBy || job.user, details?.verifiedBy || verifiedBy, entry.status, details?.executionNotes || "—"];
+    const historyDate = details?.completedAt || entry.date;
+    const values = [formatDateTime(historyDate), details?.doneBy || job.completedBy || job.user, details?.verifiedBy || verifiedBy, entry.status, details?.executionNotes || "—"];
     const lineSets = values.map((value, index) => pdf.splitTextToSize(display(value), widths[index] - 2) as string[]);
     const rowHeight = Math.max(...lineSets.map((lines) => lines.length)) * 4.2 + 2;
     nextPage(rowHeight + 5);
@@ -175,6 +243,7 @@ export function exportBackupJobPdf(job: BackupJob): void {
     lineSets.forEach((lines, index) => lines.forEach((line, lineIndex) => pdf.text(line, xPositions[index] + 1, y + lineIndex * 4.2)));
     pdf.setDrawColor(205, 205, 205);
     pdf.line(PAGE.margin, y + rowHeight - 2, PAGE.width - PAGE.margin, y + rowHeight - 2);
+    xPositions.slice(1).forEach((x) => pdf.line(x, y, x, y + rowHeight - 2));
     y += rowHeight;
   }
   if (history.length === 0) {

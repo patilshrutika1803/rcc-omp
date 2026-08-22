@@ -320,6 +320,7 @@ export function useBackupActivities() {
   };
 
   const handleSnooze = (j: BackupJob) => {
+    if (j.status === "Completed") return;
     setJobs((prev) => prev.map((job) => (job.id !== j.id ? job : { ...job, status: "Paused" })));
     toast.success(`"${j.name}" has been snoozed.`);
   };
