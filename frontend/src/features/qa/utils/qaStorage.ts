@@ -16,14 +16,19 @@ export function loadPersistedQAActivities(): QAActivity[] {
   const parsed = safeJsonParse<QAActivity[] | null>(window.localStorage.getItem(STORAGE_KEY));
   if (!Array.isArray(parsed)) return [];
 
-  return parsed.map((activity) => ({
-    ...activity,
-    dueDate: activity.dueDate || (activity as QAActivity & { targetDate?: string }).targetDate || "",
-    status: activity.status || ((activity as QAActivity & { completed?: string }).completed === "Completed" ? "Completed" : "Upcoming"),
-    priority: activity.priority || "Medium",
-    assignedUser: activity.assignedUser || "Unassigned",
-    reminderDate: activity.reminderDate,
-  }));
+  return parsed.map((activity) => {
+    const storedStatus = (activity as unknown as { status?: string }).status;
+    const status = storedStatus === "Completed" ? "Completed" : storedStatus === "Cancelled" ? "Cancelled" : "Upcoming";
+
+    return {
+      ...activity,
+      dueDate: activity.dueDate || (activity as QAActivity & { targetDate?: string }).targetDate || "",
+      status,
+      priority: activity.priority || "Medium",
+      assignedUser: activity.assignedUser || "Unassigned",
+      reminderDate: activity.reminderDate,
+    };
+  });
 }
 
 export function persistQAActivities(activities: QAActivity[]): void {

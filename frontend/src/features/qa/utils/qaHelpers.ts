@@ -50,7 +50,6 @@ export function isUpcoming(activity: QAActivity): boolean {
 export function activeStatusColor(status: QAStatus) {
   switch (status) {
     case "Completed": return { bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200", dot: "bg-emerald-500" };
-    case "Paused": return { bg: "bg-amber-50", text: "text-amber-700", border: "border-amber-200", dot: "bg-amber-500" };
     case "Cancelled": return { bg: "bg-red-50", text: "text-red-700", border: "border-red-200", dot: "bg-red-500" };
     case "Upcoming":
     default: return { bg: "bg-slate-50", text: "text-slate-600", border: "border-slate-200", dot: "bg-slate-400" };
@@ -86,8 +85,7 @@ export function getDashboardMetrics(activities: QAActivity[]) {
   const pendingCount = activities.filter((activity) => activity.status === "Upcoming").length;
   const completedCount = activities.filter((activity) => activity.status === "Completed").length;
   const overdueCount = activities.filter(isOverdue).length;
-  const upcomingCount = activities.filter((activity) => activity.status === "Paused").length;
-  return { totalCount, pendingCount, completedCount, overdueCount, upcomingCount };
+  return { totalCount, pendingCount, completedCount, overdueCount };
 }
 
 export function getTrendData(activities: QAActivity[]): QATrendPoint[] {

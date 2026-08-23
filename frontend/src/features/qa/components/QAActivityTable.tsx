@@ -1,4 +1,4 @@
-import { MoreHorizontal, Eye, Edit2, Copy, Trash2, CheckCircle2, Clock3 } from "lucide-react";
+import { MoreHorizontal, Eye, Edit2, Copy, Trash2, CheckCircle2 } from "lucide-react";
 import { formatDate } from "../../../shared/utils/dateHelpers";
 import type { QAActivity, QAColumnsState } from "../types/qa";
 import { QAColumnSelector } from "./QAColumnSelector";
@@ -18,7 +18,6 @@ interface QAActivityTableProps {
   handleDelete: (id: string) => void;
   handleEdit: (record: QAActivity) => void;
   handleComplete?: (record: QAActivity) => void;
-  handleSnooze: (record: QAActivity) => void;
 }
 
 export function QAActivityTable({
@@ -33,7 +32,6 @@ export function QAActivityTable({
   handleDuplicate,
   handleDelete,
   handleEdit,
-  handleSnooze,
 }: QAActivityTableProps) {
   const displayDate = (value?: string) => {
     if (!value) return "—";
@@ -89,7 +87,6 @@ export function QAActivityTable({
                               <button onClick={() => { onView(record); setOpenMenuId(null); }} className="w-full px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 flex items-center gap-2"><Eye size={14} /> View</button>
                               <button onClick={() => { handleEdit(record); setOpenMenuId(null); }} className="w-full px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 flex items-center gap-2"><Edit2 size={14} /> Edit</button>
                               <button onClick={() => { onView(record); setOpenMenuId(null); }} className="w-full px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 flex items-center gap-2"><CheckCircle2 size={14} /> Complete</button>
-                              <button onClick={() => { handleSnooze(record); setOpenMenuId(null); }} className="w-full px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 flex items-center gap-2"><Clock3 size={14} /> Snooze</button>
                               <button onClick={() => { handleDuplicate(record); setOpenMenuId(null); }} className="w-full px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 flex items-center gap-2"><Copy size={14} /> Duplicate</button>
                               <div className="h-px bg-slate-100 my-1" />
                               <button onClick={() => { handleDelete(record.id); setOpenMenuId(null); }} className="w-full px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 flex items-center gap-2"><Trash2 size={14} /> Delete</button>

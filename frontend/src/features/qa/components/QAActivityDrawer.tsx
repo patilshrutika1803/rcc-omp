@@ -1,5 +1,5 @@
 import { useMemo, useState, useRef } from "react";
-import { CheckSquare, X, AlertTriangle, Edit2, Copy, CheckCircle2, Trash2, Clock3 } from "lucide-react";
+import { CheckSquare, X, AlertTriangle, Edit2, Copy, CheckCircle2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { formatDate } from "../../../shared/utils/dateHelpers";
 import type { QAActivity, QAActivityFormState } from "../types/qa";
@@ -15,10 +15,9 @@ interface QAActivityDrawerProps {
   onComplete: (note: string, completedBy?: string) => void;
   onDuplicate: () => void;
   onDelete: () => void;
-  onSnooze: () => void;
 }
 
-export function QAActivityDrawer({ record, onClose, onUpdate, onEdit, onComplete, onDuplicate, onDelete, onSnooze }: QAActivityDrawerProps) {
+export function QAActivityDrawer({ record, onClose, onUpdate, onEdit, onComplete, onDuplicate, onDelete }: QAActivityDrawerProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [invalidEdit, setInvalidEdit] = useState<Record<string, boolean>>({});
   const qmsNumberRef = useRef<HTMLInputElement | null>(null);
@@ -251,7 +250,6 @@ export function QAActivityDrawer({ record, onClose, onUpdate, onEdit, onComplete
               <button onClick={onEdit} className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-100"><Edit2 size={13} /> Edit</button>
               <button onClick={() => setShowCompleteModal(true)} className="flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-emerald-700"><CheckCircle2 size={13} /> Complete Activity</button>
               <button onClick={onDuplicate} className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-100"><Copy size={13} /> Duplicate</button>
-              <button onClick={onSnooze} className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-100"><Clock3 size={13} /> Snooze</button>
               <button onClick={onDelete} className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-600 transition-colors hover:bg-red-100"><Trash2 size={13} /> Delete</button>
             </div>
           )}

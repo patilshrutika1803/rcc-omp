@@ -6,11 +6,10 @@ interface KPISectionProps {
   pendingCount: number;
   completedCount: number;
   overdueCount: number;
-  upcomingCount: number;
 }
 
-export function KPISection({ totalCount, pendingCount, completedCount, overdueCount, upcomingCount }: KPISectionProps) {
-  const values: Record<string, number> = { totalCount, pendingCount, completedCount, overdueCount, upcomingCount };
+export function KPISection({ totalCount, pendingCount, completedCount, overdueCount }: KPISectionProps) {
+  const values: Record<string, number> = { totalCount, pendingCount, completedCount, overdueCount };
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Eye, Edit2, Copy, Clock3, CheckCircle2, Trash2, MoreHorizontal } from "lucide-react";
+import { Eye, Edit2, Copy, CheckCircle2, Trash2, MoreHorizontal } from "lucide-react";
 import type { QAActivity } from "../types/qa";
 import { formatDate } from "../../../shared/utils/dateHelpers";
 import { activeStatusColor } from "../utils/qaHelpers";
@@ -10,10 +10,9 @@ interface QAActivityCardViewProps {
   onEdit: (activity: QAActivity) => void;
   onDuplicate: (activity: QAActivity) => void;
   onDelete: (id: string) => void;
-  onSnooze: (activity: QAActivity) => void;
 }
 
-export function QAActivityCardView({ activities, onView, onEdit, onDuplicate, onDelete, onSnooze }: QAActivityCardViewProps) {
+export function QAActivityCardView({ activities, onView, onEdit, onDuplicate, onDelete }: QAActivityCardViewProps) {
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   if (activities.length === 0) {
     return <div className="rounded-xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500">No QA activities found.</div>;
@@ -46,7 +45,6 @@ export function QAActivityCardView({ activities, onView, onEdit, onDuplicate, on
                         <button onClick={() => { onView(activity); setOpenMenuId(null); }} className="w-full px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 flex items-center gap-2"><Eye size={14} /> View</button>
                         <button onClick={() => { onEdit(activity); setOpenMenuId(null); }} className="w-full px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 flex items-center gap-2"><Edit2 size={14} /> Edit</button>
                         <button onClick={() => { onView(activity); setOpenMenuId(null); }} className="w-full px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 flex items-center gap-2"><CheckCircle2 size={14} /> Complete</button>
-                        <button onClick={() => { onSnooze(activity); setOpenMenuId(null); }} className="w-full px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 flex items-center gap-2"><Clock3 size={14} /> Snooze</button>
                         <button onClick={() => { onDuplicate(activity); setOpenMenuId(null); }} className="w-full px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 flex items-center gap-2"><Copy size={14} /> Duplicate</button>
                         <button onClick={() => { onDelete(activity.id); setOpenMenuId(null); }} className="w-full px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 flex items-center gap-2"><Trash2 size={14} /> Delete</button>
                       </div>

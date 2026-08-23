@@ -38,7 +38,7 @@ export default function QAPage() {
     selectedRecord, showDrawer, setShowDrawer,
     showNew, setShowNew, newForm, setNewForm,
     showFilters, setShowFilters, showColumns, setShowColumns, filters, setFilters, columns, setColumns,
-    openRecord, closeDrawer, handleCreate, handleUpdateRecord, handleEdit, handleComplete, handleDuplicate, handleDelete, handleSnooze,
+    openRecord, closeDrawer, handleCreate, handleUpdateRecord, handleEdit, handleComplete, handleDuplicate, handleDelete,
     editingRecord, setEditingRecord, openMenuId, setOpenMenuId,
   } = useQA();
 
@@ -96,7 +96,6 @@ export default function QAPage() {
                   <option value="">All Statuses</option>
                   <option value="Upcoming">Upcoming</option>
                   <option value="Completed">Completed</option>
-                  <option value="Paused">Paused</option>
                   <option value="Cancelled">Cancelled</option>
                 </select>
               </div>
@@ -140,10 +139,9 @@ export default function QAPage() {
             handleDuplicate={handleDuplicate}
             handleDelete={handleDelete}
             handleEdit={handleEdit}
-            handleSnooze={handleSnooze}
           />
         ) : viewMode === "card" ? (
-          <QAActivityCardView activities={filteredActivities} onView={openRecord} onEdit={handleEdit} onDuplicate={handleDuplicate} onDelete={handleDelete} onSnooze={handleSnooze} />
+          <QAActivityCardView activities={filteredActivities} onView={openRecord} onEdit={handleEdit} onDuplicate={handleDuplicate} onDelete={handleDelete} />
         ) : (
           <QACalendarView activities={filteredActivities} onSelect={openRecord} />
         )}
@@ -171,7 +169,6 @@ export default function QAPage() {
           onComplete={(note, completedBy) => handleComplete(selectedRecord, note, completedBy)}
           onDuplicate={() => handleDuplicate(selectedRecord)}
           onDelete={() => handleDelete(selectedRecord.id)}
-          onSnooze={() => handleSnooze(selectedRecord)}
         />
       )}
     </div>

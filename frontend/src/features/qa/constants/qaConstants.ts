@@ -3,7 +3,6 @@ import {
   Clock,
   CheckCircle2,
   AlertTriangle,
-  CalendarClock,
 } from "lucide-react";
 import type { QAActivity, QAActivityFormState, QAColumnsState, QAFiltersState } from "../types/qa";
 import { DEPARTMENT_OPTIONS } from "../../../constants/departments";
@@ -63,7 +62,6 @@ export const KPI_CARD_CONFIG = [
   { key: "pendingCount", label: "Upcoming", icon: Clock, color: "text-slate-600", bg: "bg-slate-100" },
   { key: "completedCount", label: "Completed", icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-50" },
   { key: "overdueCount", label: "Overdue", icon: AlertTriangle, color: "text-red-600", bg: "bg-red-50" },
-  { key: "upcomingCount", label: "Paused", icon: CalendarClock, color: "text-amber-600", bg: "bg-amber-50" },
 ] as const;
 
 export const TABLE_COLUMNS: { key: keyof QAColumnsState; label: string }[] = [

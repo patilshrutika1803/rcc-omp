@@ -57,7 +57,7 @@ export function useQA() {
   }, [activities, isHydrated]);
 
   const filteredActivities = useMemo(() => filterActivities(activities, search, filters), [activities, search, filters]);
-  const { totalCount, pendingCount, completedCount, overdueCount, upcomingCount } = useMemo(() => getDashboardMetrics(activities), [activities]);
+  const { totalCount, pendingCount, completedCount, overdueCount } = useMemo(() => getDashboardMetrics(activities), [activities]);
   const trendData = useMemo(() => getTrendData(activities), [activities]);
   const departmentBreakdown = useMemo(() => getDepartmentBreakdown(activities), [activities]);
 
@@ -256,11 +256,6 @@ export function useQA() {
     toast.success("QA Activity deleted.");
   };
 
-  const handleSnooze = (activity: QAActivity) => {
-    setActivities((prev) => prev.map((item) => (item.id === activity.id ? { ...item, status: "Paused", updatedAt: new Date().toISOString() } : item)));
-    toast.success(`"${activity.qmsNumber}" has been snoozed.`);
-  };
-
   return {
     viewMode, setViewMode,
     search, setSearch,
@@ -271,9 +266,9 @@ export function useQA() {
     openMenuId, setOpenMenuId,
     showFilters, setShowFilters, showColumns, setShowColumns, filters, setFilters, columns, setColumns,
     activities, filteredActivities,
-    totalCount, pendingCount, completedCount, overdueCount, upcomingCount,
+    totalCount, pendingCount, completedCount, overdueCount,
     trendData, departmentBreakdown,
-    openRecord, closeDrawer, handleCreate, handleUpdateRecord, handleEdit, handleComplete, handleDuplicate, handleDelete, handleSnooze,
+    openRecord, closeDrawer, handleCreate, handleUpdateRecord, handleEdit, handleComplete, handleDuplicate, handleDelete,
   };
 }
 

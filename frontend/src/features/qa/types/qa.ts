@@ -2,7 +2,7 @@
 // QA MODULE — TYPES
 // ─────────────────────────────────────────────────────────────────────────────
 
-export type QAStatus = "Upcoming" | "Completed" | "Paused" | "Cancelled";
+export type QAStatus = "Upcoming" | "Completed" | "Cancelled";
 export type QAPriority = "Low" | "Medium" | "High" | "Critical";
 
 export interface QAActionEntry {
