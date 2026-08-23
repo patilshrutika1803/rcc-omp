@@ -205,6 +205,10 @@ export function useInspectionSchedule() {
   const handleCompleteInspection = useCallback(
     (values: { completedBy: string; completionDate: string; completionTime: string; completionNotes?: string }) => {
       if (!selectedInspection) return;
+      if (selectedInspection.status === "Completed") {
+        toast.info("Inspection is already completed.");
+        return;
+      }
       if (!isCompletionDateValid(values.completionDate, selectedInspection.dueDate)) {
         toast.error(`Completion date cannot be before the inspection's due date (${selectedInspection.dueDate}).`);
         return;
@@ -252,6 +256,7 @@ export function useInspectionSchedule() {
         archived: false,
         inspectionScheduleId: completedRecord.id,
         notificationType: "Inspection Completed",
+        notificationKey: `inspection-completed-${completedRecord.id}`,
       });
 
       const nextInspection = buildNextRecurringInspection(completedRecord);
@@ -269,6 +274,7 @@ export function useInspectionSchedule() {
           archived: false,
           inspectionScheduleId: nextInspection.id,
           notificationType: "Next Inspection Generated",
+          notificationKey: `inspection-generated-${nextInspection.id}`,
         });
       }
 

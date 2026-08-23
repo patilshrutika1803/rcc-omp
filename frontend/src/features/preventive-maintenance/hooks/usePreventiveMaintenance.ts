@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { toast } from "sonner";
 import type { PMRecord, PMStatus } from "../types/pm";
 import type { SystemInventory } from "../../system-inventory/types/system";
@@ -22,6 +22,7 @@ const INITIAL_FILTERS: PMFilterState = {
 };
 
 export function usePreventiveMaintenance() {
+  const completionClaims = useRef(new Set<string>());
   const [viewMode, setViewMode] = useState<PMViewMode>("table");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -308,6 +309,13 @@ export function usePreventiveMaintenance() {
 
   const handleCompletePM = (submission: PMChecklistSubmission) => {
     if (!selectedRecord) return;
+    const persistedState = loadPMState();
+    const persistedRecord = persistedState.records.find((record) => record.id === selectedRecord.id);
+    if (selectedRecord.status === "Completed" || persistedRecord?.status === "Completed" || completionClaims.current.has(selectedRecord.id)) {
+      toast.info("Maintenance task is already completed.");
+      return;
+    }
+    completionClaims.current.add(selectedRecord.id);
     const today = new Date().toISOString().split("T")[0];
     const trimmedNotes = submission.notes.trim();
 
@@ -443,11 +451,21 @@ export function usePreventiveMaintenance() {
         };
         const machineId = selectedRecord.machineId;
         const existingHistory = state.completionHistory[machineId] || [];
+        const currentRecords = state.records.length > 0 ? state.records : pmRecords;
+        const nextRecords = currentRecords.length > 0
+          ? [
+              ...(newPMRecord ? [newPMRecord] : []),
+              completedRecord,
+              ...currentRecords.filter((record) => record.id !== selectedRecord.id && record.id !== newPMRecord?.id),
+            ]
+          : [];
         const next: PersistedPMStateV1 = {
           ...state,
+          records: nextRecords,
+          completedPMs: [completedRecord, ...state.completedPMs.filter((record) => record.id !== completedRecord.id)],
           completionHistory: {
             ...state.completionHistory,
-            [machineId]: [completionEvent, ...existingHistory],
+            [machineId]: [completionEvent, ...existingHistory.filter((event) => event.pmId !== completedRecord.id)],
           },
         };
         savePMState(next);

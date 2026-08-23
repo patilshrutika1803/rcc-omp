@@ -57,7 +57,6 @@ export function createInspection(record: InspectionScheduleRecord): InspectionSc
   const state = loadState();
   const exists = state.activeInspections.find((item) =>
     item.id === record.id ||
-    item.recurrenceId === record.recurrenceId ||
     normalizeInspectionKey(item) === normalizeInspectionKey(record)
   );
   if (exists) return exists;
@@ -80,14 +79,13 @@ export function updateInspection(record: InspectionScheduleRecord): InspectionSc
 
 export function completeInspection(record: InspectionScheduleRecord): boolean {
   const state = loadState();
-  const active = state.activeInspections.filter((item) => item.id !== record.id);
   const alreadyCompleted = state.completedInspections.find(
-    (item) => item.id === record.id || item.recurrenceId === record.recurrenceId
+    (item) => item.id === record.id
   );
   if (alreadyCompleted) {
-    saveState({ ...state, activeInspections: active });
     return false;
   }
+  const active = state.activeInspections.filter((item) => item.id !== record.id);
   saveState({ ...state, activeInspections: active, completedInspections: [record, ...state.completedInspections] });
   return true;
 }

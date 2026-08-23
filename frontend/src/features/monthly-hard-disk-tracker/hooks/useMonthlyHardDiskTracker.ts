@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { HardDiskCycle, HardDiskCycleFormValues, HardDiskFilters, HardDiskHistoryRecord, HardDiskReminderStatus, HardDiskReturnDetails } from "../types/hardDisk";
 import { HDD_DEFAULT_FORM_VALUES } from "../constants/hardDiskConstants";
@@ -65,6 +65,7 @@ function matchesFilters(cycle: HardDiskCycle, filters: HardDiskFilters): boolean
 }
 
 export function useMonthlyHardDiskTracker() {
+  const completionClaims = useRef(new Set<string>());
   const [cycles, setCycles] = useState<HardDiskCycle[]>(() => loadPersistedHardDiskCycles().activeCycles);
   const [completedHistory, setCompletedHistory] = useState<HardDiskHistoryRecord[]>(() => loadPersistedHardDiskCycles().completedHistory);
   const [selectedCycle, setSelectedCycle] = useState<HardDiskCycle | null>(null);
@@ -265,6 +266,14 @@ export function useMonthlyHardDiskTracker() {
 
   const completeCycle = (cycle: HardDiskCycle, details: HardDiskCycle["completionDetails"], user: string) => {
     if (!details) return;
+    const persisted = loadPersistedHardDiskCycles();
+    const persistedCycle = persisted.activeCycles.find((item) => item.id === cycle.id);
+    const alreadyCompleted = persisted.completedHistory.some((record) => record.cycleId === cycle.cycleId);
+    if (cycle.status === "Cycle Completed" || persistedCycle?.status === "Cycle Completed" || alreadyCompleted || completionClaims.current.has(cycle.id)) {
+      toast.info("Monthly cycle is already completed.");
+      return;
+    }
+    completionClaims.current.add(cycle.id);
 
     const completedRecord: HardDiskHistoryRecord = {
       id: makeId("history"),
@@ -299,8 +308,9 @@ export function useMonthlyHardDiskTracker() {
 
     const nextMonth = nextMonthLabel(cycle.month);
     const existingNext = cycles.some((item) => item.month === nextMonth) || completedHistory.some((record) => record.month === nextMonth);
+    let generatedNextCycle: HardDiskCycle | null = null;
     if (!existingNext) {
-      const nextCycle: HardDiskCycle = {
+      generatedNextCycle = {
         id: makeId("cycle"),
         cycleId: buildCycleId(nextMonth),
         month: nextMonth,
@@ -340,10 +350,17 @@ export function useMonthlyHardDiskTracker() {
         recurrenceId: cycle.recurrenceId || cycle.id,
       };
 
-      setCycles((prev) => [nextCycle, ...prev]);
-      generateInitialHardDiskNotifications(nextCycle);
-      addHardDiskNotification(nextCycle, "Next Month Generated", "Next Month Cycle Generated", `The next cycle for ${formatMonthLabel(nextMonth)} has been created.`);
+      setCycles((prev) => [generatedNextCycle as HardDiskCycle, ...prev]);
+      generateInitialHardDiskNotifications(generatedNextCycle);
+      addHardDiskNotification(generatedNextCycle, "Next Month Generated", "Next Month Cycle Generated", `The next cycle for ${formatMonthLabel(nextMonth)} has been created.`);
     }
+
+    const persistedActive = (persisted.activeCycles.length > 0 ? persisted.activeCycles : cycles)
+      .filter((item) => item.id !== cycle.id && item.month !== nextMonth);
+    persistHardDiskCycles(
+      generatedNextCycle ? [generatedNextCycle, ...persistedActive] : persistedActive,
+      [completedRecord, ...persisted.completedHistory.filter((record) => record.cycleId !== cycle.cycleId)]
+    );
 
     toast.success(`Cycle ${cycle.cycleId} completed and the next month cycle was generated.`);
   };

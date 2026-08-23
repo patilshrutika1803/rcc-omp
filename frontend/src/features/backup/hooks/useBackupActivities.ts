@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { BackupJob, BackupJobFormData, BackupSubTab } from "../types/backup";
 import { BACKUP_JOBS } from "../constants/backupConstants";
@@ -15,6 +15,7 @@ import { calculateNextDueDate as calculateSharedNextDueDate, calculateReminderDa
 import { loadPersistedBackupJobs, persistBackupJobs } from "../utils/backupStorage";
 
 export function useBackupActivities() {
+  const completionClaims = useRef(new Set<string>());
   const [subTab, setSubTab] = useState<BackupSubTab>("jobs");
   const [viewMode, setViewMode] = useState<"table" | "card">("table");
   const [showHistory, setShowHistory] = useState(false);
@@ -189,6 +190,14 @@ export function useBackupActivities() {
   };
 
   const submitCompletionForm = (values: BackupExecutionFormValues, job: BackupJob) => {
+    const persisted = loadPersistedBackupJobs();
+    const persistedJob = [...persisted.activeJobs, ...persisted.completedJobs].find((candidate) => candidate.id === job.id);
+    if (job.status === "Completed" || persistedJob?.status === "Completed" || completionClaims.current.has(job.id)) {
+      toast.info("Backup job is already completed.");
+      return;
+    }
+    completionClaims.current.add(job.id);
+
     const sizeValue = Number(values.backupSize);
     let sizeGB = Number.isNaN(sizeValue) ? 0 : sizeValue;
 
@@ -301,6 +310,10 @@ export function useBackupActivities() {
       setJobs((prev) => [nextJob, ...prev.filter((candidate) => candidate.id !== nextJob.id)]);
       checkAndGenerateDueBackupReminders([nextJob]);
     }
+
+    const persistedActive = (persisted.activeJobs.length > 0 ? persisted.activeJobs : jobs)
+      .filter((candidate) => candidate.id !== job.id && candidate.id !== nextJob?.id);
+    persistBackupJobs(nextJob ? [nextJob, ...persistedActive] : persistedActive, [completedBackup, ...persisted.completedJobs]);
 
     if (selectedJob?.id === job.id) {
       setSelectedJob(completedBackup);

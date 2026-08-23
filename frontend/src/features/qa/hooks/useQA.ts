@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { QAActivity, QAActivityFormState, QAColumnsState, QAFiltersState, QAViewMode } from "../types/qa";
 import { DEFAULT_COLUMNS, DEFAULT_FILTERS, EMPTY_FORM, INITIAL_QA_ACTIVITIES } from "../constants/qaConstants";
@@ -9,6 +9,7 @@ import { addNotification, hasNotificationForQA, removeQANotifications } from "..
 import type { Notification } from "../../notificataions/types/notification";
 
 export function useQA() {
+  const completionClaims = useRef(new Set<string>());
   const [viewMode, setViewMode] = useState<QAViewMode>("table");
   const [search, setSearch] = useState("");
   const [selectedRecord, setSelectedRecord] = useState<QAActivity | null>(null);
@@ -196,31 +197,32 @@ export function useQA() {
   };
 
   const handleComplete = (activity: QAActivity, actionNote?: string, completedBy?: string) => {
-    if (activity.status === "Completed") {
+    const persistedActivities = loadPersistedQAActivities();
+    const persistedActivity = persistedActivities.find((item) => item.id === activity.id);
+    if (activity.status === "Completed" || persistedActivity?.status === "Completed" || completionClaims.current.has(activity.id)) {
       toast.info("Activity is already completed.");
       return;
     }
+    completionClaims.current.add(activity.id);
 
     const completedAt = new Date().toISOString();
     const dueDate = activity.dueDate || activity.targetDate;
+    const completedActivity: QAActivity = {
+      ...activity,
+      status: "Completed",
+      updatedAt: completedAt,
+      completionDate: completedAt.split("T")[0],
+      completionNotes: actionNote?.trim() || activity.actionNotes || "",
+      completedBy: completedBy?.trim() || activity.completedBy || "Current User",
+      actionHistory: actionNote ? [{ time: "Just now", note: actionNote }, ...activity.actionHistory] : activity.actionHistory,
+      actionNotes: actionNote || activity.actionNotes || "",
+    };
 
     removeQANotifications(activity.id);
-    setActivities((prev) => {
-      const updated: QAActivity[] = prev.map((item): QAActivity => {
-        if (item.id !== activity.id) return item;
-        return {
-          ...item,
-          status: "Completed" as QAActivity["status"],
-          updatedAt: completedAt,
-          completionDate: completedAt.split("T")[0],
-          completionNotes: actionNote?.trim() || item.actionNotes || "",
-          completedBy: completedBy?.trim() || item.completedBy || "Current User",
-          actionHistory: actionNote ? [{ time: "Just now", note: actionNote }, ...item.actionHistory] : item.actionHistory,
-          actionNotes: actionNote || item.actionNotes || "",
-        };
-      });
-      return updated;
-    });
+    const nextActivities = (persistedActivities.length > 0 ? persistedActivities : activities)
+      .map((item) => item.id === activity.id ? completedActivity : item);
+    setActivities(nextActivities);
+    persistQAActivities(nextActivities);
 
     setShowDrawer(false);
     setSelectedRecord(null);
