@@ -78,7 +78,7 @@ export function updateInspection(record: InspectionScheduleRecord): InspectionSc
   return record;
 }
 
-export function completeInspection(record: InspectionScheduleRecord): void {
+export function completeInspection(record: InspectionScheduleRecord): boolean {
   const state = loadState();
   const active = state.activeInspections.filter((item) => item.id !== record.id);
   const alreadyCompleted = state.completedInspections.find(
@@ -86,9 +86,10 @@ export function completeInspection(record: InspectionScheduleRecord): void {
   );
   if (alreadyCompleted) {
     saveState({ ...state, activeInspections: active });
-    return;
+    return false;
   }
   saveState({ ...state, activeInspections: active, completedInspections: [record, ...state.completedInspections] });
+  return true;
 }
 
 function getDeletionKey(record: InspectionScheduleRecord): string {

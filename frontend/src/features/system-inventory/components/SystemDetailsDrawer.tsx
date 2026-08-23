@@ -1,15 +1,15 @@
 import React, { useState } from "react";
 import { X, CalendarClock, Edit2 } from "lucide-react";
 import type { SystemInventory } from "../types/system";
-import { typeIcon } from "../utils/systemHelpers";
+import { daysUntilInventoryDate, formatInventoryDate, typeIcon } from "../utils/systemHelpers";
 import { SystemStatusBadge } from "./SystemStatusBadge";
-import { daysUntil, formatDate } from "../../../shared/utils/dateHelpers";
 import { getActiveInspections, getCompletedInspections } from "../services/systemInspectionService";
+import { formatDate } from "../../../shared/utils/dateHelpers";
 
 export function SystemDetailsDrawer({ system, onClose, onEdit, onOpenComplete }: { system: SystemInventory; onClose: () => void; onEdit: () => void; onOpenComplete?: () => void }) {
   const [activeTab, setActiveTab] = useState<"details" | "inspection">("details");
   const TypeIcon = typeIcon(system.systemType);
-  const wDays = system.warrantyExpiry ? daysUntil(system.warrantyExpiry) : null;
+  const wDays = system.warrantyExpiry ? daysUntilInventoryDate(system.warrantyExpiry) : null;
 
   const rows: [string, string][] = [
     ["System ID", system.systemId],
@@ -22,8 +22,8 @@ export function SystemDetailsDrawer({ system, onClose, onEdit, onOpenComplete }:
     ["Brand", system.brand || "—"],
     ["Model", system.model || "—"],
     ["Serial Number", system.serialNumber || "—"],
-    ["Purchase Date", system.purchaseDate ? formatDate(system.purchaseDate) : "—"],
-    ["Warranty Expiry", system.warrantyExpiry ? formatDate(system.warrantyExpiry) : "—"],
+    ["Purchase Date", system.purchaseDate ? formatInventoryDate(system.purchaseDate) : "—"],
+    ["Warranty Expiry", system.warrantyExpiry ? formatInventoryDate(system.warrantyExpiry) : "—"],
   ];
 
   return (

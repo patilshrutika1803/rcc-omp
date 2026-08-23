@@ -26,12 +26,23 @@ export function getFrequencyForCategory(category: InspectionCategory): Inspectio
   return category === "GxP" ? "Monthly" : "Every 3 Months";
 }
 
+export function getFrequencyForSystem(system: SystemInventory): InspectionFrequency {
+  const savedFrequency = system.inspectionSettings?.frequency;
+  if (savedFrequency === "Monthly") return "Monthly";
+  if (savedFrequency === "Quarterly") return "Every 3 Months";
+  return getFrequencyForCategory(system.systemCategory === "GxP" ? "GxP" : "Non-GxP");
+}
+
 export function normalizeFrequencyForCalculation(frequency: InspectionFrequency): string {
   return FREQUENCY_CALC_MAP[frequency];
 }
 
 export function calculateInspectionNextDueDate(currentDueDate: string, frequency: InspectionFrequency): string {
   return calculateNextDueDate(currentDueDate, normalizeFrequencyForCalculation(frequency));
+}
+
+export function isValidInspectionDate(value: string | undefined): value is string {
+  return Boolean(value) && !Number.isNaN(new Date(`${value}T00:00:00`).getTime());
 }
 
 export function calculateInspectionReminderDate(
@@ -85,9 +96,11 @@ export function getInspectionStatus(dueDate: string, dueTime: string, isComplete
 export function buildSystemInspectionRecord(system: SystemInventory): InspectionScheduleRecord {
   const nowDate = new Date().toISOString().split("T")[0];
   const category: InspectionCategory = system.systemCategory === "GxP" ? "GxP" : "Non-GxP";
-  const frequency = getFrequencyForCategory(category);
-  const lastInspectionDate = system.inspectionSettings?.lastInspection ?? nowDate;
-  const dueDate = system.inspectionSettings?.nextInspection ?? calculateInspectionNextDueDate(lastInspectionDate, frequency) ?? nowDate;
+  const frequency = getFrequencyForSystem(system);
+  const lastInspectionDate = isValidInspectionDate(system.inspectionSettings?.lastInspection) ? system.inspectionSettings.lastInspection : nowDate;
+  const dueDate = isValidInspectionDate(system.inspectionSettings?.nextInspection)
+    ? system.inspectionSettings.nextInspection
+    : calculateInspectionNextDueDate(lastInspectionDate, frequency) ?? nowDate;
   const dueTime = "17:00";
   const reminderOption = system.inspectionSettings?.reminder ?? "1 Day Before";
 
@@ -104,7 +117,7 @@ export function buildSystemInspectionRecord(system: SystemInventory): Inspection
     },
     department: system.department || "",
     assignedUser: system.assignedUser || "",
-    description: `Recurring ${category} system inspection`,
+    description: system.inspectionSettings?.description || `Recurring ${category} system inspection`,
     category,
     frequency,
     lastInspectionDate,

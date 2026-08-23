@@ -45,6 +45,28 @@ export function emptySystem(): SystemInventory {
   };
 }
 
+export function formatInventoryDate(dateStr: string): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})(?:$|T)/.exec(dateStr);
+  const date = match
+    ? new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]))
+    : new Date(dateStr);
+
+  return date.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+}
+
+export function daysUntilInventoryDate(dateStr: string): number {
+  const match = /^(\d{4})-(\d{2})-(\d{2})(?:$|T)/.exec(dateStr);
+  const due = match
+    ? new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]))
+    : new Date(dateStr);
+  const now = new Date();
+
+  due.setHours(0, 0, 0, 0);
+  now.setHours(0, 0, 0, 0);
+
+  return Math.round((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Search / Filter helpers (used by SystemInventoryTable)
 // ─────────────────────────────────────────────────────────────────────────────

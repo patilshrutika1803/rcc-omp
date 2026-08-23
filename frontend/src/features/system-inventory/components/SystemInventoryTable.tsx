@@ -2,8 +2,7 @@ import React, { useState, useMemo } from "react";
 import { Eye, Edit2, Trash2, Download } from "lucide-react";
 import type { SystemInventory } from "../types/system";
 import { SYSTEMS_PER_PAGE } from "../constants/systemConstants";
-import { typeIcon, filterSystems, paginate, totalPagesFor, exportSystemsAsCsv } from "../utils/systemHelpers";
-import { daysUntil, formatDate } from "../../../shared/utils/dateHelpers";
+import { typeIcon, filterSystems, paginate, totalPagesFor, exportSystemsAsCsv, daysUntilInventoryDate, formatInventoryDate } from "../utils/systemHelpers";
 import { SystemStatusBadge } from "./SystemStatusBadge";
 import { EmptyState } from "./EmptyState";
 import { SystemToolbar } from "./SystemToolbar";
@@ -87,7 +86,7 @@ export function SystemInventoryTable({
                     <th className="px-4 py-3">Location</th>
                     <th className="px-4 py-3">Assigned User</th>
                     <th className="px-4 py-3">Purchase Date</th>
-                    <th className="px-4 py-3">Warranty</th>
+                    <th className="px-4 py-3">Warranty Expiry</th>
                     <th className="px-4 py-3">Status</th>
                     <th className="px-4 py-3 text-right">Actions</th>
                   </tr>
@@ -95,7 +94,7 @@ export function SystemInventoryTable({
                 <tbody className="divide-y divide-slate-100 text-slate-700">
                   {paged.map(system => {
                     const TypeIcon = typeIcon(system.systemType);
-                    const wDays = system.warrantyExpiry ? daysUntil(system.warrantyExpiry) : null;
+                    const wDays = system.warrantyExpiry ? daysUntilInventoryDate(system.warrantyExpiry) : null;
                     return (
                       <tr key={system.systemId || system._id} onClick={() => onView(system)} className="hover:bg-blue-50/30 transition-colors group cursor-pointer">
                         <td className="px-4 py-3.5 text-xs font-mono font-semibold text-slate-700">{system.systemId}</td>
@@ -125,11 +124,11 @@ export function SystemInventoryTable({
                             <span className="text-xs text-slate-600 font-medium">{system.assignedUser.split(" ")[0]}</span>
                           </div>
                         </td>
-                        <td className="px-4 py-3.5 text-xs text-slate-500">{system.purchaseDate ? formatDate(system.purchaseDate) : "—"}</td>
+                        <td className="px-4 py-3.5 text-xs text-slate-500">{system.purchaseDate ? formatInventoryDate(system.purchaseDate) : "—"}</td>
                         <td className="px-4 py-3.5">
                           {system.warrantyExpiry ? (
                             <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md ${wDays !== null && wDays < 0 ? "bg-red-50 text-red-600 border border-red-200" : wDays !== null && wDays < 90 ? "bg-amber-50 text-amber-600 border border-amber-200" : "bg-emerald-50 text-emerald-600 border border-emerald-200"}`}>
-                              {wDays !== null && wDays < 0 ? "Expired" : formatDate(system.warrantyExpiry)}
+                              {wDays !== null && wDays < 0 ? "Expired" : formatInventoryDate(system.warrantyExpiry)}
                             </span>
                           ) : <span className="text-[10px] text-slate-400">—</span>}
                         </td>

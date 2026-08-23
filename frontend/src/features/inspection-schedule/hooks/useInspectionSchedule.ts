@@ -228,7 +228,14 @@ export function useInspectionSchedule() {
         history: [historyEntry, ...(selectedInspection.history ?? [])],
       };
 
-      completeInspection(completedRecord);
+      const wasCompleted = completeInspection(completedRecord);
+      if (!wasCompleted) {
+        setActiveInspections((prev) => prev.filter((item) => item.id !== completedRecord.id));
+        setShowCompleteDialog(false);
+        setSelectedInspection(null);
+        return;
+      }
+
       setCompletedInspections((prev) => [completedRecord, ...prev]);
       setActiveInspections((prev) => prev.filter((item) => item.id !== completedRecord.id));
 

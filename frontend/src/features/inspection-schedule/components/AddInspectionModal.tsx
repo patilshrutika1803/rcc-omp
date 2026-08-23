@@ -14,7 +14,7 @@ import {
   INSPECTION_REMINDERS,
   INSPECTION_TARGET_TYPES,
 } from "../constants/inspectionScheduleConstants";
-import { getFrequencyForCategory } from "../utils/inspectionScheduleUtils";
+import { calculateInspectionNextDueDate, getFrequencyForSystem, isValidInspectionDate } from "../utils/inspectionScheduleUtils";
 import { DEPARTMENT_OPTIONS } from "../../../constants/departments";
 
 interface AddInspectionModalProps {
@@ -35,6 +35,7 @@ export function AddInspectionModal({ onClose, onSave, systems, editRecord }: Add
   const [assignedUser, setAssignedUser] = useState(editRecord?.assignedUser ?? "");
   const [description, setDescription] = useState(editRecord?.description ?? "");
   const [frequency, setFrequency] = useState<InspectionFrequency>(editRecord?.frequency ?? "Monthly");
+  const [lastInspectionDate, setLastInspectionDate] = useState(editRecord?.lastInspectionDate ?? "");
   const [dueDate, setDueDate] = useState(editRecord?.dueDate ?? new Date().toISOString().slice(0, 10));
   const [dueTime, setDueTime] = useState(editRecord?.dueTime ?? "17:00");
   const [reminderOption, setReminderOption] = useState<InspectionReminderOption>(editRecord?.reminderOption ?? "1 Day Before");
@@ -58,11 +59,25 @@ export function AddInspectionModal({ onClose, onSave, systems, editRecord }: Add
       // Editing mode: keep existing frequency
       return;
     }
-    // Creating new inspection: set default frequency based on target type
+    // Creating a system inspection: initialize from the system's saved settings.
     if (targetType === "Machine") {
       setFrequency("Monthly");
     } else if (targetType === "System" && selectedSystem) {
-      setFrequency(getFrequencyForCategory(selectedSystem.systemCategory === "GxP" ? "GxP" : "Non-GxP"));
+      const settings = selectedSystem.inspectionSettings;
+      const savedFrequency = getFrequencyForSystem(selectedSystem);
+      const savedLastInspectionDate = isValidInspectionDate(settings?.lastInspection)
+        ? settings.lastInspection
+        : new Date().toISOString().slice(0, 10);
+      const savedDueDate = isValidInspectionDate(settings?.nextInspection)
+        ? settings.nextInspection
+        : calculateInspectionNextDueDate(savedLastInspectionDate, savedFrequency);
+
+      setFrequency(savedFrequency);
+      setLastInspectionDate(savedLastInspectionDate);
+      setDueDate(savedDueDate);
+      setReminderOption(settings?.reminder ?? "1 Day Before");
+      setPriority(settings?.priority ?? "Medium");
+      setDescription(settings?.description ?? "");
     }
   }, [targetType, selectedSystem, editRecord]);
 
@@ -104,7 +119,7 @@ export function AddInspectionModal({ onClose, onSave, systems, editRecord }: Add
       description: description || (targetType === "System" ? `Recurring ${category} system inspection` : "Machine inspection"),
       category,
       frequency: frequency,
-      lastInspectionDate: editRecord?.lastInspectionDate ?? dueDate,
+      lastInspectionDate: editRecord?.lastInspectionDate ?? (lastInspectionDate || dueDate),
       dueDate,
       dueTime,
       reminderOption,

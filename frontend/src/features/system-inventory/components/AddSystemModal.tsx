@@ -104,12 +104,6 @@ export function AddSystemModal({
   // If systemCategory changes, ensure inspection frequency defaults accordingly
   const handleCategoryChange = (value: string) => {
     updateField("systemCategory", value);
-    setForm(prev => {
-      const insp = prev.inspectionSettings ?? undefined;
-      if (!insp) return prev;
-      const nextFreq = value === "GxP" ? "Monthly" : "Quarterly";
-      return { ...prev, inspectionSettings: { ...insp, frequency: nextFreq } };
-    });
   };
 
   const validate = () => validateSystemForm(form);
