@@ -50,6 +50,7 @@ export default function InspectionSchedulePage() {
     closeCompleteDialog,
     handleSaveInspection,
     handleCompleteInspection,
+    handleUndoCompletion,
     handleDeleteInspection,
     setShowHistory: setHistory,
   } = useInspectionSchedule();
@@ -172,7 +173,7 @@ export default function InspectionSchedulePage() {
       </div>
 
       {showHistory && (
-        <InspectionHistoryPanel inspections={completedInspections} />
+        <InspectionHistoryPanel inspections={completedInspections} onUndo={(inspection) => { if (window.confirm("Undo Completion?\n\nThis will restore the task to its previous active state. Any generated recurring record/history changes will be safely reversed.")) handleUndoCompletion(inspection); }} />
       )}
 
       {showAddModal && (

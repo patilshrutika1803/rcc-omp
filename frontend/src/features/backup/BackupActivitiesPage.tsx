@@ -50,7 +50,7 @@ export default function BackupActivitiesPage() {
     selectedJob, showDrawer, openJob, closeDrawer,
     showAddModal, setShowAddModal,
     editingJob, setEditingJob,
-    showExecutionForm, completingJob, executionFormMode, openCompletionForm, openExecutionReview, submitCompletionForm, cancelCompletionForm,
+    showExecutionForm, completingJob, executionFormMode, openCompletionForm, openExecutionReview, submitCompletionForm, cancelCompletionForm, handleUndoCompletion,
     handleAddJob, handleEditJob, handleDuplicate, handleSnooze, handleDelete,
   } = useBackupActivities();
 
@@ -257,6 +257,7 @@ export default function BackupActivitiesPage() {
                           <button title="View Details" onClick={() => openJob(job)} className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-md"><Archive size={14} /></button>
                           <button title="View Execution Form" onClick={() => openExecutionReview(job)} className="p-1.5 text-slate-400 hover:text-sky-600 hover:bg-sky-50 rounded-md"><History size={14} /></button>
                           <button title="Export PDF" onClick={() => exportBackupJobPdf(job)} className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md"><Download size={14} /></button>
+                          <button title="Undo Completion" onClick={() => { if (window.confirm("Undo Completion?\n\nThis will restore the task to its previous active state. Any generated recurring record/history changes will be safely reversed.")) handleUndoCompletion(job); }} className="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-md"><RefreshCw size={14} /></button>
                           <button title="Delete" onClick={() => handleDelete(job)} className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md">✕</button>
                         </div>
                       </td>
@@ -310,6 +311,7 @@ export default function BackupActivitiesPage() {
           onEdit={() => { setEditingJob(selectedJob); closeDrawer(); }}
           onRunNow={() => openCompletionForm(selectedJob)}
           onViewExecution={() => openExecutionReview(selectedJob)}
+          onUndo={() => { if (window.confirm("Undo Completion?\n\nThis will restore the task to its previous active state. Any generated recurring record/history changes will be safely reversed.")) { handleUndoCompletion(selectedJob); closeDrawer(); } }}
         />
       )}
 

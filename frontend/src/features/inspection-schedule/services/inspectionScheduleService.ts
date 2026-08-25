@@ -90,6 +90,15 @@ export function completeInspection(record: InspectionScheduleRecord): boolean {
   return true;
 }
 
+export function undoInspectionCompletion(completedId: string, restored: InspectionScheduleRecord, generatedId?: string): boolean {
+  const state = loadState();
+  const completed = state.completedInspections.some((item) => item.id === completedId);
+  if (!completed || state.activeInspections.some((item) => item.id === restored.id)) return false;
+  const active = state.activeInspections.filter((item) => item.id !== generatedId && item.parentId !== completedId);
+  saveState({ ...state, activeInspections: [restored, ...active], completedInspections: state.completedInspections.filter((item) => item.id !== completedId) });
+  return true;
+}
+
 function getDeletionKey(record: InspectionScheduleRecord): string {
   if (record.targetType === "System" && record.systemId) return `system:${record.systemId}`;
   return `inspection:${record.id}`;

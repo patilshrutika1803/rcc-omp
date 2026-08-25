@@ -4,6 +4,7 @@ import { useMonthlyHardDiskTracker } from "./hooks/useMonthlyHardDiskTracker";
 import type { HardDiskCycle, HardDiskCycleFormValues } from "./types/hardDisk";
 import { HDD_PRIORITY_OPTIONS, HDD_REMINDER_OPTIONS } from "./constants/hardDiskConstants";
 import { exportHardDiskCyclePdf } from "./utils/hardDiskPdf";
+import { isDueDateTimeReached } from "../shared/utils/recurringWorkflow";
 
 const emptyFormValues = (): HardDiskCycleFormValues => ({
   month: "",
@@ -50,7 +51,7 @@ export default function MonthlyHardDiskTrackerPage() {
     closeDrawer,
     submitCycle,
     updateCycleStatus,
-    completeCycle,
+    completeCycle, handleUndoCompletion,
     markAccountabilityCompleted,
     recordReturn,
     removeCycle,
@@ -317,7 +318,7 @@ export default function MonthlyHardDiskTrackerPage() {
                         <button title="Receive at RSB" onClick={() => updateCycleStatus(cycle, "Received at RSB", "Hard disk received at RSB", cycle.responsiblePerson)} className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md"><PackageCheck size={14} /></button>
                         <button title="Accountability" onClick={() => openAccountability(cycle)} className="p-1.5 text-slate-400 hover:text-yellow-600 hover:bg-yellow-50 rounded-md"><RotateCcw size={14} /></button>
                         <button title="Mark Returned" onClick={() => openReturn(cycle)} className="p-1.5 text-slate-400 hover:text-emerald-700 hover:bg-emerald-50 rounded-md"><RotateCcw size={14} /></button>
-                        <button title="Complete" onClick={() => openCompletion(cycle)} className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-md"><CheckCircle2 size={14} /></button>
+                        <button title={isDueDateTimeReached(cycle.expectedReturnDate) ? "Complete" : "Cannot complete before the scheduled due date."} disabled={!isDueDateTimeReached(cycle.expectedReturnDate)} onClick={() => openCompletion(cycle)} className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-md disabled:cursor-not-allowed disabled:opacity-50"><CheckCircle2 size={14} /></button>
                         <button title="Export PDF" onClick={() => exportHardDiskCyclePdf(cycle)} className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md"><Download size={14} /></button>
                         <button title="Delete" onClick={() => removeCycle(cycle)} className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md"><Trash2 size={14} /></button>
                       </div>
@@ -346,6 +347,7 @@ export default function MonthlyHardDiskTrackerPage() {
                   <th className="px-4 py-3">Verified By</th>
                   <th className="px-4 py-3">Condition</th>
                   <th className="px-4 py-3">Remarks</th>
+                  <th className="px-4 py-3 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-slate-700">
@@ -359,6 +361,7 @@ export default function MonthlyHardDiskTrackerPage() {
                     <td className="px-4 py-3.5 text-xs text-slate-500">{record.verifiedBy}</td>
                     <td className="px-4 py-3.5 text-xs text-slate-500">{record.hardDiskCondition}</td>
                     <td className="px-4 py-3.5 text-xs text-slate-500">{record.remarks}</td>
+                    <td className="px-4 py-3.5 text-right"><button title="Undo Completion" onClick={() => { if (window.confirm("Undo Completion?\n\nThis will restore the task to its previous active state. Any generated recurring record/history changes will be safely reversed.")) handleUndoCompletion(record); }} className="inline-flex items-center gap-1.5 px-2 py-1.5 text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-md"><RotateCcw size={13} /> Undo Completion</button></td>
                   </tr>
                 ))}
               </tbody>

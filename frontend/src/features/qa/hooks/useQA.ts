@@ -7,6 +7,7 @@ import { validateNewQAActivity } from "../utils/qaValidation";
 import { loadPersistedQAActivities, persistQAActivities } from "../utils/qaStorage";
 import { addNotification, hasNotificationForQA, removeQANotifications } from "../../notificataions/utils/notificationStorage";
 import type { Notification } from "../../notificataions/types/notification";
+import { isDueDateTimeReached } from "../../shared/utils/recurringWorkflow";
 
 export function useQA() {
   const completionClaims = useRef(new Set<string>());
@@ -203,6 +204,10 @@ export function useQA() {
       toast.info("Activity is already completed.");
       return;
     }
+    if (!isDueDateTimeReached(activity.dueDate || activity.targetDate)) {
+      toast.error("Cannot complete before the scheduled due date.");
+      return;
+    }
     completionClaims.current.add(activity.id);
 
     const completedAt = new Date().toISOString();
@@ -227,6 +232,20 @@ export function useQA() {
     setShowDrawer(false);
     setSelectedRecord(null);
     toast.success(`"${activity.qmsNumber}" marked as completed.`);
+  };
+
+  const handleUndoCompletion = (activity: QAActivity) => {
+    if (activity.status !== "Completed") {
+      toast.error("This QA completion cannot be undone in its current state.");
+      return;
+    }
+    const restored: QAActivity = { ...activity, status: "Upcoming", completionDate: undefined, completionNotes: undefined, completedBy: undefined, updatedAt: new Date().toISOString() };
+    completionClaims.current.delete(activity.id);
+    const nextActivities = activities.map((item) => item.id === activity.id ? restored : item);
+    setActivities(nextActivities);
+    persistQAActivities(nextActivities);
+    generateReminderIfDue(restored);
+    toast.success("Completion undone successfully.");
   };
 
   const handleDuplicate = (record: QAActivity) => {
@@ -270,7 +289,7 @@ export function useQA() {
     activities, filteredActivities,
     totalCount, pendingCount, completedCount, overdueCount,
     trendData, departmentBreakdown,
-    openRecord, closeDrawer, handleCreate, handleUpdateRecord, handleEdit, handleComplete, handleDuplicate, handleDelete,
+    openRecord, closeDrawer, handleCreate, handleUpdateRecord, handleEdit, handleComplete, handleUndoCompletion, handleDuplicate, handleDelete,
   };
 }
 

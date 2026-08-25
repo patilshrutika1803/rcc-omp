@@ -8,6 +8,7 @@ import {
   User,
   Clock,
   ClipboardCheck,
+  Undo2,
 } from "lucide-react";
 import type { PMRecord } from "../types/pm";
 import { machineIcon } from "../utils/pmHelpers";
@@ -23,11 +24,13 @@ import {
 import { FREQUENCY_INTERVAL_DAYS } from "../constants/pmConstants";
 import { StatusBadge } from "./StatusBadge";
 import { PriorityBadge } from "./PriorityBadge";
+import { isDueDateTimeReached } from "../../shared/utils/recurringWorkflow";
 
-export function MachineDrawer({ record, onClose, onEdit, onComplete, onSnooze, onViewChecklist }: { record: PMRecord; onClose: () => void; onEdit: (r: PMRecord) => void; onComplete: (r: PMRecord) => void; onSnooze: (r: PMRecord) => void; onViewChecklist?: (r: PMRecord) => void }) {
+export function MachineDrawer({ record, onClose, onEdit, onComplete, onSnooze, onViewChecklist, onUndo }: { record: PMRecord; onClose: () => void; onEdit: (r: PMRecord) => void; onComplete: (r: PMRecord) => void; onSnooze: (r: PMRecord) => void; onViewChecklist?: (r: PMRecord) => void; onUndo?: (r: PMRecord) => void }) {
   const [tab, setTab] = useState<"info" | "history" | "schedule">("info");
 
   const Icon = machineIcon(record.department);
+  const completionAllowed = isDueDateTimeReached(record.nextDue);
 
   const tabs = [
     { id: "info", label: "Machine Info" },
@@ -232,6 +235,9 @@ export function MachineDrawer({ record, onClose, onEdit, onComplete, onSnooze, o
         {/* Drawer Footer */}
         <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/50 flex gap-3 shrink-0">
           {record.status === "Completed" ? <>
+            <button onClick={() => onUndo?.(record)} className="flex items-center gap-2 px-3 py-2 text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-lg hover:bg-amber-100 transition-colors">
+              <Undo2 size={13} /> Undo Completion
+            </button>
             <button onClick={() => onViewChecklist?.(record)} className="flex items-center gap-2 px-3 py-2 text-xs font-semibold text-blue-600 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors">
               <ClipboardCheck size={13} /> View Checklist
             </button>
@@ -242,9 +248,10 @@ export function MachineDrawer({ record, onClose, onEdit, onComplete, onSnooze, o
             <button onClick={() => onSnooze(record)} className="flex items-center gap-2 px-3 py-2 text-xs font-semibold text-amber-600 bg-amber-50 border border-amber-200 rounded-lg hover:bg-amber-100 transition-colors">
               <AlarmClock size={13} /> Snooze
             </button>
-            <button onClick={() => onComplete(record)} className="flex-1 flex items-center justify-center gap-2 py-2 text-xs font-semibold text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors">
+            <button onClick={() => onComplete(record)} disabled={!completionAllowed} title={completionAllowed ? "Mark Complete" : "Cannot complete before the scheduled due date."} className="flex-1 flex items-center justify-center gap-2 py-2 text-xs font-semibold text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors disabled:cursor-not-allowed disabled:opacity-50">
               <CheckCircle2 size={13} /> Mark Complete
             </button>
+            {!completionAllowed && <p className="text-xs text-amber-700">Cannot complete before the scheduled due date.</p>}
           </>}
         </div>
       </div>

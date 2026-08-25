@@ -66,6 +66,7 @@ export interface HardDiskHistoryRecord {
   hardDiskCondition: string;
   remarks: string;
   status: HardDiskCycleStatus;
+  cycleSnapshot?: HardDiskCycle;
 }
 
 export interface HardDiskCycle {

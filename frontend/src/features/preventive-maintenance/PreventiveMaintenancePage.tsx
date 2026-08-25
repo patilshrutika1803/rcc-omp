@@ -5,7 +5,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import React, { useState } from "react";
-import { ClipboardCheck, Download, Edit2, Eye, Trash2 } from "lucide-react";
+import { ClipboardCheck, Download, Edit2, Eye, Trash2, Undo2 } from "lucide-react";
 
 import { usePreventiveMaintenance } from "./hooks/usePreventiveMaintenance";
 
@@ -158,6 +158,7 @@ export default function PreventiveMaintenancePage() {
                             <button aria-label="Edit completed PM" title="Edit" onClick={() => { pm.setSelectedRecord(record); pm.setShowEditModal(true); }} className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-md"><Edit2 size={14} /></button>
                             <button aria-label="View completed checklist" title="View Checklist" onClick={() => openChecklist(record, true)} className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-md"><ClipboardCheck size={14} /></button>
                             <button aria-label="Export completed PM PDF" title="Export PDF" onClick={() => exportPMChecklistPdf(record)} className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md"><Download size={14} /></button>
+                            <button aria-label="Undo PM completion" title="Undo Completion" onClick={() => { if (window.confirm("Undo Completion?\n\nThis will restore the task to its previous active state. Any generated recurring record/history changes will be safely reversed.")) pm.handleUndoCompletion(record); }} className="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-md"><Undo2 size={14} /></button>
                             <button aria-label="Delete completed PM" title="Delete" onClick={() => { pm.setSelectedRecord(record); pm.setShowDeleteDialog(true); }} className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md"><Trash2 size={14} /></button>
                           </div>
                         </td>
@@ -266,6 +267,7 @@ export default function PreventiveMaintenancePage() {
           onEdit={(r) => { pm.setShowDrawer(false); pm.setSelectedRecord(r); pm.setShowEditModal(true); }}
           onComplete={(r) => { pm.setShowDrawer(false); openChecklist(r, false); }}
           onViewChecklist={r => { pm.setShowDrawer(false); openChecklist(r, true); }}
+          onUndo={(r) => { if (window.confirm("Undo Completion?\n\nThis will restore the task to its previous active state. Any generated recurring record/history changes will be safely reversed.")) { pm.handleUndoCompletion(r); pm.setShowDrawer(false); } }}
           onSnooze={(r) => { pm.setSelectedRecord(r); pm.setShowSnoozeDialog(true); }}
         />
       )}

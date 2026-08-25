@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { X, AlertCircle } from "lucide-react";
 import type { InspectionScheduleRecord } from "../types/inspectionSchedule";
-import { isCompletionDateValid as validateCompletionDate } from "../utils/inspectionScheduleUtils";
+import { combineDateTime, isCompletionDateValid as validateCompletionDate } from "../utils/inspectionScheduleUtils";
 
 export function CompleteInspectionDialog({
   inspection,
@@ -22,13 +22,15 @@ export function CompleteInspectionDialog({
   const [validationError, setValidationError] = useState<string | null>(null);
 
   const completionDateIsValid = useMemo(() => {
-    return validateCompletionDate(completionDate, inspection.dueDate);
-  }, [completionDate, inspection.dueDate]);
+    const due = combineDateTime(inspection.dueDate, inspection.dueTime);
+    const completion = combineDateTime(completionDate, completionTime);
+    return validateCompletionDate(completionDate, inspection.dueDate) && Boolean(due && completion && completion.getTime() >= due.getTime());
+  }, [completionDate, completionTime, inspection.dueDate, inspection.dueTime]);
 
   const handleConfirm = () => {
     if (!completionDateIsValid) {
       setValidationError(
-        `Completion date cannot be before the inspection's due date (${inspection.dueDate})`
+        `Cannot complete before the scheduled due date (${inspection.dueDate} ${inspection.dueTime}).`
       );
       return;
     }
@@ -44,7 +46,7 @@ export function CompleteInspectionDialog({
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
           <div>
             <h2 className="text-sm font-bold text-slate-900">Complete Inspection</h2>
-            <p className="text-xs text-slate-500">Mark this inspection as completed and generate the next recurring schedule.</p>
+              <p className="text-xs text-slate-500">Mark this inspection as completed and generate the next recurring schedule.</p>
           </div>
           <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-700 rounded-lg"><X size={18} /></button>
         </div>

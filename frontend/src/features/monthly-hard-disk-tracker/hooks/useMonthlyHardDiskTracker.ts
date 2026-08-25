@@ -3,7 +3,8 @@ import { toast } from "sonner";
 import type { HardDiskCycle, HardDiskCycleFormValues, HardDiskFilters, HardDiskHistoryRecord, HardDiskReminderStatus, HardDiskReturnDetails } from "../types/hardDisk";
 import { HDD_DEFAULT_FORM_VALUES } from "../constants/hardDiskConstants";
 import { loadPersistedHardDiskCycles, persistHardDiskCycles } from "../utils/hardDiskStorage";
-import { addHardDiskNotification, buildCycleReminders, calculateHardDiskReminderDate, closePendingReminders, generateInitialHardDiskNotifications, generateLifecycleNotification } from "../utils/hardDiskReminderUtils";
+import { addHardDiskNotification, buildCycleReminders, calculateHardDiskReminderDate, closePendingReminders, generateInitialHardDiskNotifications, generateLifecycleNotification, removeHardDiskNotifications } from "../utils/hardDiskReminderUtils";
+import { isDueDateTimeReached } from "../../shared/utils/recurringWorkflow";
 
 function makeId(prefix: string): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -273,6 +274,10 @@ export function useMonthlyHardDiskTracker() {
       toast.info("Monthly cycle is already completed.");
       return;
     }
+    if (!isDueDateTimeReached(cycle.expectedReturnDate)) {
+      toast.error("Cannot complete before the scheduled due date.");
+      return;
+    }
     completionClaims.current.add(cycle.id);
 
     const completedRecord: HardDiskHistoryRecord = {
@@ -299,6 +304,7 @@ export function useMonthlyHardDiskTracker() {
       history: [...cycle.history, buildTimelineEntry("Cycle Completed", "Cycle Completed", user, details.remarks)],
       updatedAt: new Date().toISOString(),
     };
+    completedRecord.cycleSnapshot = completedCycle;
 
     setCycles((prev) => prev.filter((item) => item.id !== cycle.id));
     setCompletedHistory((prev) => [completedRecord, ...prev]);
@@ -363,6 +369,26 @@ export function useMonthlyHardDiskTracker() {
     );
 
     toast.success(`Cycle ${cycle.cycleId} completed and the next month cycle was generated.`);
+  };
+
+  const handleUndoCompletion = (record: HardDiskHistoryRecord) => {
+    const snapshot = record.cycleSnapshot;
+    if (!snapshot || record.status !== "Cycle Completed") {
+      toast.error("This cycle cannot be safely restored because its completion snapshot is unavailable.");
+      return;
+    }
+    const persisted = loadPersistedHardDiskCycles();
+    const generatedNext = persisted.activeCycles.find((cycle) => cycle.parentId === snapshot.id);
+    const restored = { ...snapshot, status: snapshot.history[snapshot.history.length - 2]?.status || "Returned from RSB" as const, completionDetails: undefined, reminderStatus: "Pending" as const, history: snapshot.history.slice(0, -1), updatedAt: new Date().toISOString() };
+    completionClaims.current.delete(snapshot.id);
+    const activeCycles = [restored, ...persisted.activeCycles.filter((cycle) => cycle.id !== snapshot.id && cycle.id !== generatedNext?.id)];
+    persistHardDiskCycles(activeCycles, persisted.completedHistory.filter((item) => item.id !== record.id && item.cycleId !== record.cycleId));
+    setCycles(activeCycles);
+    setCompletedHistory((prev) => prev.filter((item) => item.id !== record.id && item.cycleId !== record.cycleId));
+    removeHardDiskNotifications(snapshot.id);
+    if (generatedNext) removeHardDiskNotifications(generatedNext.id);
+    generateInitialHardDiskNotifications(restored);
+    toast.success("Completion undone successfully.");
   };
 
   const removeCycle = (cycle: HardDiskCycle) => {
@@ -454,6 +480,7 @@ export function useMonthlyHardDiskTracker() {
     submitCycle,
     updateCycleStatus,
     completeCycle,
+    handleUndoCompletion,
     removeCycle,
     updateCycle,
     markAccountabilityCompleted,

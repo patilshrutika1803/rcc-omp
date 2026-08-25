@@ -11,7 +11,7 @@ import {
   checkAndGenerateDueBackupReminders,
   clearRemindersForBackup,
 } from "../utils/backupReminderUtils";
-import { calculateNextDueDate as calculateSharedNextDueDate, calculateReminderDate as calculateSharedReminderDate } from "../../shared/utils/recurringWorkflow";
+import { calculateNextDueDate as calculateSharedNextDueDate, calculateReminderDate as calculateSharedReminderDate, isDueDateTimeReached } from "../../shared/utils/recurringWorkflow";
 import { loadPersistedBackupJobs, persistBackupJobs } from "../utils/backupStorage";
 
 export function useBackupActivities() {
@@ -196,6 +196,11 @@ export function useBackupActivities() {
       toast.info("Backup job is already completed.");
       return;
     }
+    const scheduledAt = job.nextBackup || `${job.nextDueDate || job.dueDate} ${job.backupTime || ""}`;
+    if (!isDueDateTimeReached(scheduledAt)) {
+      toast.error("Cannot complete before the scheduled due date.");
+      return;
+    }
     completionClaims.current.add(job.id);
 
     const sizeValue = Number(values.backupSize);
@@ -326,6 +331,35 @@ export function useBackupActivities() {
     toast.success(`"${job.name}" marked as completed successfully. A new recurring backup job was scheduled.`);
   };
 
+  const handleUndoCompletion = (job: BackupJob) => {
+    if (job.status !== "Completed") {
+      toast.error("This backup completion cannot be undone in its current state.");
+      return;
+    }
+    const generatedChild = jobs.find((candidate) => candidate.parentId === job.id);
+    const restored: BackupJob = {
+      ...job,
+      status: "Upcoming",
+      progress: 0,
+      nextBackup: job.nextBackup || `${job.dueDate} ${job.backupTime}`,
+      lastBackup: undefined,
+      lastBackupDate: undefined,
+      completionDate: undefined,
+      completionRemarks: undefined,
+      completedBy: undefined,
+      verifiedBy: undefined,
+      executionData: undefined,
+      history: job.history.slice(1),
+    };
+    completionClaims.current.delete(job.id);
+    setJobs((prev) => [restored, ...prev.filter((candidate) => candidate.id !== job.id && candidate.id !== generatedChild?.id)]);
+    setCompletedJobs((prev) => prev.filter((candidate) => candidate.id !== job.id));
+    if (generatedChild) clearRemindersForBackup(generatedChild.id);
+    checkAndGenerateDueBackupReminders([restored]);
+    setSelectedJob(restored);
+    toast.success("Completion undone successfully.");
+  };
+
   const handleDuplicate = (j: BackupJob) => {
     const newJob: BackupJob = { ...j, id: `backup-copy-${Date.now()}`, name: `${j.name} (Copy)`, status: "Upcoming", progress: 0, lastBackup: "—", history: [] };
     setJobs((prev) => [...prev, newJob]);
@@ -361,6 +395,6 @@ export function useBackupActivities() {
     showAddModal, setShowAddModal,
     editingJob, setEditingJob,
     showExecutionForm, completingJob, executionFormMode, openCompletionForm, openExecutionReview, submitCompletionForm, cancelCompletionForm,
-    handleAddJob, handleEditJob, handleDuplicate, handleSnooze, handleDelete,
+    handleAddJob, handleEditJob, handleDuplicate, handleSnooze, handleDelete, handleUndoCompletion,
   };
 }

@@ -1,17 +1,19 @@
-import { X, RotateCcw, Edit2, CheckCircle2, Archive, FileDown, ClipboardList } from "lucide-react";
+import { X, RotateCcw, Edit2, CheckCircle2, Archive, FileDown, ClipboardList, Undo2 } from "lucide-react";
 import type { BackupJob } from "../../types/backup";
 import { computeUsedPct } from "../../utils/backupCalculations";
 import { getBackupStorage, getLatestBackupExecution, resolveBackupInstitution, resolveBackupVerifiedBy } from "../../utils/backupHelpers";
 import { BkpStatusBadge } from "./BackupStatusBadge";
 import { BkpTypeBadge } from "./BackupTypeBadge";
 import { exportBackupJobPdf } from "../../utils/backupPdf";
+import { isDueDateTimeReached } from "../../../shared/utils/recurringWorkflow";
 
-export function BackupJobDrawer({ job, onClose, onEdit, onRunNow, onViewExecution }: {
+export function BackupJobDrawer({ job, onClose, onEdit, onRunNow, onViewExecution, onUndo }: {
   job: BackupJob;
   onClose: () => void;
   onEdit: () => void;
   onRunNow: () => void;
   onViewExecution: () => void;
+  onUndo: () => void;
 }) {
   const getDisplayText = (value?: string | null) => {
     const trimmed = value?.trim();
@@ -26,6 +28,7 @@ export function BackupJobDrawer({ job, onClose, onEdit, onRunNow, onViewExecutio
   const isCompleted = job.status === "Completed";
   const reminderLabel = job.reminder || "None";
   const dueDateLabel = job.nextDueDate || job.nextBackup || "—";
+  const completionAllowed = isDueDateTimeReached(job.nextBackup || `${job.nextDueDate || job.dueDate} ${job.backupTime || ""}`);
 
   return (
     <div className="fixed inset-0 z-[60] flex">
@@ -167,6 +170,9 @@ export function BackupJobDrawer({ job, onClose, onEdit, onRunNow, onViewExecutio
           </button>
           {isCompleted ? (
             <>
+              <button onClick={onUndo} className="flex items-center gap-2 px-3 py-2 text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-lg hover:bg-amber-100 transition-colors">
+                <Undo2 size={13} /> Undo Completion
+              </button>
               <button onClick={() => { onViewExecution(); onClose(); }} className="flex items-center gap-2 px-3 py-2 text-xs font-semibold text-sky-700 bg-sky-50 border border-sky-200 rounded-lg hover:bg-sky-100 transition-colors">
                 <ClipboardList size={13} /> View Execution Form
               </button>
@@ -175,9 +181,12 @@ export function BackupJobDrawer({ job, onClose, onEdit, onRunNow, onViewExecutio
               </button>
             </>
           ) : (
-            <button onClick={onRunNow} className="flex-1 min-w-[180px] flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors">
-              <CheckCircle2 size={13} /> Complete Backup
-            </button>
+            <>
+              <button onClick={onRunNow} disabled={!completionAllowed} title={completionAllowed ? "Complete Backup" : "Cannot complete before the scheduled due date."} className="flex-1 min-w-[180px] flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors disabled:cursor-not-allowed disabled:opacity-50">
+                <CheckCircle2 size={13} /> Complete Backup
+              </button>
+              {!completionAllowed && <p className="w-full text-xs text-amber-700">Cannot complete before the scheduled due date.</p>}
+            </>
           )}
         </div>
       </div>

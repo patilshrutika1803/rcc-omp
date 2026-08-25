@@ -32,6 +32,16 @@ function parseDateLikeValue(value: string | undefined | null): Date | null {
   return new Date(year, month - 1, day, 0, 0, 0, 0);
 }
 
+export function isDueDateTimeReached(dueDate: string | undefined | null, dueTime?: string | undefined | null): boolean {
+  const parsed = parseDateLikeValue(dueDate);
+  if (!parsed) return false;
+  if (dueTime) {
+    const [hours, minutes] = dueTime.split(":").map(Number);
+    if (!Number.isNaN(hours)) parsed.setHours(hours, Number.isNaN(minutes) ? 0 : minutes, 0, 0);
+  }
+  return new Date().getTime() >= parsed.getTime();
+}
+
 function formatDateOnly(date: Date): string {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");

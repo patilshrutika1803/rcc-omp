@@ -135,6 +135,13 @@ export function addHardDiskNotification(cycle: HardDiskCycle, notificationType: 
   addNotification(notification);
 }
 
+export function removeHardDiskNotifications(cycleId: string): void {
+  const notifications = loadNotifications().filter((notification) => notification.hardDiskCycleId !== cycleId);
+  if (typeof window !== "undefined") {
+    window.localStorage.setItem("rcc_omp_notifications", JSON.stringify(notifications));
+  }
+}
+
 export function generateInitialHardDiskNotifications(cycle: HardDiskCycle): void {
   addHardDiskNotification(
     cycle,

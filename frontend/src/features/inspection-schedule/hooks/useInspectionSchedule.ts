@@ -9,6 +9,7 @@ import {
   getCompletedInspections,
   isInspectionDeleted,
   updateInspection,
+  undoInspectionCompletion,
 } from "../services/inspectionScheduleService";
 import type {
   InspectionScheduleRecord,
@@ -24,6 +25,7 @@ import {
   getInspectionStatus,
   isCompletionDateValid,
   syncSystemInspectionWithSystem,
+  combineDateTime,
 } from "../utils/inspectionScheduleUtils";
 import { addNotification, removeInspectionNotifications } from "../../notificataions/utils/notificationStorage";
 import type { InspectionHistoryEntry } from "../types/inspectionSchedule";
@@ -213,6 +215,12 @@ export function useInspectionSchedule() {
         toast.error(`Completion date cannot be before the inspection's due date (${selectedInspection.dueDate}).`);
         return;
       }
+      const due = combineDateTime(selectedInspection.dueDate, selectedInspection.dueTime);
+      const completion = combineDateTime(values.completionDate, values.completionTime);
+      if (!due || !completion || completion.getTime() < due.getTime()) {
+        toast.error("Cannot complete before the scheduled due date.");
+        return;
+      }
       const now = new Date().toISOString();
       const historyEntry = buildCompletionHistoryEntry(
         selectedInspection,
@@ -300,6 +308,29 @@ export function useInspectionSchedule() {
     }
   }, []);
 
+  const handleUndoCompletion = useCallback((inspection: InspectionScheduleRecord) => {
+    const generated = activeInspections.find((item) => item.parentId === inspection.id);
+    const history = inspection.history[0];
+    const restored: InspectionScheduleRecord = {
+      ...inspection,
+      status: getInspectionStatus(inspection.dueDate, inspection.dueTime),
+      completionDate: undefined,
+      completionTime: undefined,
+      completedBy: undefined,
+      completionNotes: undefined,
+      history: inspection.history.slice(1),
+    };
+    if (!history || !undoInspectionCompletion(inspection.id, restored, generated?.id)) {
+      toast.error("This inspection cannot be safely restored in its current state.");
+      return;
+    }
+    setCompletedInspections((prev) => prev.filter((item) => item.id !== inspection.id));
+    setActiveInspections((prev) => [restored, ...prev.filter((item) => item.id !== generated?.id)]);
+    removeInspectionNotifications(inspection.id);
+    if (generated) removeInspectionNotifications(generated.id);
+    toast.success("Completion undone successfully.");
+  }, [activeInspections]);
+
   const inspectionTargets = useMemo(() => {
     return systems.map((system) => ({
       label: `${system.systemId} · ${system.systemName} · ${system.systemType} · ${system.systemCategory}`,
@@ -342,6 +373,7 @@ export function useInspectionSchedule() {
     closeCompleteDialog,
     handleSaveInspection,
     handleCompleteInspection,
+    handleUndoCompletion,
     handleDeleteInspection,
     setSelectedInspection,
     inspectionTargets,

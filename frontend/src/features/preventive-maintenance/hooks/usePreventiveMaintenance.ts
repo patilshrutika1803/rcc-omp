@@ -10,6 +10,7 @@ import { loadPMState, savePMState, removePMArtifacts, type PersistedPMStateV1, t
 import { calculateReminderDate, checkAndGenerateDueReminders, clearRemindersForPM } from "../utils/pmReminderUtils";
 import type { PMChecklistSubmission } from "../components/ChecklistDrawer";
 import preventiveMaintenanceService from "../services/preventiveMaintenanceService";
+import { isDueDateTimeReached } from "../../shared/utils/recurringWorkflow";
 
 
 const INITIAL_FILTERS: PMFilterState = {
@@ -315,6 +316,10 @@ export function usePreventiveMaintenance() {
       toast.info("Maintenance task is already completed.");
       return;
     }
+    if (!isDueDateTimeReached(selectedRecord.nextDue)) {
+      toast.error("Cannot complete before the scheduled due date.");
+      return;
+    }
     completionClaims.current.add(selectedRecord.id);
     const today = new Date().toISOString().split("T")[0];
     const trimmedNotes = submission.notes.trim();
@@ -483,6 +488,43 @@ export function usePreventiveMaintenance() {
     }
   };
 
+  const handleUndoCompletion = (record: PMRecord) => {
+    if (record.status !== "Completed") {
+      toast.error("This maintenance completion cannot be undone in its current state.");
+      return;
+    }
+    const state = loadPMState();
+    const generatedChild = state.records.find((item) => item.parentId === record.id);
+    const historyEntry = record.history[0];
+    const previousDueDate = historyEntry?.previousDueDate || record.scheduledNextDue || record.lastMaintenance;
+    const daysToDue = previousDueDate ? daysUntil(previousDueDate) : 0;
+    const restored: PMRecord = {
+      ...record,
+      status: daysToDue < 0 ? "Overdue" : daysToDue === 0 ? "Due Today" : "Upcoming",
+      nextDue: previousDueDate,
+      lastMaintenance: historyEntry?.previousMaintenanceDate || record.lastMaintenance,
+      scheduledNextDue: undefined,
+      completionDate: undefined,
+      completionNotes: undefined,
+      checklistResponses: undefined,
+      history: record.history.slice(1),
+    };
+    completionClaims.current.delete(record.id);
+    const nextRecords = [restored, ...state.records.filter((item) => item.id !== record.id && item.id !== generatedChild?.id)];
+    const nextState: PersistedPMStateV1 = {
+      ...state,
+      records: nextRecords,
+      completedPMs: state.completedPMs.filter((item) => item.id !== record.id),
+      completionHistory: Object.fromEntries(Object.entries(state.completionHistory).map(([key, events]) => [key, events.filter((event) => event.pmId !== record.id)])),
+    };
+    savePMState(nextState);
+    setPmRecords(nextRecords);
+    setCompletedPMs(nextState.completedPMs);
+    if (generatedChild) clearRemindersForPM(generatedChild.id);
+    checkAndGenerateDueReminders([restored]);
+    toast.success("Completion undone successfully.");
+  };
+
   const handleSnoozePM = (newDate: string) => {
     if (!selectedRecord) return;
     if (isNaN(new Date(newDate).getTime())) {
@@ -588,6 +630,7 @@ export function usePreventiveMaintenance() {
     handleEditPM,
     handleDeletePM,
     handleCompletePM,
+    handleUndoCompletion,
     handleSnoozePM,
     handleDuplicate,
     handleCheckAll,

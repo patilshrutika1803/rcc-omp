@@ -38,7 +38,7 @@ export default function QAPage() {
     selectedRecord, showDrawer, setShowDrawer,
     showNew, setShowNew, newForm, setNewForm,
     showFilters, setShowFilters, showColumns, setShowColumns, filters, setFilters, columns, setColumns,
-    openRecord, closeDrawer, handleCreate, handleUpdateRecord, handleEdit, handleComplete, handleDuplicate, handleDelete,
+    openRecord, closeDrawer, handleCreate, handleUpdateRecord, handleEdit, handleComplete, handleUndoCompletion, handleDuplicate, handleDelete,
     editingRecord, setEditingRecord, openMenuId, setOpenMenuId,
   } = useQA();
 
@@ -167,6 +167,7 @@ export default function QAPage() {
           onUpdate={handleUpdateRecord}
           onEdit={() => handleEdit(selectedRecord)}
           onComplete={(note, completedBy) => handleComplete(selectedRecord, note, completedBy)}
+          onUndo={() => { if (window.confirm("Undo Completion?\n\nThis will restore the task to its previous active state. Any generated recurring record/history changes will be safely reversed.")) handleUndoCompletion(selectedRecord); }}
           onDuplicate={() => handleDuplicate(selectedRecord)}
           onDelete={() => handleDelete(selectedRecord.id)}
         />
