@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { SystemInventory } from "../../system-inventory/types/system";
 import { getSystems } from "../../system-inventory/services/systemInventoryService";
 import {
@@ -28,6 +28,7 @@ import {
   combineDateTime,
 } from "../utils/inspectionScheduleUtils";
 import { addNotification, removeInspectionNotifications } from "../../notificataions/utils/notificationStorage";
+import { isDueDateTimeReached } from "../../shared/utils/recurringWorkflow";
 import type { InspectionHistoryEntry } from "../types/inspectionSchedule";
 import { toast } from "sonner";
 
@@ -47,6 +48,7 @@ export function useInspectionSchedule() {
   const [editingInspection, setEditingInspection] = useState<InspectionScheduleRecord | null>(null);
   const [selectedInspection, setSelectedInspection] = useState<InspectionScheduleRecord | null>(null);
   const [showCompleteDialog, setShowCompleteDialog] = useState(false);
+  const completionClaims = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     let cancelled = false;
@@ -207,87 +209,117 @@ export function useInspectionSchedule() {
   const handleCompleteInspection = useCallback(
     (values: { completedBy: string; completionDate: string; completionTime: string; completionNotes?: string }) => {
       if (!selectedInspection) return;
-      if (selectedInspection.status === "Completed") {
-        toast.info("Inspection is already completed.");
+      const inspectionId = selectedInspection.id;
+      if (completionClaims.current.has(inspectionId)) {
+        toast.info("Inspection completion is already being processed.");
         return;
       }
-      if (!isCompletionDateValid(values.completionDate, selectedInspection.dueDate)) {
-        toast.error(`Completion date cannot be before the inspection's due date (${selectedInspection.dueDate}).`);
-        return;
-      }
-      const due = combineDateTime(selectedInspection.dueDate, selectedInspection.dueTime);
-      const completion = combineDateTime(values.completionDate, values.completionTime);
-      if (!due || !completion || completion.getTime() < due.getTime()) {
-        toast.error("Cannot complete before the scheduled due date.");
-        return;
-      }
-      const now = new Date().toISOString();
-      const historyEntry = buildCompletionHistoryEntry(
-        selectedInspection,
-        values.completedBy,
-        values.completionDate,
-        values.completionTime,
-        values.completionNotes
-      );
-      const completedRecord: InspectionScheduleRecord = {
-        ...selectedInspection,
-        status: "Completed",
-        completionDate: values.completionDate,
-        completionTime: values.completionTime,
-        completedBy: values.completedBy,
-        completionNotes: values.completionNotes,
-        updatedAt: now,
-        history: [historyEntry, ...(selectedInspection.history ?? [])],
-      };
+      completionClaims.current.add(inspectionId);
 
-      const wasCompleted = completeInspection(completedRecord);
-      if (!wasCompleted) {
+      try {
+        if (selectedInspection.status === "Completed" || getActiveInspections().some((item) => item.id === inspectionId && item.status === "Completed")) {
+          toast.info("Inspection is already completed.");
+          return;
+        }
+
+        if (!isDueDateTimeReached(selectedInspection.dueDate, selectedInspection.dueTime)) {
+          toast.error("Cannot complete before the scheduled due date and time.");
+          return;
+        }
+
+        if (!isCompletionDateValid(values.completionDate, selectedInspection.dueDate)) {
+          toast.error(`Completion date cannot be before the inspection's due date (${selectedInspection.dueDate}).`);
+          return;
+        }
+
+        const due = combineDateTime(selectedInspection.dueDate, selectedInspection.dueTime);
+        const completion = combineDateTime(values.completionDate, values.completionTime);
+        if (!due || !completion || completion.getTime() < due.getTime()) {
+          toast.error("Cannot complete before the scheduled due date and time.");
+          return;
+        }
+
+        const existingGenerated = getActiveInspections().some(
+          (item) =>
+            item.id !== inspectionId &&
+            (item.parentId === inspectionId || (item.recurrenceId === selectedInspection.recurrenceId && item.status !== "Completed"))
+        );
+
+        if (existingGenerated) {
+          toast.info("This inspection already has a generated recurring cycle.");
+          return;
+        }
+
+        const now = new Date().toISOString();
+        const historyEntry = buildCompletionHistoryEntry(
+          selectedInspection,
+          values.completedBy,
+          values.completionDate,
+          values.completionTime,
+          values.completionNotes
+        );
+        const completedRecord: InspectionScheduleRecord = {
+          ...selectedInspection,
+          status: "Completed",
+          completionDate: values.completionDate,
+          completionTime: values.completionTime,
+          completedBy: values.completedBy,
+          completionNotes: values.completionNotes,
+          updatedAt: now,
+          history: [historyEntry, ...(selectedInspection.history ?? [])],
+        };
+
+        const wasCompleted = completeInspection(completedRecord);
+        if (!wasCompleted) {
+          setActiveInspections((prev) => prev.filter((item) => item.id !== completedRecord.id));
+          setShowCompleteDialog(false);
+          setSelectedInspection(null);
+          return;
+        }
+
+        setCompletedInspections((prev) => [completedRecord, ...prev.filter((item) => item.id !== completedRecord.id)]);
         setActiveInspections((prev) => prev.filter((item) => item.id !== completedRecord.id));
-        setShowCompleteDialog(false);
-        setSelectedInspection(null);
-        return;
-      }
 
-      setCompletedInspections((prev) => [completedRecord, ...prev]);
-      setActiveInspections((prev) => prev.filter((item) => item.id !== completedRecord.id));
+        removeInspectionNotifications(completedRecord.id);
 
-      removeInspectionNotifications(completedRecord.id);
-
-      addNotification({
-        id: `inspection-completed-${completedRecord.id}-${Date.now()}`,
-        title: "Inspection Completed",
-        message: `${completedRecord.targetType} ${completedRecord.targetType === "System" ? completedRecord.systemSnapshot?.systemName ?? completedRecord.systemId : completedRecord.machineName} was completed on ${values.completionDate} at ${values.completionTime}.`,
-        category: completedRecord.targetType === "System" ? "system" : "machine",
-        severity: "success",
-        time: new Date().toLocaleString("en-IN", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }),
-        read: false,
-        archived: false,
-        inspectionScheduleId: completedRecord.id,
-        notificationType: "Inspection Completed",
-        notificationKey: `inspection-completed-${completedRecord.id}`,
-      });
-
-      const nextInspection = buildNextRecurringInspection(completedRecord);
-      const created = createInspection(nextInspection);
-      if (created.id === nextInspection.id) {
-        setActiveInspections((prev) => [nextInspection, ...prev]);
         addNotification({
-          id: `inspection-generated-${nextInspection.id}-${Date.now()}`,
-          title: "Next Inspection Generated",
-          message: `${nextInspection.targetType} ${nextInspection.targetType === "System" ? nextInspection.systemSnapshot?.systemName ?? nextInspection.systemId : nextInspection.machineName} has a new inspection scheduled for ${nextInspection.dueDate}.`,
-          category: nextInspection.targetType === "System" ? "system" : "machine",
-          severity: "info",
+          id: `inspection-completed-${completedRecord.id}-${Date.now()}`,
+          title: "Inspection Completed",
+          message: `${completedRecord.targetType} ${completedRecord.targetType === "System" ? completedRecord.systemSnapshot?.systemName ?? completedRecord.systemId : completedRecord.machineName} was completed on ${values.completionDate} at ${values.completionTime}.`,
+          category: completedRecord.targetType === "System" ? "system" : "machine",
+          severity: "success",
           time: new Date().toLocaleString("en-IN", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }),
           read: false,
           archived: false,
-          inspectionScheduleId: nextInspection.id,
-          notificationType: "Next Inspection Generated",
-          notificationKey: `inspection-generated-${nextInspection.id}`,
+          inspectionScheduleId: completedRecord.id,
+          notificationType: "Inspection Completed",
+          notificationKey: `inspection-completed-${completedRecord.id}`,
         });
-      }
 
-      setShowCompleteDialog(false);
-      setSelectedInspection(null);
+        const nextInspection = buildNextRecurringInspection(completedRecord);
+        const created = createInspection(nextInspection);
+        if (created.id === nextInspection.id) {
+          setActiveInspections((prev) => [nextInspection, ...prev.filter((item) => item.id !== nextInspection.id)]);
+          addNotification({
+            id: `inspection-generated-${nextInspection.id}-${Date.now()}`,
+            title: "Next Inspection Generated",
+            message: `${nextInspection.targetType} ${nextInspection.targetType === "System" ? nextInspection.systemSnapshot?.systemName ?? nextInspection.systemId : nextInspection.machineName} has a new inspection scheduled for ${nextInspection.dueDate}.`,
+            category: nextInspection.targetType === "System" ? "system" : "machine",
+            severity: "info",
+            time: new Date().toLocaleString("en-IN", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }),
+            read: false,
+            archived: false,
+            inspectionScheduleId: nextInspection.id,
+            notificationType: "Next Inspection Generated",
+            notificationKey: `inspection-generated-${nextInspection.id}`,
+          });
+        }
+
+        setShowCompleteDialog(false);
+        setSelectedInspection(null);
+      } finally {
+        completionClaims.current.delete(inspectionId);
+      }
     },
     [selectedInspection]
   );
@@ -309,8 +341,10 @@ export function useInspectionSchedule() {
   }, []);
 
   const handleUndoCompletion = useCallback((inspection: InspectionScheduleRecord) => {
-    const generated = activeInspections.find((item) => item.parentId === inspection.id);
-    const history = inspection.history[0];
+    const generatedMatches = getActiveInspections().filter(
+      (item) => item.id !== inspection.id && (item.parentId === inspection.id || (item.recurrenceId === inspection.recurrenceId && item.status !== "Completed"))
+    );
+    const generated = generatedMatches[0];
     const restored: InspectionScheduleRecord = {
       ...inspection,
       status: getInspectionStatus(inspection.dueDate, inspection.dueTime),
@@ -320,14 +354,16 @@ export function useInspectionSchedule() {
       completionNotes: undefined,
       history: inspection.history.slice(1),
     };
-    if (!history || !undoInspectionCompletion(inspection.id, restored, generated?.id)) {
+    if (!undoInspectionCompletion(inspection.id, restored, generated?.id)) {
       toast.error("This inspection cannot be safely restored in its current state.");
       return;
     }
     setCompletedInspections((prev) => prev.filter((item) => item.id !== inspection.id));
-    setActiveInspections((prev) => [restored, ...prev.filter((item) => item.id !== generated?.id)]);
+    setActiveInspections((prev) => [restored, ...prev.filter((item) => item.id !== generated?.id && item.parentId !== inspection.id && !(item.recurrenceId === inspection.recurrenceId && item.id !== inspection.id && item.status !== "Completed"))]);
     removeInspectionNotifications(inspection.id);
-    if (generated) removeInspectionNotifications(generated.id);
+    for (const candidate of generatedMatches) {
+      removeInspectionNotifications(candidate.id);
+    }
     toast.success("Completion undone successfully.");
   }, [activeInspections]);
 

@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { X, AlertCircle } from "lucide-react";
+import { isDueDateTimeReached } from "../../shared/utils/recurringWorkflow";
 import type { InspectionScheduleRecord } from "../types/inspectionSchedule";
 import { combineDateTime, isCompletionDateValid as validateCompletionDate } from "../utils/inspectionScheduleUtils";
 
@@ -24,7 +25,8 @@ export function CompleteInspectionDialog({
   const completionDateIsValid = useMemo(() => {
     const due = combineDateTime(inspection.dueDate, inspection.dueTime);
     const completion = combineDateTime(completionDate, completionTime);
-    return validateCompletionDate(completionDate, inspection.dueDate) && Boolean(due && completion && completion.getTime() >= due.getTime());
+    const dueReached = isDueDateTimeReached(inspection.dueDate, inspection.dueTime);
+    return dueReached && validateCompletionDate(completionDate, inspection.dueDate) && Boolean(due && completion && completion.getTime() >= due.getTime());
   }, [completionDate, completionTime, inspection.dueDate, inspection.dueTime]);
 
   const handleConfirm = () => {

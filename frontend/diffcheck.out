@@ -1,6 +1,5 @@
-warning: in the working copy of 'frontend/src/features/backup/utils/backupReminderUtils.ts', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'frontend/src/features/notificataions/utils/notificationStorage.ts', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'frontend/src/features/preventive-maintenance/utils/pmDateUtils.ts', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'frontend/src/features/preventive-maintenance/utils/pmReminderUtils.ts', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'frontend/src/features/shared/utils/recurringWorkflow.ts', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'frontend/src/features/system-inventory/utils/inspectionReminderUtils.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/build.out', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/diffcheck.out', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/features/inspection-schedule/components/CompleteInspectionDialog.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/features/inspection-schedule/hooks/useInspectionSchedule.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/features/inspection-schedule/services/inspectionScheduleService.ts', LF will be replaced by CRLF the next time Git touches it

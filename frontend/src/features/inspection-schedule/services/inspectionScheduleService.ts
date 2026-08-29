@@ -79,23 +79,46 @@ export function updateInspection(record: InspectionScheduleRecord): InspectionSc
 
 export function completeInspection(record: InspectionScheduleRecord): boolean {
   const state = loadState();
-  const alreadyCompleted = state.completedInspections.find(
-    (item) => item.id === record.id
-  );
-  if (alreadyCompleted) {
+  if (state.completedInspections.some((item) => item.id === record.id)) {
     return false;
   }
+  if (state.activeInspections.some((item) => item.id === record.id && item.status === "Completed")) {
+    return false;
+  }
+
   const active = state.activeInspections.filter((item) => item.id !== record.id);
-  saveState({ ...state, activeInspections: active, completedInspections: [record, ...state.completedInspections] });
+  saveState({
+    ...state,
+    activeInspections: active,
+    completedInspections: [record, ...state.completedInspections.filter((item) => item.id !== record.id)],
+  });
   return true;
 }
 
 export function undoInspectionCompletion(completedId: string, restored: InspectionScheduleRecord, generatedId?: string): boolean {
   const state = loadState();
-  const completed = state.completedInspections.some((item) => item.id === completedId);
+  const completed = state.completedInspections.find((item) => item.id === completedId);
   if (!completed || state.activeInspections.some((item) => item.id === restored.id)) return false;
-  const active = state.activeInspections.filter((item) => item.id !== generatedId && item.parentId !== completedId);
-  saveState({ ...state, activeInspections: [restored, ...active], completedInspections: state.completedInspections.filter((item) => item.id !== completedId) });
+
+  const activeChildIds = new Set(
+    state.activeInspections
+      .filter((item) => item.id !== completedId && (item.parentId === completedId || (item.recurrenceId === completed.recurrenceId && item.status !== "Completed")))
+      .map((item) => item.id)
+  );
+
+  const active = state.activeInspections.filter(
+    (item) =>
+      item.id !== completedId &&
+      item.id !== generatedId &&
+      item.parentId !== completedId &&
+      !activeChildIds.has(item.id)
+  );
+
+  saveState({
+    ...state,
+    activeInspections: [restored, ...active],
+    completedInspections: state.completedInspections.filter((item) => item.id !== completedId),
+  });
   return true;
 }
 
