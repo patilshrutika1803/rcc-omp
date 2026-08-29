@@ -1,4 +1,4 @@
-import { ExternalLink, Trash2, Edit2, Check, User, } from "lucide-react";
+import { Bookmark, Trash2, Edit2, Check, User } from "lucide-react";
 import type { Note } from "../types/note";
 
 export default function NoteHeader(props: {
@@ -6,10 +6,10 @@ export default function NoteHeader(props: {
   isEditing: boolean;
   onToggleEditing: () => void;
   onSave: () => void;
-  onCopyLink: () => void;
+  onPinToggle: () => void;
   onDelete: () => void;
 }) {
-  const { note, isEditing, onToggleEditing, onSave, onCopyLink, onDelete } = props;
+  const { note, isEditing, onToggleEditing, onSave, onPinToggle, onDelete } = props;
 
   return (
     <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100">
@@ -50,10 +50,14 @@ export default function NoteHeader(props: {
         )}
 
         <button
-          onClick={onCopyLink}
-          className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+          onClick={onPinToggle}
+          className={`flex items-center gap-1.5 h-7 px-2.5 text-[11px] font-semibold rounded-lg border transition-colors ${
+            note.pinned
+              ? "bg-amber-100 text-amber-700 border-amber-200 hover:bg-amber-200"
+              : "text-slate-600 bg-white border-slate-200 hover:bg-slate-50"
+          }`}
         >
-          <ExternalLink size={14} />
+          <Bookmark size={11} /> {note.pinned ? "Unpin" : "Pin"}
         </button>
 
         <button

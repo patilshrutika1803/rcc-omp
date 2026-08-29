@@ -30,7 +30,7 @@ export default function NotesPage() {
     setEditor,
     handleSave,
     handleDelete,
-    handleCopyLink,
+    handleTogglePin,
     handleNewNote,
     notes,
   } = useNotes();
@@ -102,7 +102,7 @@ export default function NotesPage() {
           }
           onToggleEditing={toggleEditing}
           onSave={handleSave}
-          onCopyLink={handleCopyLink}
+          onPinToggle={handleTogglePin}
           onDelete={handleDelete}
         />
       </div>

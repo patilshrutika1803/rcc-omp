@@ -72,12 +72,19 @@ export function useNotes() {
 
   function buildBlankNote(): Partial<Note> {
     const now = new Date();
+    const sourceFolder =
+      selectedFolder === "Pinned" || selectedFolder === "Shared Notes"
+        ? selectedNote?.folder && selectedNote.folder !== "Pinned" && selectedNote.folder !== "Shared Notes"
+          ? selectedNote.folder
+          : "My Notes"
+        : selectedFolder;
+
     return {
       title: "Untitled",
       content: "",
-      folder: selectedFolder === "Pinned" || selectedFolder === "Shared Notes" ? "My Notes" : selectedFolder,
+      folder: sourceFolder,
       tags: [],
-      pinned: false,
+      pinned: selectedFolder === "Pinned" || Boolean(selectedNote?.pinned),
       shared: false,
       date: now.toISOString(),
       author: "You",
@@ -130,8 +137,18 @@ export function useNotes() {
     toast.error("Note deleted.");
   }
 
-  function handleCopyLink() {
-    toast.success("Link copied!");
+  async function handleTogglePin() {
+    if (!selectedNote) return;
+
+    const updated = await noteService.pinNote(selectedNote.id, !selectedNote.pinned);
+    if (!updated) {
+      toast.error("Failed to update note pin state.");
+      return;
+    }
+
+    setNotes((prev) => prev.map((n) => (n.id === updated.id ? updated : n)));
+    setSelectedNote(updated);
+    toast.success(updated.pinned ? "Note pinned." : "Note unpinned.");
   }
 
   return {
@@ -151,7 +168,7 @@ export function useNotes() {
     handleNewNote,
     handleSave,
     handleDelete,
-    handleCopyLink,
+    handleTogglePin,
   };
 }
 

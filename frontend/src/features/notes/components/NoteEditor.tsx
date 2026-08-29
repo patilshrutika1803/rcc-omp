@@ -11,7 +11,7 @@ export default function NoteEditor(props: {
   onEditContentChange: (v: string) => void;
   onToggleEditing: () => void;
   onSave: () => void;
-  onCopyLink: () => void;
+  onPinToggle: () => void;
   onDelete: () => void;
 }) {
   const {
@@ -21,7 +21,7 @@ export default function NoteEditor(props: {
     onEditContentChange,
     onToggleEditing,
     onSave,
-    onCopyLink,
+    onPinToggle,
     onDelete,
   } = props;
 
@@ -34,7 +34,7 @@ export default function NoteEditor(props: {
             isEditing={isEditing}
             onToggleEditing={onToggleEditing}
             onSave={onSave}
-            onCopyLink={onCopyLink}
+            onPinToggle={onPinToggle}
             onDelete={onDelete}
           />
 

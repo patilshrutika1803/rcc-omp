@@ -110,7 +110,11 @@ export async function createNote(payload: Partial<Note>): Promise<Note | null> {
   const notes = getNotesForCurrentUser();
   const next = normalizeNote({ ...payload, id: undefined, userId: currentUserId });
 
-  if (next.folder === "Pinned" || next.folder === "Shared Notes") next.folder = "My Notes";
+  if (next.folder === "Pinned" || next.folder === "Shared Notes") {
+    next.folder = payload.folder && payload.folder !== "Pinned" && payload.folder !== "Shared Notes"
+      ? payload.folder
+      : "My Notes";
+  }
 
   const updated = [next, ...notes];
   saveNotesForCurrentUser(updated);
@@ -139,7 +143,13 @@ export async function updateNote(
     date: payload.date !== undefined ? payload.date : new Date().toISOString(),
   };
 
-  if (next.folder === "Pinned" || next.folder === "Shared Notes") next.folder = "My Notes";
+  if (next.folder === "Pinned" || next.folder === "Shared Notes") {
+    next.folder = payload.folder && payload.folder !== "Pinned" && payload.folder !== "Shared Notes"
+      ? payload.folder
+      : prev.folder && prev.folder !== "Pinned" && prev.folder !== "Shared Notes"
+        ? prev.folder
+        : "My Notes";
+  }
 
   const updated = [...notes];
   updated[idx] = next;
