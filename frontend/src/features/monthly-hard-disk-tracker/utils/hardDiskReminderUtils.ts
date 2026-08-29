@@ -7,9 +7,28 @@ function makeId(prefix: string): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+function parseLocalDateOnly(value: string): Date | null {
+  if (!value) return null;
+
+  const [yearText, monthText, dayText] = value.split("-");
+  const year = Number(yearText);
+  const month = Number(monthText);
+  const day = Number(dayText);
+
+  if ([year, month, day].some((part) => Number.isNaN(part))) return null;
+  return new Date(year, month - 1, day);
+}
+
+function formatLocalDate(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 function formatDateDisplay(value: string): string {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
+  const date = parseLocalDateOnly(value);
+  if (!date) return value;
   return date.toLocaleDateString("en-GB", {
     day: "2-digit",
     month: "short",
@@ -39,10 +58,10 @@ export function calculateHardDiskReminderDate(dueDate: string, reminderOption: s
 
   const offset = getReminderOffset(reminderOption);
   if (offset !== undefined) {
-    const parsed = new Date(dueDate);
-    if (Number.isNaN(parsed.getTime())) return undefined;
+    const parsed = parseLocalDateOnly(dueDate);
+    if (!parsed) return undefined;
     parsed.setDate(parsed.getDate() - offset);
-    return `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, "0")}-${String(parsed.getDate()).padStart(2, "0")}`;
+    return formatLocalDate(parsed);
   }
 
   return calculateSharedReminderDate(dueDate, reminderOption);

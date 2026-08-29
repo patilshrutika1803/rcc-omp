@@ -4,7 +4,33 @@ import { useMonthlyHardDiskTracker } from "./hooks/useMonthlyHardDiskTracker";
 import type { HardDiskCycle, HardDiskCycleFormValues } from "./types/hardDisk";
 import { HDD_PRIORITY_OPTIONS, HDD_REMINDER_OPTIONS } from "./constants/hardDiskConstants";
 import { exportHardDiskCyclePdf } from "./utils/hardDiskPdf";
+import { calculateHardDiskReminderDate } from "./utils/hardDiskReminderUtils";
 import { isDueDateTimeReached } from "../shared/utils/recurringWorkflow";
+
+function formatLocalDate(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function monthStartDateValue(monthKey: string): string {
+  if (!monthKey) return "";
+  const [yearText, monthText] = monthKey.split("-");
+  const year = Number(yearText);
+  const month = Number(monthText);
+  if (!yearText || !monthText || Number.isNaN(year) || Number.isNaN(month)) return "";
+  return formatLocalDate(new Date(year, month - 1, 1));
+}
+
+function monthEndDateValue(monthKey: string): string {
+  if (!monthKey) return "";
+  const [yearText, monthText] = monthKey.split("-");
+  const year = Number(yearText);
+  const month = Number(monthText);
+  if (!yearText || !monthText || Number.isNaN(year) || Number.isNaN(month)) return "";
+  return formatLocalDate(new Date(year, month, 0));
+}
 
 const emptyFormValues = (): HardDiskCycleFormValues => ({
   month: "",
@@ -71,7 +97,13 @@ export default function MonthlyHardDiskTrackerPage() {
   });
 
   const openCreateModal = () => {
-    setFormValues(emptyFormValues());
+    const currentMonth = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}`;
+    setFormValues({
+      ...emptyFormValues(),
+      month: currentMonth,
+      dispatchDate: monthStartDateValue(currentMonth),
+      expectedReturnDate: monthEndDateValue(currentMonth),
+    });
     setEditingCycle(null);
     setShowModal(true);
   };
@@ -80,8 +112,8 @@ export default function MonthlyHardDiskTrackerPage() {
     setEditingCycle(cycle);
     setFormValues({
       month: cycle.month,
-      dispatchDate: cycle.dispatchDate,
-      expectedReturnDate: cycle.expectedReturnDate,
+      dispatchDate: monthStartDateValue(cycle.month) || cycle.dispatchDate,
+      expectedReturnDate: monthEndDateValue(cycle.month) || cycle.expectedReturnDate,
       reminderBeforeReturn: cycle.reminderBeforeReturn,
       priority: cycle.priority,
       preparedBy: cycle.preparedBy,
@@ -138,7 +170,7 @@ export default function MonthlyHardDiskTrackerPage() {
 
   const openAccountability = (cycle: HardDiskCycle) => {
     setEditingCycle(cycle);
-    setAccountabilityForm({ completedBy: cycle.responsiblePerson || "", completedAt: new Date().toISOString().split("T")[0], notes: "" });
+    setAccountabilityForm({ completedBy: cycle.responsiblePerson || "", completedAt: formatLocalDate(new Date()), notes: "" });
     setShowAccountabilityModal(true);
   };
 
@@ -152,7 +184,7 @@ export default function MonthlyHardDiskTrackerPage() {
 
   const openReturn = (cycle: HardDiskCycle) => {
     setEditingCycle(cycle);
-    setReturnForm({ returnDate: new Date().toISOString().split("T")[0], returnedBy: cycle.responsiblePerson || "", receivedBy: cycle.preparedBy || "", returnNotes: "" });
+    setReturnForm({ returnDate: formatLocalDate(new Date()), returnedBy: cycle.responsiblePerson || "", receivedBy: cycle.preparedBy || "", returnNotes: "" });
     setShowReturnModal(true);
   };
 
@@ -179,6 +211,8 @@ export default function MonthlyHardDiskTrackerPage() {
     "Returned from RSB": ["Received at RCC"],
     "Received at RCC": ["Cycle Completed"],
   };
+
+  const getAccountabilityDueDate = (cycle: HardDiskCycle) => calculateHardDiskReminderDate(cycle.expectedReturnDate, cycle.reminderBeforeReturn) || cycle.expectedReturnDate;
 
   return (
     <div className="w-full max-w-[1600px] mx-auto animate-in fade-in duration-300">
@@ -312,12 +346,10 @@ export default function MonthlyHardDiskTrackerPage() {
                     <td className="px-4 py-3.5 text-xs text-slate-500">{cycle.priority}</td>
                     <td className="px-4 py-3.5">
                       <div className="flex items-center justify-end gap-1.5">
-                        <button title="View" onClick={() => openCycle(cycle)} className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-md"><Eye size={14} /></button>
-                        <button title="Edit" onClick={() => openEditModal(cycle)} className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-md"><Edit3 size={14} /></button>
-                        <button title="Dispatch" onClick={() => updateCycleStatus(cycle, "Dispatched from RCC", "Hard disk dispatched", cycle.responsiblePerson)} className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-md"><Truck size={14} /></button>
+                        <button title={isDueDateTimeReached(cycle.dispatchDate) ? "Dispatch" : "Cannot dispatch before the configured dispatch date."} disabled={!isDueDateTimeReached(cycle.dispatchDate)} onClick={() => updateCycleStatus(cycle, "Dispatched from RCC", "Hard disk dispatched", cycle.responsiblePerson)} className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-md disabled:cursor-not-allowed disabled:opacity-50"><Truck size={14} /></button>
                         <button title="Receive at RSB" onClick={() => updateCycleStatus(cycle, "Received at RSB", "Hard disk received at RSB", cycle.responsiblePerson)} className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md"><PackageCheck size={14} /></button>
-                        <button title="Accountability" onClick={() => openAccountability(cycle)} className="p-1.5 text-slate-400 hover:text-yellow-600 hover:bg-yellow-50 rounded-md"><RotateCcw size={14} /></button>
-                        <button title="Mark Returned" onClick={() => openReturn(cycle)} className="p-1.5 text-slate-400 hover:text-emerald-700 hover:bg-emerald-50 rounded-md"><RotateCcw size={14} /></button>
+                        <button title={isDueDateTimeReached(getAccountabilityDueDate(cycle)) ? "Accountability" : "Cannot record accountability before the configured reminder date."} disabled={!isDueDateTimeReached(getAccountabilityDueDate(cycle))} onClick={() => openAccountability(cycle)} className="p-1.5 text-slate-400 hover:text-yellow-600 hover:bg-yellow-50 rounded-md disabled:cursor-not-allowed disabled:opacity-50"><RotateCcw size={14} /></button>
+                        <button title={isDueDateTimeReached(cycle.expectedReturnDate) ? "Mark Returned" : "Cannot mark returned before the scheduled due date."} disabled={!isDueDateTimeReached(cycle.expectedReturnDate)} onClick={() => openReturn(cycle)} className="p-1.5 text-slate-400 hover:text-emerald-700 hover:bg-emerald-50 rounded-md disabled:cursor-not-allowed disabled:opacity-50"><RotateCcw size={14} /></button>
                         <button title={isDueDateTimeReached(cycle.expectedReturnDate) ? "Complete" : "Cannot complete before the scheduled due date."} disabled={!isDueDateTimeReached(cycle.expectedReturnDate)} onClick={() => openCompletion(cycle)} className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-md disabled:cursor-not-allowed disabled:opacity-50"><CheckCircle2 size={14} /></button>
                         <button title="Export PDF" onClick={() => exportHardDiskCyclePdf(cycle)} className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md"><Download size={14} /></button>
                         <button title="Delete" onClick={() => removeCycle(cycle)} className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md"><Trash2 size={14} /></button>
@@ -383,15 +415,23 @@ export default function MonthlyHardDiskTrackerPage() {
             <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 block">Month *</label>
-                <input type="month" required value={formValues.month} onChange={(event) => setFormValues((current) => ({ ...current, month: event.target.value }))} className="w-full h-9 px-3 text-sm border border-slate-300 rounded-lg" />
+                <input type="month" required value={formValues.month} onChange={(event) => {
+                  const nextMonth = event.target.value;
+                  setFormValues((current) => ({
+                    ...current,
+                    month: nextMonth,
+                    dispatchDate: nextMonth ? monthStartDateValue(nextMonth) : "",
+                    expectedReturnDate: nextMonth ? monthEndDateValue(nextMonth) : "",
+                  }));
+                }} className="w-full h-9 px-3 text-sm border border-slate-300 rounded-lg" />
               </div>
               <div>
                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 block">Dispatch Date *</label>
-                <input type="date" required value={formValues.dispatchDate} onChange={(event) => setFormValues((current) => ({ ...current, dispatchDate: event.target.value }))} className="w-full h-9 px-3 text-sm border border-slate-300 rounded-lg" />
+                <input type="date" required value={formValues.dispatchDate || monthStartDateValue(formValues.month)} readOnly className="w-full h-9 px-3 text-sm border border-slate-300 rounded-lg bg-slate-50" />
               </div>
               <div>
                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 block">Expected Return Date *</label>
-                <input type="date" required value={formValues.expectedReturnDate} onChange={(event) => setFormValues((current) => ({ ...current, expectedReturnDate: event.target.value }))} className="w-full h-9 px-3 text-sm border border-slate-300 rounded-lg" />
+                <input type="date" required value={formValues.expectedReturnDate || monthEndDateValue(formValues.month)} readOnly className="w-full h-9 px-3 text-sm border border-slate-300 rounded-lg bg-slate-50" />
               </div>
               <div>
                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 block">Reminder Before Return</label>

@@ -28,11 +28,36 @@ function buildTimelineEntry(label: string, status: HardDiskCycle["status"], user
   };
 }
 
+function formatLocalDate(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function monthStartDateValue(monthKey: string): string {
+  if (!monthKey) return "";
+  const [yearText, monthText] = monthKey.split("-");
+  const year = Number(yearText);
+  const month = Number(monthText);
+  if (!yearText || !monthText || Number.isNaN(year) || Number.isNaN(month)) return "";
+  return formatLocalDate(new Date(year, month - 1, 1));
+}
+
+function monthEndDateValue(monthKey: string): string {
+  if (!monthKey) return "";
+  const [yearText, monthText] = monthKey.split("-");
+  const year = Number(yearText);
+  const month = Number(monthText);
+  if (!yearText || !monthText || Number.isNaN(year) || Number.isNaN(month)) return "";
+  return formatLocalDate(new Date(year, month, 0));
+}
+
 function nextMonthLabel(baseMonth: string): string {
   const [yearText, monthText] = baseMonth.split("-");
   const year = Number(yearText);
   const month = Number(monthText);
-  const next = new Date(year, month, 1);
+  const next = new Date(year, month - 1, 1);
   next.setMonth(next.getMonth() + 1);
   return `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, "0")}`;
 }
@@ -89,57 +114,6 @@ export function useMonthlyHardDiskTracker() {
     persistHardDiskCycles(cycles, completedHistory);
   }, [cycles, completedHistory, isHydrated]);
 
-  useEffect(() => {
-    if (!isHydrated) return;
-    if (cycles.length === 0) {
-      const initialCycle: HardDiskCycle = {
-        id: makeId("cycle"),
-        cycleId: buildCycleId(`${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}`),
-        month: `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}`,
-        dispatchDate: new Date().toISOString().split("T")[0],
-        expectedReturnDate: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().split("T")[0],
-        currentHolder: "RCC",
-        status: "Created",
-        priority: "Medium",
-        preparedBy: "Operations Team",
-        responsiblePerson: "Backup Team",
-        remarks: "Initial monthly hard disk tracker cycle",
-        reminderBeforeReturn: "5 Days Before",
-        reminderStatus: "Pending",
-        accountabilityStatus: "Pending",
-        accountability: null,
-        returnDetails: null,
-        history: [buildTimelineEntry("Cycle Created", "Created", "Operations Team", "Monthly hard disk cycle created")],
-        reminders: buildCycleReminders({
-          id: makeId("cycle"),
-          cycleId: "",
-          month: `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}`,
-          dispatchDate: new Date().toISOString().split("T")[0],
-          expectedReturnDate: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().split("T")[0],
-          currentHolder: "RCC",
-          status: "Created",
-          priority: "Medium",
-          preparedBy: "Operations Team",
-          responsiblePerson: "Backup Team",
-          remarks: "Initial monthly hard disk tracker cycle",
-          reminderBeforeReturn: "5 Days Before",
-          reminderStatus: "Pending",
-          accountabilityStatus: "Pending",
-          accountability: null,
-          returnDetails: null,
-          history: [],
-          reminders: [],
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        }),
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-      setCycles([initialCycle]);
-      generateInitialHardDiskNotifications(initialCycle);
-    }
-  }, [cycles.length, isHydrated]);
-
   const filteredCycles = useMemo(() => {
     return cycles.filter((cycle) => {
       const byQuery = searchQuery.trim() ? matchesSearch(cycle, searchQuery) : true;
@@ -160,6 +134,13 @@ export function useMonthlyHardDiskTracker() {
 
   const submitCycle = (values: HardDiskCycleFormValues) => {
     const monthKey = getMonthFromValue(values.month);
+    if (!monthKey) {
+      toast.error("A month is required to create the cycle.");
+      return;
+    }
+
+    const dispatchDate = monthStartDateValue(monthKey);
+    const expectedReturnDate = monthEndDateValue(monthKey);
     const duplicate = cycles.some((cycle) => cycle.month === monthKey) || completedHistory.some((record) => record.month === monthKey);
     if (duplicate) {
       toast.error("A monthly cycle for this month already exists.");
@@ -171,8 +152,8 @@ export function useMonthlyHardDiskTracker() {
       id: makeId("cycle"),
       cycleId: buildCycleId(monthKey),
       month: monthKey,
-      dispatchDate: values.dispatchDate,
-      expectedReturnDate: values.expectedReturnDate,
+      dispatchDate,
+      expectedReturnDate,
       currentHolder: "RCC",
       status: "Created",
       priority: values.priority,
@@ -189,8 +170,8 @@ export function useMonthlyHardDiskTracker() {
         id: makeId("cycle"),
         cycleId: buildCycleId(monthKey),
         month: monthKey,
-        dispatchDate: values.dispatchDate,
-        expectedReturnDate: values.expectedReturnDate,
+        dispatchDate,
+        expectedReturnDate,
         currentHolder: "RCC",
         status: "Created",
         priority: values.priority,
@@ -198,10 +179,10 @@ export function useMonthlyHardDiskTracker() {
         responsiblePerson: values.responsiblePerson,
         remarks: values.remarks,
         reminderBeforeReturn: values.reminderBeforeReturn,
-          reminderStatus: "Pending",
-          accountabilityStatus: "Pending",
-          accountability: null,
-          returnDetails: null,
+        reminderStatus: "Pending",
+        accountabilityStatus: "Pending",
+        accountability: null,
+        returnDetails: null,
         history: [],
         reminders: [],
         createdAt: now.toISOString(),
@@ -219,6 +200,11 @@ export function useMonthlyHardDiskTracker() {
   };
 
   const updateCycleStatus = (cycle: HardDiskCycle, nextStatus: HardDiskCycle["status"], remarks: string, user: string) => {
+    if (nextStatus === "Dispatched from RCC" && !isDueDateTimeReached(cycle.dispatchDate)) {
+      toast.error("Cannot dispatch before the configured dispatch date.");
+      return;
+    }
+
     const updatedHistory = [...cycle.history, buildTimelineEntry(nextStatus, nextStatus, user, remarks)];
     const updatedCycle: HardDiskCycle = {
       ...cycle,
@@ -234,6 +220,12 @@ export function useMonthlyHardDiskTracker() {
   };
 
   const markAccountabilityCompleted = (cycle: HardDiskCycle, completedBy: string, completedAt: string, notes: string) => {
+    const accountabilityDueDate = cycle.reminderBeforeReturn ? (calculateHardDiskReminderDate(cycle.expectedReturnDate, cycle.reminderBeforeReturn) || cycle.expectedReturnDate) : cycle.expectedReturnDate;
+    if (!isDueDateTimeReached(accountabilityDueDate)) {
+      toast.error("Cannot record accountability before the configured reminder date.");
+      return;
+    }
+
     const updated: HardDiskCycle = {
       ...cycle,
       accountabilityStatus: "Completed",
@@ -249,6 +241,11 @@ export function useMonthlyHardDiskTracker() {
   };
 
   const recordReturn = (cycle: HardDiskCycle, details: HardDiskReturnDetails, user: string) => {
+    if (!isDueDateTimeReached(cycle.expectedReturnDate)) {
+      toast.error("Cannot record a return before the scheduled due date.");
+      return;
+    }
+
     const updated: HardDiskCycle = {
       ...cycle,
       actualReturnDate: details.returnDate,
@@ -313,15 +310,18 @@ export function useMonthlyHardDiskTracker() {
     setSelectedCycle(null);
 
     const nextMonth = nextMonthLabel(cycle.month);
-    const existingNext = cycles.some((item) => item.month === nextMonth) || completedHistory.some((record) => record.month === nextMonth);
+    const nextMonthKey = buildCycleId(nextMonth);
+    const existingNext = [...persisted.activeCycles, ...persisted.completedHistory].some((entry) => (entry.month === nextMonth || entry.cycleId === nextMonthKey || (entry as HardDiskCycle).parentId === cycle.id));
     let generatedNextCycle: HardDiskCycle | null = null;
     if (!existingNext) {
+      const nextDispatchDate = monthStartDateValue(nextMonth);
+      const nextExpectedReturnDate = monthEndDateValue(nextMonth);
       generatedNextCycle = {
         id: makeId("cycle"),
-        cycleId: buildCycleId(nextMonth),
+        cycleId: nextMonthKey,
         month: nextMonth,
-        dispatchDate: new Date().toISOString().split("T")[0],
-        expectedReturnDate: new Date(new Date().getFullYear(), new Date().getMonth() + 2, 0).toISOString().split("T")[0],
+        dispatchDate: nextDispatchDate,
+        expectedReturnDate: nextExpectedReturnDate,
         currentHolder: "RCC",
         status: "Created",
         priority: cycle.priority,
@@ -333,10 +333,10 @@ export function useMonthlyHardDiskTracker() {
         history: [buildTimelineEntry("Cycle Created", "Created", cycle.preparedBy, "Auto-generated next month cycle")],
         reminders: buildCycleReminders({
           id: makeId("cycle"),
-          cycleId: buildCycleId(nextMonth),
+          cycleId: nextMonthKey,
           month: nextMonth,
-          dispatchDate: new Date().toISOString().split("T")[0],
-          expectedReturnDate: new Date(new Date().getFullYear(), new Date().getMonth() + 2, 0).toISOString().split("T")[0],
+          dispatchDate: nextDispatchDate,
+          expectedReturnDate: nextExpectedReturnDate,
           currentHolder: "RCC",
           status: "Created",
           priority: cycle.priority,
