@@ -7,7 +7,7 @@ import { validateNewQAActivity } from "../utils/qaValidation";
 import { loadPersistedQAActivities, persistQAActivities } from "../utils/qaStorage";
 import { addNotification, hasNotificationForQA, removeQANotifications } from "../../notificataions/utils/notificationStorage";
 import type { Notification } from "../../notificataions/types/notification";
-import { getLocalTodayDateKey, isDueDateTimeReached } from "../../shared/utils/recurringWorkflow";
+import { calculateNextDueDate, getLocalTodayDateKey, isDueDateTimeReached } from "../../shared/utils/recurringWorkflow";
 
 export function useQA() {
   const completionClaims = useRef(new Set<string>());
@@ -203,39 +203,82 @@ export function useQA() {
 
   const handleComplete = (activity: QAActivity, actionNote?: string, completedBy?: string) => {
     const persistedActivities = loadPersistedQAActivities();
-    const persistedActivity = persistedActivities.find((item) => item.id === activity.id);
-    if (activity.status === "Completed" || persistedActivity?.status === "Completed" || completionClaims.current.has(activity.id)) {
+    const snapshot = persistedActivities.length > 0 ? persistedActivities : activities;
+    const currentActivity = snapshot.find((item) => item.id === activity.id) ?? activity;
+
+    if (currentActivity.status === "Completed" || completionClaims.current.has(currentActivity.id)) {
       toast.info("Activity is already completed.");
       return;
     }
-    if (!isDueDateTimeReached(activity.dueDate || activity.targetDate)) {
+    if (!isDueDateTimeReached(currentActivity.dueDate || currentActivity.targetDate)) {
       toast.error("Cannot complete before the scheduled due date.");
       return;
     }
-    completionClaims.current.add(activity.id);
+
+    completionClaims.current.add(currentActivity.id);
 
     const completedAt = new Date().toISOString();
-    const dueDate = activity.dueDate || activity.targetDate;
+    const completedDateKey = completedAt.split("T")[0];
+    const recurrenceKey = currentActivity.recurrenceId || `qa-recur-${currentActivity.id}`;
+    const frequency = currentActivity.frequency || (currentActivity as QAActivity & { isRecurring?: boolean }).frequency;
+    const nextDueDate = frequency && frequency !== "One Time" ? calculateNextDueDate(currentActivity.dueDate || currentActivity.targetDate, frequency) : "";
+    const nextReminderDate = nextDueDate && currentActivity.reminder ? calculateReminderDate(nextDueDate, currentActivity.reminder) : undefined;
+    const existsGeneratedActive = snapshot.some((item) => item.id !== currentActivity.id && item.recurrenceId === recurrenceKey && item.status !== "Completed");
+
+    if (nextDueDate && existsGeneratedActive) {
+      completionClaims.current.delete(currentActivity.id);
+      toast.error("A recurring QA activity for this cycle already exists. Duplicate generation prevented.");
+      return;
+    }
+
     const completedActivity: QAActivity = {
-      ...activity,
+      ...currentActivity,
       status: "Completed",
       updatedAt: completedAt,
-      completionDate: completedAt.split("T")[0],
-      completionNotes: actionNote?.trim() || activity.actionNotes || "",
-      completedBy: completedBy?.trim() || activity.completedBy || "Current User",
-      actionHistory: actionNote ? [{ time: "Just now", note: actionNote }, ...activity.actionHistory] : activity.actionHistory,
-      actionNotes: actionNote || activity.actionNotes || "",
+      completionDate: completedDateKey,
+      completionNotes: actionNote?.trim() || currentActivity.actionNotes || "",
+      completedBy: completedBy?.trim() || currentActivity.completedBy || "Current User",
+      actionHistory: actionNote ? [{ time: "Just now", note: actionNote }, ...currentActivity.actionHistory] : currentActivity.actionHistory,
+      actionNotes: actionNote || currentActivity.actionNotes || "",
     };
 
-    removeQANotifications(activity.id);
-    const nextActivities = (persistedActivities.length > 0 ? persistedActivities : activities)
-      .map((item) => item.id === activity.id ? completedActivity : item);
+    const generatedNextActivity: QAActivity | null = nextDueDate
+      ? {
+          ...currentActivity,
+          id: `QA-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+          status: "Upcoming",
+          recurrenceId: recurrenceKey,
+          parentId: currentActivity.id,
+          dueDate: nextDueDate,
+          targetDate: nextDueDate,
+          reminderDate: nextReminderDate,
+          completionDate: undefined,
+          completionNotes: undefined,
+          completedBy: undefined,
+          actionHistory: [],
+          actionNotes: "",
+          createdAt: completedAt,
+          updatedAt: completedAt,
+        }
+      : null;
+
+    const nextActivities = [
+      ...(generatedNextActivity ? [generatedNextActivity] : []),
+      completedActivity,
+      ...snapshot.filter((item) => item.id !== currentActivity.id && item.id !== generatedNextActivity?.id),
+    ];
+
+    removeQANotifications(currentActivity.id);
+    if (generatedNextActivity) {
+      removeQANotifications(generatedNextActivity.id);
+    }
+
     setActivities(nextActivities);
     persistQAActivities(nextActivities);
 
     setShowDrawer(false);
     setSelectedRecord(null);
-    toast.success(`"${activity.qmsNumber}" marked as completed.`);
+    toast.success(`"${currentActivity.qmsNumber}" marked as completed.`);
   };
 
   const handleUndoCompletion = (activity: QAActivity) => {
@@ -243,9 +286,30 @@ export function useQA() {
       toast.error("This QA completion cannot be undone in its current state.");
       return;
     }
-    const restored: QAActivity = { ...activity, status: "Upcoming", completionDate: undefined, completionNotes: undefined, completedBy: undefined, updatedAt: new Date().toISOString() };
+
+    const persistedActivities = loadPersistedQAActivities();
+    const snapshot = persistedActivities.length > 0 ? persistedActivities : activities;
+    const generatedChild = snapshot.find((item) => item.parentId === activity.id);
+    const restored: QAActivity = {
+      ...activity,
+      status: "Upcoming",
+      completionDate: undefined,
+      completionNotes: undefined,
+      completedBy: undefined,
+      actionNotes: activity.actionNotes || "",
+      updatedAt: new Date().toISOString(),
+    };
+
     completionClaims.current.delete(activity.id);
-    const nextActivities = activities.map((item) => item.id === activity.id ? restored : item);
+    const nextActivities = snapshot
+      .map((item) => (item.id === activity.id ? restored : item))
+      .filter((item) => item.id !== generatedChild?.id);
+
+    removeQANotifications(activity.id);
+    if (generatedChild) {
+      removeQANotifications(generatedChild.id);
+    }
+
     setActivities(nextActivities);
     persistQAActivities(nextActivities);
     generateReminderIfDue(restored);

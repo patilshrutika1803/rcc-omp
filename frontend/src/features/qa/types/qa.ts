@@ -23,6 +23,9 @@ export interface QAActivity {
   priority: QAPriority;
   assignedUser: string;
   status: QAStatus;
+  frequency?: string;
+  recurrenceId?: string;
+  parentId?: string;
   completionDate?: string;
   completionNotes?: string;
   completedBy?: string;
