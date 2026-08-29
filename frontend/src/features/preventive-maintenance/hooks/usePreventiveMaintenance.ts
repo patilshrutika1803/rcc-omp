@@ -82,10 +82,17 @@ export function usePreventiveMaintenance() {
         const persisted: PersistedPMStateV1 = loadPMState();
         if (cancelled) return;
 
+        const loadedRecords = Array.isArray(persisted.records) ? persisted.records : [];
+        const loadedCompleted = Array.isArray(persisted.completedPMs) ? persisted.completedPMs : [];
+        const mergedCompleted = [
+          ...loadedCompleted,
+          ...loadedRecords.filter(record => record.status === "Completed" && !loadedCompleted.some(completed => completed.id === record.id)),
+        ];
+
         // Load PM records + persisted filters.
-        setPmRecords(Array.isArray(persisted.records) ? persisted.records : []);
-        // Load completed PMs from persisted state (BUG 5)
-        setCompletedPMs(Array.isArray(persisted.completedPMs) ? persisted.completedPMs : []);
+        setPmRecords(loadedRecords);
+        // Load completed PMs from persisted state and retain completed records across reloads.
+        setCompletedPMs(mergedCompleted);
 
         if (persisted.filters) {
           setSearchQuery(persisted.filters.searchQuery ?? "");
@@ -310,97 +317,78 @@ export function usePreventiveMaintenance() {
 
   const handleCompletePM = (submission: PMChecklistSubmission) => {
     if (!selectedRecord) return;
+
+    const currentRecord = pmRecords.find(record => record.id === selectedRecord.id) ?? selectedRecord;
     const persistedState = loadPMState();
-    const persistedRecord = persistedState.records.find((record) => record.id === selectedRecord.id);
-    if (selectedRecord.status === "Completed" || persistedRecord?.status === "Completed" || completionClaims.current.has(selectedRecord.id)) {
+    const persistedRecord = persistedState.records.find((record) => record.id === currentRecord.id);
+    if (currentRecord.status === "Completed" || persistedRecord?.status === "Completed" || completionClaims.current.has(currentRecord.id)) {
       toast.info("Maintenance task is already completed.");
       return;
     }
-    if (!isDueDateTimeReached(selectedRecord.nextDue)) {
+    if (!isDueDateTimeReached(currentRecord.nextDue)) {
       toast.error("Cannot complete before the scheduled due date.");
       return;
     }
-    completionClaims.current.add(selectedRecord.id);
-    const today = new Date().toISOString().split("T")[0];
-    const trimmedNotes = submission.notes.trim();
 
-    // 1. Clear any pending reminder notifications for this PM (BUG 2)
-    clearRemindersForPM(selectedRecord.id);
-
-    // 2. Use the recurrenceId for duplicate detection (BUG 4).
-    // If the selected PM has a recurrenceId, check if there's already an
-    // active PM (non-Completed) with the same recurrenceId.
-    // This is a stable identifier that persists across edits.
-    const recurrenceKey = selectedRecord.recurrenceId;
-    if (recurrenceKey) {
-      const existingNext = pmRecords.find(
-        r =>
-          r.id !== selectedRecord.id &&
-          r.recurrenceId === recurrenceKey &&
-          r.status !== "Completed"
-      );
-      if (existingNext) {
-        toast.error("A recurring PM task for this cycle already exists. Duplicate generation prevented.");
-        setShowCompleteDialog(false);
-        setSelectedRecord(null);
-        return;
-      }
-    } else {
-      // Fallback for older records without recurrenceId: check machineId + frequency
-      const existingNext = pmRecords.find(
-        r =>
-          r.id !== selectedRecord.id &&
-          r.machine === selectedRecord.machine &&
-          r.machineId === selectedRecord.machineId &&
-          r.frequency === selectedRecord.frequency &&
-          r.status !== "Completed"
-      );
-      if (existingNext) {
-        toast.error("A recurring PM task for this machine and frequency already exists.");
-        setShowCompleteDialog(false);
-        setSelectedRecord(null);
-        return;
-      }
+    const recurrenceKey = currentRecord.recurrenceId;
+    const hasDuplicateCycle = [...pmRecords, ...completedPMs].some((record) =>
+      record.id !== currentRecord.id &&
+      ((recurrenceKey && record.recurrenceId === recurrenceKey) ||
+        (!recurrenceKey && record.machine === currentRecord.machine && record.machineId === currentRecord.machineId && record.frequency === currentRecord.frequency)) &&
+      record.status !== "Completed"
+    );
+    if (hasDuplicateCycle) {
+      toast.error("A recurring PM task for this cycle already exists. Duplicate generation prevented.");
+      setShowCompleteDialog(false);
+      setSelectedRecord(null);
+      return;
     }
 
+    completionClaims.current.add(currentRecord.id);
+
     try {
-      const shouldRecur = !!selectedRecord.frequency && selectedRecord.frequency !== "One Time";
-      const completedCycleDueDate = selectedRecord.nextDue || selectedRecord.lastMaintenance || today;
-      const nextDueDate = shouldRecur ? calculateNextDue(completedCycleDueDate, selectedRecord.frequency) : "";
-      const nextReminderDate = shouldRecur && nextDueDate && selectedRecord.reminder ? calculateReminderDate(nextDueDate, selectedRecord.reminder) : undefined;
+      const today = new Date().toISOString().split("T")[0];
+      const trimmedNotes = submission.notes.trim();
+
+      // 1. Clear any pending reminder notifications for this PM (BUG 2)
+      clearRemindersForPM(currentRecord.id);
+
+      const shouldRecur = !!currentRecord.frequency && currentRecord.frequency !== "One Time";
+      const completedCycleDueDate = currentRecord.nextDue || currentRecord.lastMaintenance || today;
+      const nextDueDate = shouldRecur ? calculateNextDue(completedCycleDueDate, currentRecord.frequency) : "";
+      const nextReminderDate = shouldRecur && nextDueDate && currentRecord.reminder ? calculateReminderDate(nextDueDate, currentRecord.reminder) : undefined;
 
       const newPMRecord: PMRecord | null = shouldRecur && nextDueDate ? {
         id: `temp-${Date.now()}`,
-        machine: selectedRecord.machine,
-        machineId: selectedRecord.machineId,
-        systemId: selectedRecord.systemId,
-        systemName: selectedRecord.systemName,
-        systemType: selectedRecord.systemType,
-        department: selectedRecord.department,
-        location: selectedRecord.location,
-        assignedUser: selectedRecord.assignedUser,
-        model: selectedRecord.model,
-        user: selectedRecord.user,
-        frequency: selectedRecord.frequency,
-        reminder: selectedRecord.reminder,
+        machine: currentRecord.machine,
+        machineId: currentRecord.machineId,
+        systemId: currentRecord.systemId,
+        systemName: currentRecord.systemName,
+        systemType: currentRecord.systemType,
+        department: currentRecord.department,
+        location: currentRecord.location,
+        assignedUser: currentRecord.assignedUser,
+        model: currentRecord.model,
+        user: currentRecord.user,
+        frequency: currentRecord.frequency,
+        reminder: currentRecord.reminder,
         reminderDate: nextReminderDate,
-        checklist: selectedRecord.checklist || selectedRecord.description,
-        priority: selectedRecord.priority,
+        checklist: currentRecord.checklist || currentRecord.description,
+        priority: currentRecord.priority,
         lastMaintenance: completedCycleDueDate,
         nextDue: nextDueDate,
         scheduledNextDue: nextDueDate,
         status: "Upcoming" as PMStatus,
-        description: selectedRecord.description,
-        recurrenceId: selectedRecord.recurrenceId || `recur-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-        parentId: selectedRecord.id,
+        description: currentRecord.description,
+        recurrenceId: currentRecord.recurrenceId || `recur-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        parentId: currentRecord.id,
         history: [],
       } : null;
 
-      // 5. Mark the current record as completed
       const now = new Date();
       const completionTimeStr = now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
       const completedRecord: PMRecord = {
-        ...selectedRecord,
+        ...currentRecord,
         status: "Completed" as PMStatus,
         lastMaintenance: completedCycleDueDate,
         nextDue: "",
@@ -414,31 +402,26 @@ export function usePreventiveMaintenance() {
             notes: trimmedNotes || "PM completed.",
             status: "Completed",
             completionTime: completionTimeStr,
-            previousMaintenanceDate: selectedRecord.lastMaintenance,
-            previousDueDate: selectedRecord.nextDue,
-            frequency: selectedRecord.frequency,
-            priority: selectedRecord.priority,
+            previousMaintenanceDate: currentRecord.lastMaintenance,
+            previousDueDate: currentRecord.nextDue,
+            frequency: currentRecord.frequency,
+            priority: currentRecord.priority,
           },
-          ...selectedRecord.history,
+          ...currentRecord.history,
         ],
       };
       completedRecord.checklistResponses = submission.items;
 
-      // Save the completed checklist and create the next recurring PM together.
       setPmRecords(prev => {
-        if (!newPMRecord) {
-          return [completedRecord, ...prev.filter(r => r.id !== selectedRecord.id)];
-        }
-        return [newPMRecord, completedRecord, ...prev.filter(r => r.id !== selectedRecord.id)];
+        const withoutCurrent = prev.filter(r => r.id !== currentRecord.id);
+        return newPMRecord ? [newPMRecord, completedRecord, ...withoutCurrent.filter(r => r.id !== newPMRecord.id)] : [completedRecord, ...withoutCurrent];
       });
-      setCompletedPMs(prev => [completedRecord, ...prev]);
+      setCompletedPMs(prev => [completedRecord, ...prev.filter(record => record.id !== completedRecord.id)]);
 
-      // BUG 2: Generate a fresh reminder ONLY for the new recurring PM
       if (newPMRecord) {
         checkAndGenerateDueReminders([newPMRecord]);
       }
 
-      // 6. Store completion event in storage
       try {
         const state = loadPMState();
         const completionEvent: PMCompletionEvent = {
@@ -448,22 +431,17 @@ export function usePreventiveMaintenance() {
           completedBy: "Current User",
           checklist: submission.items.map(item => `${item.number} ${item.label}`),
           completionNotes: trimmedNotes || "PM completed.",
-          previousDueDate: selectedRecord.nextDue,
-          previousMaintenanceDate: selectedRecord.lastMaintenance,
-          frequency: selectedRecord.frequency,
+          previousDueDate: currentRecord.nextDue,
+          previousMaintenanceDate: currentRecord.lastMaintenance,
+          frequency: currentRecord.frequency,
           status: "Completed",
           checklistResponses: submission.items,
         };
-        const machineId = selectedRecord.machineId;
+        const machineId = currentRecord.machineId;
         const existingHistory = state.completionHistory[machineId] || [];
         const currentRecords = state.records.length > 0 ? state.records : pmRecords;
-        const nextRecords = currentRecords.length > 0
-          ? [
-              ...(newPMRecord ? [newPMRecord] : []),
-              completedRecord,
-              ...currentRecords.filter((record) => record.id !== selectedRecord.id && record.id !== newPMRecord?.id),
-            ]
-          : [];
+        const dedupedRecords = currentRecords.filter(record => record.id !== currentRecord.id && record.id !== newPMRecord?.id);
+        const nextRecords = newPMRecord ? [newPMRecord, completedRecord, ...dedupedRecords] : [completedRecord, ...dedupedRecords];
         const next: PersistedPMStateV1 = {
           ...state,
           records: nextRecords,
@@ -483,6 +461,7 @@ export function usePreventiveMaintenance() {
     } catch (_err) {
       toast.error("Failed to mark maintenance as complete. Please try again.");
     } finally {
+      completionClaims.current.delete(currentRecord.id);
       setShowCompleteDialog(false);
       setSelectedRecord(null);
     }
@@ -493,8 +472,11 @@ export function usePreventiveMaintenance() {
       toast.error("This maintenance completion cannot be undone in its current state.");
       return;
     }
+
     const state = loadPMState();
-    const generatedChild = state.records.find((item) => item.parentId === record.id);
+    const generatedChild = [...state.records, ...state.completedPMs].find(
+      (item) => item.id !== record.id && (item.parentId === record.id || (item.recurrenceId && item.recurrenceId === record.recurrenceId && item.status !== "Completed"))
+    );
     const historyEntry = record.history[0];
     const previousDueDate = historyEntry?.previousDueDate || record.scheduledNextDue || record.lastMaintenance;
     const daysToDue = previousDueDate ? daysUntil(previousDueDate) : 0;
@@ -510,6 +492,7 @@ export function usePreventiveMaintenance() {
       history: record.history.slice(1),
     };
     completionClaims.current.delete(record.id);
+
     const nextRecords = [restored, ...state.records.filter((item) => item.id !== record.id && item.id !== generatedChild?.id)];
     const nextState: PersistedPMStateV1 = {
       ...state,
@@ -521,6 +504,7 @@ export function usePreventiveMaintenance() {
     setPmRecords(nextRecords);
     setCompletedPMs(nextState.completedPMs);
     if (generatedChild) clearRemindersForPM(generatedChild.id);
+    clearRemindersForPM(restored.id);
     checkAndGenerateDueReminders([restored]);
     toast.success("Completion undone successfully.");
   };
