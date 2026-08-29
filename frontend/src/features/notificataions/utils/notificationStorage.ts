@@ -40,16 +40,18 @@ function emitNotificationChange(): void {
 }
 
 export function addNotification(notification: Notification): void {
-  if (notification.notificationKey) {
-    const notifications = loadNotifications();
-    if (notifications.some((n) => n.notificationKey === notification.notificationKey)) return;
-    notifications.unshift(notification);
-    saveNotifications(notifications);
-    emitNotificationChange();
-    return;
+  const duplicateKey = notification.notificationKey ?? notification.id;
+  const notifications = loadNotifications();
+
+  if (duplicateKey) {
+    const hasDuplicate = notifications.some(
+      (n) =>
+        (n.notificationKey && n.notificationKey === duplicateKey) ||
+        n.id === duplicateKey
+    );
+    if (hasDuplicate) return;
   }
 
-  const notifications = loadNotifications();
   notifications.unshift(notification);
   saveNotifications(notifications);
   emitNotificationChange();
@@ -104,19 +106,19 @@ export function removeQANotifications(qaActivityId: string): void {
  * Check if a notification already exists for a given PM id + reminder cycle.
  * Prevents duplicate reminder notifications.
  */
-export function hasNotificationForPM(pmId: string): boolean {
+export function hasNotificationForPM(pmId: string, notificationKey?: string): boolean {
   const notifications = loadNotifications();
-  return notifications.some((n) => n.pmId === pmId && !n.read);
+  return notifications.some((n) => n.pmId === pmId && (!notificationKey || n.notificationKey === notificationKey) && !n.read);
 }
 
-export function hasNotificationForBackup(backupJobId: string): boolean {
+export function hasNotificationForBackup(backupJobId: string, notificationKey?: string): boolean {
   const notifications = loadNotifications();
-  return notifications.some((n) => n.backupJobId === backupJobId && !n.read);
+  return notifications.some((n) => n.backupJobId === backupJobId && (!notificationKey || n.notificationKey === notificationKey) && !n.read);
 }
 
-export function hasNotificationForQA(qaActivityId: string): boolean {
+export function hasNotificationForQA(qaActivityId: string, notificationKey?: string): boolean {
   const notifications = loadNotifications();
-  return notifications.some((n) => n.qaActivityId === qaActivityId && !n.read);
+  return notifications.some((n) => n.qaActivityId === qaActivityId && (!notificationKey || n.notificationKey === notificationKey) && !n.read);
 }
 
 export function removeSystemInspectionNotifications(systemInspectionId: string): void {
@@ -127,9 +129,9 @@ export function removeSystemInspectionNotifications(systemInspectionId: string):
   emitNotificationChange();
 }
 
-export function hasNotificationForSystemInspection(systemInspectionId: string): boolean {
+export function hasNotificationForSystemInspection(systemInspectionId: string, notificationKey?: string): boolean {
   const notifications = loadNotifications();
-  return notifications.some((n) => n.systemInspectionId === systemInspectionId);
+  return notifications.some((n) => n.systemInspectionId === systemInspectionId && (!notificationKey || n.notificationKey === notificationKey));
 }
 
 export function removeInspectionNotifications(inspectionScheduleId: string): void {
@@ -140,10 +142,10 @@ export function removeInspectionNotifications(inspectionScheduleId: string): voi
   emitNotificationChange();
 }
 
-export function hasNotificationForInspection(inspectionScheduleId: string): boolean {
+export function hasNotificationForInspection(inspectionScheduleId: string, notificationKey?: string): boolean {
   const notifications = loadNotifications();
   return notifications.some(
-    (n) => n.inspectionScheduleId === inspectionScheduleId && !n.read
+    (n) => n.inspectionScheduleId === inspectionScheduleId && (!notificationKey || n.notificationKey === notificationKey) && !n.read
   );
 }
 

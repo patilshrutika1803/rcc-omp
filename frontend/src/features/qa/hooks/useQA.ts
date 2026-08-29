@@ -7,7 +7,7 @@ import { validateNewQAActivity } from "../utils/qaValidation";
 import { loadPersistedQAActivities, persistQAActivities } from "../utils/qaStorage";
 import { addNotification, hasNotificationForQA, removeQANotifications } from "../../notificataions/utils/notificationStorage";
 import type { Notification } from "../../notificataions/types/notification";
-import { isDueDateTimeReached } from "../../shared/utils/recurringWorkflow";
+import { getLocalTodayDateKey, isDueDateTimeReached } from "../../shared/utils/recurringWorkflow";
 
 export function useQA() {
   const completionClaims = useRef(new Set<string>());
@@ -88,10 +88,11 @@ export function useQA() {
     });
 
     const severity = activity.priority === "Critical" || activity.priority === "High" ? "critical" : activity.priority === "Medium" ? "warning" : "info";
+    const notificationKey = `qa-reminder-${activity.id}-${activity.reminderDate || dueDate}`;
 
     return {
-      id: `qa-reminder-${activity.id}-${Date.now()}`,
-      notificationKey: `qa-reminder-${activity.id}-${activity.reminderDate || dueDate}`,
+      id: notificationKey,
+      notificationKey,
       title: "QA Activity Reminder",
       message: `QMS Number:\n${activity.qmsNumber}\n\nQMS Type:\n${activity.qmsType}\n\nDepartment:\n${activity.department}\n\nDue Date:\n${dueDate}\n\nPriority:\n${activity.priority}\n\nReminder:\n${activity.reminder}\n\nNotification Type:\nQA Activity`,
       category: "qa",
@@ -113,10 +114,13 @@ export function useQA() {
 
   const generateReminderIfDue = (activity: QAActivity) => {
     if (!activity.reminderDate || activity.status === "Completed") return false;
-    const today = new Date().toISOString().split("T")[0];
-    if (activity.reminderDate > today) return false;
-    if (hasNotificationForQA(activity.id)) return false;
-    addNotification(createReminderNotification(activity));
+    if (activity.reminderDate > getLocalTodayDateKey()) return false;
+
+    const notificationKey = `qa-reminder-${activity.id}-${activity.reminderDate}`;
+    if (hasNotificationForQA(activity.id, notificationKey)) return false;
+
+    const notification = createReminderNotification(activity);
+    addNotification({ ...notification, id: notificationKey, notificationKey });
     return true;
   };
 

@@ -6,7 +6,10 @@
 import type { Notification } from "../../notificataions/types/notification";
 import type { SystemInspectionRecord } from "../types/inspection";
 import { addNotification, hasNotificationForSystemInspection, removeSystemInspectionNotifications } from "../../notificataions/utils/notificationStorage";
-import { calculateReminderDate as calculateSharedReminderDate } from "../../shared/utils/recurringWorkflow";
+import {
+  calculateReminderDate as calculateSharedReminderDate,
+  getLocalTodayDateKey,
+} from "../../shared/utils/recurringWorkflow";
 
 export function calculateInspectionReminderDate(
   dueDate: string,
@@ -52,11 +55,12 @@ export function generateInspectionReminderNotification(inspection: SystemInspect
 
   const severity = getSeverityFromPriority(inspection.priority);
   const title = "System Inspection Reminder";
+  const notificationKey = `inspection-reminder-${inspection.id}-${inspection.reminderDate || inspection.nextDueDate}`;
   const message = `System:\n${inspection.systemName}\n\nIs due on\n${formatDateToDisplay(inspection.nextDueDate)}.\n\nDepartment:\n${inspection.department}\n\nPriority:\n${inspection.priority}\n\nAssigned User:\n${inspection.assignedUser}\n\nType:\nSystem Inspection`;
 
   return {
-    id: `inspection-reminder-${inspection.id}-${Date.now()}`,
-    notificationKey: `inspection-reminder-${inspection.id}-${inspection.reminderDate || inspection.nextDueDate}`,
+    id: notificationKey,
+    notificationKey,
     title,
     message,
     category: "inspection",
@@ -83,13 +87,13 @@ export function generateReminderIfDue(inspection: SystemInspectionRecord): boole
   const reminderDate = inspection.reminderDate || calculateInspectionReminderDate(inspection.nextDueDate, inspection.reminder);
   if (!reminderDate) return false;
 
-  const today = new Date().toISOString().split("T")[0];
-  if (reminderDate > today) return false;
+  if (reminderDate > getLocalTodayDateKey()) return false;
 
-  if (hasNotificationForSystemInspection(inspection.id)) return false;
+  const notificationKey = `inspection-reminder-${inspection.id}-${reminderDate}`;
+  if (hasNotificationForSystemInspection(inspection.id, notificationKey)) return false;
 
   const notification = generateInspectionReminderNotification(inspection);
-  addNotification(notification);
+  addNotification({ ...notification, id: notificationKey, notificationKey });
   return true;
 }
 

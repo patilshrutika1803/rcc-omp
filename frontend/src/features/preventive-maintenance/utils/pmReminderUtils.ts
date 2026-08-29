@@ -18,7 +18,10 @@ import {
   hasNotificationForPM,
   removePMNotifications,
 } from "../../notificataions/utils/notificationStorage";
-import { calculateReminderDate as calculateSharedReminderDate } from "../../shared/utils/recurringWorkflow";
+import {
+  calculateReminderDate as calculateSharedReminderDate,
+  getLocalTodayDateKey,
+} from "../../shared/utils/recurringWorkflow";
 
 /**
  * Calculate the reminder date for a PM record.
@@ -101,12 +104,13 @@ export function generateReminderNotification(pm: PMRecord): Notification {
 
   const severity = getSeverityFromPriority(pm.priority);
   const severityLabel = getPrioritySeverityLabel(pm.priority);
+  const notificationKey = `pm-reminder-${pm.id}-${pm.reminderDate || pm.nextDue}`;
 
   const message = `Machine:\n${pm.machine}\n\nis due on\n${formatDateToDisplay(pm.nextDue)}.\n\nDepartment:\n${pm.department}\n\nPriority:\n${pm.priority}\n\nAssigned User:\n${pm.user || pm.assignedUser}\n\nType:\nPreventive Maintenance\n\nSeverity:\n${severityLabel}`;
 
   return {
-    id: `pm-reminder-${pm.id}-${Date.now()}`,
-    notificationKey: `pm-reminder-${pm.id}-${pm.reminderDate || pm.nextDue}`,
+    id: notificationKey,
+    notificationKey,
     title: "Preventive Maintenance Reminder",
     message,
     category: "maintenance",
@@ -135,26 +139,20 @@ export function generateReminderNotification(pm: PMRecord): Notification {
  * Returns true if a notification was generated.
  */
 export function generateReminderIfDue(pm: PMRecord): boolean {
-  // Must have a reminder option
   if (!pm.reminder) return false;
 
-  // Calculate reminder date
   const reminderDate = pm.reminderDate || calculateReminderDate(pm.nextDue, pm.reminder);
   if (!reminderDate) return false;
 
-  // Check if reminder date is today or in the past
-  const today = new Date().toISOString().split("T")[0];
-  if (reminderDate > today) return false;
+  if (reminderDate > getLocalTodayDateKey()) return false;
 
-  // Check for duplicate (only one notification per reminder cycle)
-  if (hasNotificationForPM(pm.id)) return false;
+  const notificationKey = `pm-reminder-${pm.id}-${reminderDate}`;
+  if (hasNotificationForPM(pm.id, notificationKey)) return false;
 
-  // Don't generate reminders for completed PMs
   if (pm.status === "Completed") return false;
 
-  // Generate and store the notification
   const notification = generateReminderNotification(pm);
-  addNotification(notification);
+  addNotification({ ...notification, id: notificationKey, notificationKey });
   return true;
 }
 

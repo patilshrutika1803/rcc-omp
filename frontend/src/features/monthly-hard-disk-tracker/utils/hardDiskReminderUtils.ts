@@ -130,9 +130,10 @@ export function addHardDiskNotification(cycle: HardDiskCycle, notificationType: 
     minute: "2-digit",
   });
 
+  const notificationKey = `hdd-${cycle.id}-${notificationType}`;
   const notification: Notification = {
-    id: makeId("hdd-notification"),
-    notificationKey: `hdd-${cycle.id}-${notificationType}`,
+    id: notificationKey,
+    notificationKey,
     title,
     message,
     category: "monthly-hard-disk",

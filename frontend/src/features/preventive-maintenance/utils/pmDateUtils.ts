@@ -102,7 +102,7 @@ export function addDays(dateStr: string, days: number): string {
   const d = new Date(dateStr);
   if (isNaN(d.getTime())) return "";
   d.setDate(d.getDate() + days);
-  return d.toISOString().split("T")[0];
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
 export function getTimelineBucket(record: PMRecord | null | undefined): "Overdue" | "Due Today" | "Upcoming" | null {
@@ -138,7 +138,7 @@ export function calculateNextDue(lastMaintenance: string, frequency: string): st
     const d = new Date(lastMaintenance);
     if (isNaN(d.getTime())) return "";
     d.setDate(d.getDate() + 14);
-    return d.toISOString().split("T")[0];
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   }
 
   return calculateNextDueDate(lastMaintenance, frequency);

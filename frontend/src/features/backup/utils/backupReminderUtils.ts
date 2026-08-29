@@ -8,6 +8,7 @@ import {
 import {
   calculateNextDueDate,
   calculateReminderDate as calculateSharedReminderDate,
+  getLocalTodayDateKey,
 } from "../../shared/utils/recurringWorkflow";
 
 function formatDateDisplay(dateStr: string): string {
@@ -64,11 +65,12 @@ export function generateBackupReminderNotification(job: BackupJob): Notification
   });
 
   const severity = getSeverityFromPriority(job.priority || "Medium");
+  const notificationKey = `backup-reminder-${job.id}-${job.reminderDate || job.nextDueDate || job.dueDate}`;
   const message = `Backup Activity:\n${job.name}\n\nIs due on\n${formatDateDisplay(job.nextDueDate || job.dueDate)}.\n\nDepartment:\n${job.department}\n\nPriority:\n${job.priority || "Medium"}\n\nBackup Type:\n${job.backupType}`;
 
   return {
-    id: `backup-reminder-${job.id}-${Date.now()}`,
-    notificationKey: `backup-reminder-${job.id}-${job.reminderDate || job.nextDueDate || job.dueDate}`,
+    id: notificationKey,
+    notificationKey,
     title: "Backup Activity Reminder",
     message,
     category: "backup",
@@ -94,13 +96,14 @@ export function generateBackupReminderIfDue(job: BackupJob): boolean {
   const reminderDate = job.reminderDate || calculateReminderDate(job.nextDueDate || job.dueDate, job.reminder);
   if (!reminderDate) return false;
 
-  const today = new Date().toISOString().split("T")[0];
-  if (reminderDate > today) return false;
-  if (hasNotificationForBackup(job.id)) return false;
+  if (reminderDate > getLocalTodayDateKey()) return false;
+
+  const notificationKey = `backup-reminder-${job.id}-${reminderDate}`;
+  if (hasNotificationForBackup(job.id, notificationKey)) return false;
   if (job.status === "Completed") return false;
 
   const notification = generateBackupReminderNotification(job);
-  addNotification(notification);
+  addNotification({ ...notification, id: notificationKey, notificationKey });
   return true;
 }
 
