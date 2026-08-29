@@ -81,7 +81,7 @@ export function UserProfileContent() {
           <div className="flex-1">
             <h1 className="text-xl font-bold text-slate-900">{displayName}</h1>
             <div className="flex flex-wrap items-center gap-3 mt-1 text-xs text-slate-500">
-              <span className="flex items-center gap-1"><Shield size={11} /> Portal User</span>
+              <span className="flex items-center gap-1"><Shield size={11} /> {user?.role ?? "Operations Manager"}</span>
               <span className="flex items-center gap-1"><Mail size={11} /> {displayEmail}</span>
             </div>
             <div className="flex items-center gap-2 mt-2.5">
@@ -117,7 +117,7 @@ export function UserProfileContent() {
                 </select>
               </div>
               <SettingsInput label="Phone" value={form.phone} onChange={(e) => setForm((prev) => ({ ...prev, phone: e.target.value }))} />
-              <SettingsInput label="Role" value={user?.role ?? "Portal User"} readOnly />
+              <SettingsInput label="Role" value={user?.role ?? "Operations Manager"} readOnly />
               <SettingsInput label="Employee ID" value={user?.employeeId ?? "EMP-001"} readOnly />
               <SettingsInput label="Email" value={displayEmail} readOnly />
               <div className="sm:col-span-2 flex gap-2">
@@ -130,7 +130,7 @@ export function UserProfileContent() {
               {[
                 ["Full Name", displayName],
                 ["Login ID / Email", displayEmail],
-                ["Role", user?.role ?? "Portal User"],
+                ["Role", user?.role ?? "Operations Manager"],
                 ["Department", normalizeDepartment(user?.department)],
                 ["Employee ID", user?.employeeId ?? "EMP-001"],
                 ["Phone", user?.phone ?? "+91 00000 00000"],

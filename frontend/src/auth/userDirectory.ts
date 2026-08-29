@@ -1,3 +1,5 @@
+import { DEPARTMENT_OPTIONS } from "../constants/departments";
+
 export type AllowedUserData = {
   name: string;
   role?: string;
@@ -6,6 +8,36 @@ export type AllowedUserData = {
   phone?: string;
   profileImageUrl?: string;
 };
+
+export const USER_ROLE_OPTIONS = [
+  "Operations Manager",
+  "Maintenance Lead",
+  "IT Admin",
+] as const;
+
+export type UserRole = (typeof USER_ROLE_OPTIONS)[number];
+
+export function normalizeUserRole(value?: string | null): UserRole {
+  const candidate = value?.trim();
+  if (!candidate) return USER_ROLE_OPTIONS[0];
+
+  const match = USER_ROLE_OPTIONS.find(
+    (option) => option.toLowerCase() === candidate.toLowerCase()
+  );
+
+  return match ?? USER_ROLE_OPTIONS[0];
+}
+
+export function normalizeUserDepartment(value?: string | null): string {
+  const candidate = value?.trim();
+  if (!candidate) return DEPARTMENT_OPTIONS[0];
+
+  const match = DEPARTMENT_OPTIONS.find(
+    (option) => option.toLowerCase() === candidate.toLowerCase()
+  );
+
+  return match ?? DEPARTMENT_OPTIONS[0];
+}
 
 export const ALLOWED_USERS: Record<string, AllowedUserData> = {
   "nikhil.sakat@rajaram.com": {

@@ -1,4 +1,5 @@
 import { DEPARTMENT_OPTIONS } from "../constants/departments";
+import { normalizeUserRole } from "./userDirectory";
 
 export type AuthUser = {
   email: string;
@@ -65,7 +66,7 @@ export async function loginWithPassword(email: string, _password: string): Promi
     user: {
       email: normalizedEmail,
       name: user.name,
-      role: user.role ?? "Portal User",
+      role: normalizeUserRole(user.role),
       department: normalizeDepartment(user.department),
       employeeId: user.employeeId ?? "EMP-001",
       phone: user.phone ?? "+91 00000 00000",

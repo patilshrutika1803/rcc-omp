@@ -5,7 +5,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import React from "react";
-import { ChevronDown, User, HelpCircle, ShieldCheck, LogOut } from "lucide-react";
+import { ChevronDown, User, HelpCircle, ShieldCheck, LogOut, Settings } from "lucide-react";
 import { useAuth } from "../auth/AuthProvider";
 
 export function ProfileDropdown({
@@ -24,6 +24,7 @@ export function ProfileDropdown({
   const { user } = useAuth();
   const displayName = user?.name ?? "RCC OMP User";
   const displayEmail = user?.email ?? "unknown@example.com";
+  const displayRole = user?.role ?? "Operations Manager";
   const initials = displayName
     .split(" ")
     .map((segment) => segment[0])
@@ -37,7 +38,7 @@ export function ProfileDropdown({
         <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-sm font-bold shrink-0">{initials}</div>
         <div className="hidden lg:block text-left">
           <div className="text-sm font-semibold text-slate-900 leading-tight">{displayName}</div>
-          <div className="text-[11px] text-slate-500 font-medium">Portal User</div>
+          <div className="text-[11px] text-slate-500 font-medium">{displayRole}</div>
         </div>
         <ChevronDown size={14} className="text-slate-400 hidden lg:block" />
       </button>
@@ -51,8 +52,9 @@ export function ProfileDropdown({
             </div>
             <div className="py-1">
               <button onClick={() => { setActiveNav("profile"); onClose(); }} className="w-full px-4 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-slate-900 flex items-center gap-2"><User size={14} /> My Profile</button>
-              <button onClick={() => { setActiveNav("help"); onClose(); }} className="w-full px-4 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-slate-900 flex items-center gap-2"><HelpCircle size={14} /> Help Center</button>
+              <button onClick={() => { setActiveNav("settings"); onClose(); }} className="w-full px-4 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-slate-900 flex items-center gap-2"><Settings size={14} /> Preferences</button>
               <button onClick={() => { setActiveNav("admin"); onClose(); }} className="w-full px-4 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-slate-900 flex items-center gap-2"><ShieldCheck size={14} /> User Management</button>
+              <button onClick={() => { setActiveNav("help"); onClose(); }} className="w-full px-4 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-slate-900 flex items-center gap-2"><HelpCircle size={14} /> Help Center</button>
             </div>
             <div className="py-1 border-t border-slate-100">
               <button onClick={onLogout} className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"><LogOut size={14} /> Sign Out</button>
