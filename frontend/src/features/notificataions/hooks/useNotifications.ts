@@ -47,8 +47,12 @@ export function useNotifications() {
   }, []);
 
   const deleteNotif = useCallback(async (id: string) => {
-    setNotifications((ns) => ns.filter((n) => n.id !== id));
-    toast.error("Notification deleted.");
+    setNotifications((ns) => ns.map((n) =>
+      n.id === id
+        ? { ...n, deleted: true, deletedAt: new Date().toISOString(), archived: false }
+        : n
+    ));
+    toast.success("Moved to Trash.");
     await notificationService.deleteNotification(id);
   }, []);
 

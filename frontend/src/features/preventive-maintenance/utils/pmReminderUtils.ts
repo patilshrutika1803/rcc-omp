@@ -22,6 +22,7 @@ import {
   calculateReminderDate as calculateSharedReminderDate,
   getLocalTodayDateKey,
 } from "../../shared/utils/recurringWorkflow";
+import { areMaintenanceAlertsEnabled } from "../../settings/utils/notificationSettings";
 
 /**
  * Calculate the reminder date for a PM record.
@@ -140,6 +141,7 @@ export function generateReminderNotification(pm: PMRecord): Notification {
  */
 export function generateReminderIfDue(pm: PMRecord): boolean {
   if (!pm.reminder) return false;
+  if (!areMaintenanceAlertsEnabled()) return false;
 
   const reminderDate = pm.reminderDate || calculateReminderDate(pm.nextDue, pm.reminder);
   if (!reminderDate) return false;

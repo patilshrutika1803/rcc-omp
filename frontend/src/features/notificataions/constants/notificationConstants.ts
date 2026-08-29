@@ -33,4 +33,5 @@ export const SIDEBAR_FILTER_DEFS: { id: NotificationFilterId; label: string }[] 
   { id: "department", label: "Department" },
   { id: "system", label: "System" },
   { id: "archived", label: "Archived" },
+  { id: "trash", label: "Trash" },
 ];

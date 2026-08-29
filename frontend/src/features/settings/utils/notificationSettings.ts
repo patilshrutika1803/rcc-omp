@@ -2,23 +2,19 @@ export const NOTIFICATION_SETTINGS_STORAGE_KEY = "rccomp.settings.notifications"
 export const NOTIFICATION_SETTINGS_EVENT = "rccomp:notification-settings-change";
 
 export type NotificationSettings = {
-  emailNotifications: boolean;
   inAppPushNotifications: boolean;
   smsAlerts: boolean;
   maintenanceAlerts: boolean;
   backupAlerts: boolean;
   qaAlerts: boolean;
-  criticalOnlyMode: boolean;
 };
 
 export const NOTIFICATION_SETTINGS_DEFAULTS: NotificationSettings = {
-  emailNotifications: true,
   inAppPushNotifications: true,
   smsAlerts: false,
   maintenanceAlerts: true,
   backupAlerts: true,
   qaAlerts: true,
-  criticalOnlyMode: false,
 };
 
 function readStoredNotificationSettings(): Partial<NotificationSettings> | null {
@@ -57,26 +53,22 @@ export function loadNotificationSettings(): NotificationSettings {
   }
 
   return {
-    emailNotifications: Boolean(stored.emailNotifications ?? defaults.emailNotifications),
     inAppPushNotifications: Boolean(stored.inAppPushNotifications ?? defaults.inAppPushNotifications),
     smsAlerts: Boolean(stored.smsAlerts ?? defaults.smsAlerts),
     maintenanceAlerts: Boolean(stored.maintenanceAlerts ?? defaults.maintenanceAlerts),
     backupAlerts: Boolean(stored.backupAlerts ?? defaults.backupAlerts),
     qaAlerts: Boolean(stored.qaAlerts ?? defaults.qaAlerts),
-    criticalOnlyMode: Boolean(stored.criticalOnlyMode ?? defaults.criticalOnlyMode),
   };
 }
 
 export function saveNotificationSettings(settings: NotificationSettings): NotificationSettings | null {
   const defaults = NOTIFICATION_SETTINGS_DEFAULTS;
   const next: NotificationSettings = {
-    emailNotifications: Boolean(settings.emailNotifications ?? defaults.emailNotifications),
     inAppPushNotifications: Boolean(settings.inAppPushNotifications ?? defaults.inAppPushNotifications),
     smsAlerts: Boolean(settings.smsAlerts ?? defaults.smsAlerts),
     maintenanceAlerts: Boolean(settings.maintenanceAlerts ?? defaults.maintenanceAlerts),
     backupAlerts: Boolean(settings.backupAlerts ?? defaults.backupAlerts),
     qaAlerts: Boolean(settings.qaAlerts ?? defaults.qaAlerts),
-    criticalOnlyMode: Boolean(settings.criticalOnlyMode ?? defaults.criticalOnlyMode),
   };
 
   if (typeof window !== "undefined") {
@@ -89,10 +81,6 @@ export function saveNotificationSettings(settings: NotificationSettings): Notifi
 
   emitNotificationSettingsChanged(next);
   return next;
-}
-
-export function isEmailNotificationsEnabled(): boolean {
-  return loadNotificationSettings().emailNotifications;
 }
 
 export function areInAppPushNotificationsEnabled(): boolean {
@@ -115,19 +103,11 @@ export function areQAAlertsEnabled(): boolean {
   return loadNotificationSettings().qaAlerts;
 }
 
-export function isCriticalOnlyModeEnabled(): boolean {
-  return loadNotificationSettings().criticalOnlyMode;
-}
-
-export function shouldSurfaceInAppNotification(severity: "critical" | "warning" | "info" | "success" | string): boolean {
+export function shouldSurfaceInAppNotification(_severity: "critical" | "warning" | "info" | "success" | string): boolean {
   const settings = loadNotificationSettings();
 
   if (!settings.inAppPushNotifications) {
     return false;
-  }
-
-  if (settings.criticalOnlyMode) {
-    return severity === "critical";
   }
 
   return true;

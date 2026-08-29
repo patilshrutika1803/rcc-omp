@@ -41,25 +41,26 @@ export function getSeverityBadgeClasses(severity: Notification["severity"]) {
 // ── Counting helpers ─────────────────────────────────────────────────────
 
 export function getUnreadCount(notifications: Notification[]): number {
-  return notifications.filter((n) => !n.read && !n.archived).length;
+  return notifications.filter((n) => !n.read && !n.archived && !n.deleted).length;
 }
 
 export function getActiveTotalCount(notifications: Notification[]): number {
-  return notifications.filter((n) => !n.archived).length;
+  return notifications.filter((n) => !n.archived && !n.deleted).length;
 }
 
 function countForFilter(notifications: Notification[], filterId: NotificationFilterId): number {
-  if (filterId === "archived") return notifications.filter((n) => n.archived).length;
-  if (filterId === "all") return notifications.filter((n) => !n.archived).length;
-  if (filterId === "unread") return notifications.filter((n) => !n.read && !n.archived).length;
+  if (filterId === "archived") return notifications.filter((n) => n.archived && !n.deleted).length;
+  if (filterId === "trash") return notifications.filter((n) => n.deleted).length;
+  if (filterId === "all") return notifications.filter((n) => !n.archived && !n.deleted).length;
+  if (filterId === "unread") return notifications.filter((n) => !n.read && !n.archived && !n.deleted).length;
   if (filterId === "critical") {
-    return notifications.filter((n) => n.severity === "critical" && !n.archived).length;
+    return notifications.filter((n) => n.severity === "critical" && !n.archived && !n.deleted).length;
   }
   if (filterId === "warning") {
-    return notifications.filter((n) => n.severity === "warning" && !n.archived).length;
+    return notifications.filter((n) => n.severity === "warning" && !n.archived && !n.deleted).length;
   }
   if ((NOTIFICATION_CATEGORIES as string[]).includes(filterId)) {
-    return notifications.filter((n) => n.category === filterId && !n.archived).length;
+    return notifications.filter((n) => n.category === filterId && !n.archived && !n.deleted).length;
   }
   return 0;
 }
@@ -81,8 +82,9 @@ export function filterNotifications(
   activeFilter: NotificationFilterId
 ): Notification[] {
   return notifications.filter((n) => {
-    if (activeFilter === "archived") return n.archived;
-    if (n.archived) return false;
+    if (activeFilter === "trash") return n.deleted;
+    if (activeFilter === "archived") return n.archived && !n.deleted;
+    if (n.archived || n.deleted) return false;
     if (activeFilter === "unread") return !n.read;
     if (activeFilter === "critical") return n.severity === "critical";
     if (activeFilter === "warning") return n.severity === "warning";

@@ -26,6 +26,8 @@ export interface Notification {
   notificationKey?: string;
   read: boolean;
   archived: boolean;
+  deleted?: boolean;
+  deletedAt?: string;
 
   // Reminder fields for Preventive Maintenance, Backup, and QA notifications
   pmId?: string;
@@ -55,7 +57,8 @@ export type NotificationFilterId =
   | "critical"
   | "warning"
   | NotificationCategory
-  | "archived";
+  | "archived"
+  | "trash";
 
 export interface NotificationFilter {
   id: NotificationFilterId;

@@ -12,6 +12,7 @@
 import type { Notification } from "../types/notification";
 
 const STORAGE_KEY = "rcc_omp_notifications";
+const DELETE_RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
 
 function safeJsonParse<T>(raw: string | null): T | null {
   if (!raw) return null;
@@ -22,11 +23,31 @@ function safeJsonParse<T>(raw: string | null): T | null {
   }
 }
 
+function isExpiredDeletedNotification(notification: Notification): boolean {
+  if (!notification.deleted || !notification.deletedAt) {
+    return false;
+  }
+
+  const deletedAt = new Date(notification.deletedAt).getTime();
+  if (Number.isNaN(deletedAt)) {
+    return false;
+  }
+
+  return Date.now() - deletedAt > DELETE_RETENTION_MS;
+}
+
 export function loadNotifications(): Notification[] {
   if (typeof window === "undefined") return [];
   const raw = window.localStorage.getItem(STORAGE_KEY);
   const parsed = safeJsonParse<Notification[]>(raw);
-  return Array.isArray(parsed) ? parsed : [];
+  if (!Array.isArray(parsed)) return [];
+
+  const active = parsed.filter((notification) => !isExpiredDeletedNotification(notification));
+  if (active.length !== parsed.length) {
+    saveNotifications(active);
+  }
+
+  return active;
 }
 
 export function saveNotifications(notifications: Notification[]): void {
@@ -58,7 +79,16 @@ export function addNotification(notification: Notification): void {
 }
 
 export function removeNotification(id: string): void {
-  const notifications = loadNotifications().filter((n) => n.id !== id);
+  const notifications = loadNotifications().map((n) =>
+    n.id === id
+      ? {
+          ...n,
+          deleted: true,
+          deletedAt: n.deletedAt || new Date().toISOString(),
+          archived: false,
+        }
+      : n
+  );
   saveNotifications(notifications);
   emitNotificationChange();
 }
@@ -153,7 +183,7 @@ export function hasNotificationForInspection(inspectionScheduleId: string, notif
  * Get the count of unread notifications.
  */
 export function getUnreadCount(): number {
-  return loadNotifications().filter((n) => !n.read && !n.archived).length;
+  return loadNotifications().filter((n) => !n.read && !n.archived && !n.deleted).length;
 }
 
 /**

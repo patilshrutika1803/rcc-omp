@@ -10,6 +10,7 @@ import {
   calculateReminderDate as calculateSharedReminderDate,
   getLocalTodayDateKey,
 } from "../../shared/utils/recurringWorkflow";
+import { areBackupAlertsEnabled } from "../../settings/utils/notificationSettings";
 
 function formatDateDisplay(dateStr: string): string {
   const parsed = new Date(dateStr);
@@ -93,6 +94,7 @@ export function generateBackupReminderNotification(job: BackupJob): Notification
 
 export function generateBackupReminderIfDue(job: BackupJob): boolean {
   if (!job.reminder) return false;
+  if (!areBackupAlertsEnabled()) return false;
   const reminderDate = job.reminderDate || calculateReminderDate(job.nextDueDate || job.dueDate, job.reminder);
   if (!reminderDate) return false;
 

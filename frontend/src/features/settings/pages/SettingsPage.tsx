@@ -196,13 +196,11 @@ export default function SettingsPage() {
             <div className="max-w-xl">
               <h2 className="text-sm font-bold text-slate-900 mb-5">Notification Preferences</h2>
               <div className="space-y-0">
-                <SettingsToggle label="Email Notifications" desc="Receive important alerts via email" value={notificationSettings.emailNotifications} onChange={() => handleNotificationToggle("emailNotifications")} />
                 <SettingsToggle label="In-app Push Notifications" desc="Surface existing in-app notification behavior" value={notificationSettings.inAppPushNotifications} onChange={() => handleNotificationToggle("inAppPushNotifications")} />
                 <SettingsToggle label="SMS Alerts" desc="Critical alerts via SMS" value={notificationSettings.smsAlerts} onChange={() => handleNotificationToggle("smsAlerts")} />
                 <SettingsToggle label="Maintenance Alerts" desc="PM due, overdue, completed" value={notificationSettings.maintenanceAlerts} onChange={() => handleNotificationToggle("maintenanceAlerts")} />
                 <SettingsToggle label="Backup Alerts" desc="Backup success and failure" value={notificationSettings.backupAlerts} onChange={() => handleNotificationToggle("backupAlerts")} />
                 <SettingsToggle label="QA Alerts" desc="Inspection results and audits" value={notificationSettings.qaAlerts} onChange={() => handleNotificationToggle("qaAlerts")} />
-                <SettingsToggle label="Critical Only Mode" desc="Only receive critical severity alerts" value={notificationSettings.criticalOnlyMode} onChange={() => handleNotificationToggle("criticalOnlyMode")} />
               </div>
               <button onClick={handleSaveNotificationSettings} className="mt-4 flex items-center gap-2 h-9 px-5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"><Check size={13} /> Save</button>
             </div>

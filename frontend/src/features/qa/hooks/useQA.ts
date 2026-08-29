@@ -8,6 +8,7 @@ import { loadPersistedQAActivities, persistQAActivities } from "../utils/qaStora
 import { addNotification, hasNotificationForQA, removeQANotifications } from "../../notificataions/utils/notificationStorage";
 import type { Notification } from "../../notificataions/types/notification";
 import { calculateNextDueDate, getLocalTodayDateKey, isDueDateTimeReached } from "../../shared/utils/recurringWorkflow";
+import { areQAAlertsEnabled } from "../../settings/utils/notificationSettings";
 
 export function useQA() {
   const completionClaims = useRef(new Set<string>());
@@ -114,6 +115,7 @@ export function useQA() {
 
   const generateReminderIfDue = (activity: QAActivity) => {
     if (!activity.reminderDate || activity.status === "Completed") return false;
+    if (!areQAAlertsEnabled()) return false;
     if (activity.reminderDate > getLocalTodayDateKey()) return false;
 
     const notificationKey = `qa-reminder-${activity.id}-${activity.reminderDate}`;
