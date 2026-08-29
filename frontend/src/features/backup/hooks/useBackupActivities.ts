@@ -11,7 +11,7 @@ import {
   checkAndGenerateDueBackupReminders,
   clearRemindersForBackup,
 } from "../utils/backupReminderUtils";
-import { calculateNextDueDate as calculateSharedNextDueDate, calculateReminderDate as calculateSharedReminderDate, isDueDateTimeReached } from "../../shared/utils/recurringWorkflow";
+import { calculateNextDueDate as calculateSharedNextDueDate, calculateReminderDate as calculateSharedReminderDate, formatDateOnly, isDueDateTimeReached } from "../../shared/utils/recurringWorkflow";
 import { loadPersistedBackupJobs, persistBackupJobs } from "../utils/backupStorage";
 
 export function useBackupActivities() {
@@ -93,8 +93,8 @@ export function useBackupActivities() {
     const now = new Date();
     const nextDate = new Date(now);
     nextDate.setDate(nextDate.getDate() + 1);
-    // If user provided an initial due date use it, otherwise default to tomorrow
-    const initialDueDate = data.initialDueDate && data.initialDueDate.trim() ? data.initialDueDate : nextDate.toISOString().split("T")[0];
+    // If user provided an initial due date use it, otherwise default to tomorrow using the local date utility.
+    const initialDueDate = data.initialDueDate && data.initialDueDate.trim() ? data.initialDueDate : formatDateOnly(nextDate);
     const nextBackup = `${initialDueDate} ${data.backupTime}`;
     const reminderDate = calculateReminderDate(initialDueDate, data.reminder);
     const newJob: BackupJob = {
@@ -201,7 +201,6 @@ export function useBackupActivities() {
       toast.error("Cannot complete before the scheduled due date.");
       return;
     }
-    completionClaims.current.add(job.id);
 
     const sizeValue = Number(values.backupSize);
     let sizeGB = Number.isNaN(sizeValue) ? 0 : sizeValue;
@@ -214,24 +213,27 @@ export function useBackupActivities() {
       sizeGB = sizeGB * 1024;
     }
 
-    const completedAt = `${values.backupDate} ${values.backupTime}`;
-    const originalDueDate = job.nextBackup.split(" ")[0] || values.backupDate;
+    completionClaims.current.add(job.id);
 
-    // Follow PM completion flow exactly: determine recurrence, previous due, next due using shared helpers
+    const completedAt = `${values.backupDate} ${values.backupTime}`;
+    const originalDueDate = (job.nextBackup || `${job.nextDueDate || job.dueDate} ${job.backupTime || ""}`).split(" ")[0] || values.backupDate;
+
+    // Follow PM completion flow exactly: determine recurrence, previous due, next due using shared helpers.
     const shouldRecur = !!job.frequency && job.frequency !== "One Time";
-    const completedCycleDueDate = job.nextBackup.split(" ")[0] || (job.lastBackup || values.backupDate) || new Date().toISOString().split("T")[0];
+    const completedCycleDueDate = (job.nextBackup || `${job.nextDueDate || job.dueDate} ${job.backupTime || ""}`).split(" ")[0] || (job.lastBackupDate || job.lastDueDate || values.backupDate) || formatDateOnly(new Date());
     const nextDueDate = shouldRecur ? calculateSharedNextDueDate(completedCycleDueDate, job.frequency) : "";
     const nextBackup = shouldRecur && nextDueDate ? `${nextDueDate} ${values.backupTime}` : "";
     const nextReminderDate = shouldRecur && nextDueDate && job.reminder ? calculateSharedReminderDate(nextDueDate, job.reminder) : undefined;
-
-    const nextJob = shouldRecur && nextBackup ? buildRecurringBackupJob(job, completedAt, nextBackup, nextReminderDate, `backup-${Date.now() + 1}`) : null;
+    const nextRecurringJobId = `backup-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const nextJob = shouldRecur && nextBackup ? buildRecurringBackupJob(job, completedAt, nextBackup, nextReminderDate, nextRecurringJobId) : null;
 
     // Duplicate detection using recurrenceId (stable) or fallback to legacy fields (mirror PM)
     const recurrenceKey = job.recurrenceId;
     const existingNext = recurrenceKey
-      ? jobs.some((candidate) => candidate.id !== job.id && candidate.recurrenceId === recurrenceKey && candidate.status !== "Completed")
+      ? [...jobs, ...completedJobs].some((candidate) => candidate.id !== job.id && candidate.recurrenceId === recurrenceKey && candidate.status !== "Completed")
       : jobs.some((candidate) => candidate.id !== job.id && candidate.name === job.name && candidate.server === job.server && candidate.frequency === job.frequency && candidate.status !== "Completed");
     if (existingNext) {
+      completionClaims.current.delete(job.id);
       toast.error("A recurring backup activity for this cycle already exists.");
       setShowExecutionForm(false);
       setCompletingJob(null);
@@ -317,13 +319,14 @@ export function useBackupActivities() {
     }
 
     const persistedActive = (persisted.activeJobs.length > 0 ? persisted.activeJobs : jobs)
-      .filter((candidate) => candidate.id !== job.id && candidate.id !== nextJob?.id);
-    persistBackupJobs(nextJob ? [nextJob, ...persistedActive] : persistedActive, [completedBackup, ...persisted.completedJobs]);
+      .filter((candidate) => candidate.id !== job.id && candidate.id !== nextJob?.id && !(nextJob && candidate.recurrenceId && candidate.recurrenceId === nextJob.recurrenceId));
+    persistBackupJobs(nextJob ? [nextJob, ...persistedActive] : persistedActive, [completedBackup, ...persisted.completedJobs.filter((candidate) => candidate.id !== completedBackup.id)]);
 
     if (selectedJob?.id === job.id) {
       setSelectedJob(completedBackup);
     }
 
+    completionClaims.current.delete(job.id);
     setShowExecutionForm(false);
     setCompletingJob(null);
     setExecutionFormMode("complete");
@@ -337,11 +340,15 @@ export function useBackupActivities() {
       return;
     }
     const generatedChild = jobs.find((candidate) => candidate.parentId === job.id);
+    const restoredDueDate = job.originalDueDate || job.nextDueDate || job.dueDate || job.lastBackupDate || job.lastDueDate || formatDateOnly(new Date());
     const restored: BackupJob = {
       ...job,
       status: "Upcoming",
       progress: 0,
-      nextBackup: job.nextBackup || `${job.dueDate} ${job.backupTime}`,
+      nextDueDate: restoredDueDate,
+      nextBackup: `${restoredDueDate} ${job.backupTime || "02:00"}`,
+      dueDate: restoredDueDate,
+      reminderDate: job.reminder ? calculateReminderDate(restoredDueDate, job.reminder) : undefined,
       lastBackup: undefined,
       lastBackupDate: undefined,
       completionDate: undefined,
@@ -355,6 +362,7 @@ export function useBackupActivities() {
     setJobs((prev) => [restored, ...prev.filter((candidate) => candidate.id !== job.id && candidate.id !== generatedChild?.id)]);
     setCompletedJobs((prev) => prev.filter((candidate) => candidate.id !== job.id));
     if (generatedChild) clearRemindersForBackup(generatedChild.id);
+    clearRemindersForBackup(job.id);
     checkAndGenerateDueBackupReminders([restored]);
     setSelectedJob(restored);
     toast.success("Completion undone successfully.");
